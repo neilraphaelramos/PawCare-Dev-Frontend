@@ -1,0 +1,53 @@
+/* ───────────────────────────  Sidebar  ─────────────────────────────────── */
+.user-dashboard-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow:hidden;
+  height: 100vh;           
+
+}
+
+.user-dashboard-logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #32b2b2;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.user-dashboard-nav a {
+  display: block;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  color: #444;
+  text-decoration: none;
+  border-radius: 8px;
+
+  transition: 0.2s;
+}
+
+.user-dashboard-nav a.active,
+.user-dashboard-nav a:hover {
+  background: #32b2b2;
+  color: #ffffff;
+}
+
+.user-dashboard-sign-out {
+  margin-top: auto;
+  background: transparent;
+  color: #e53e3e; 
+  border: 1.5px solid #e53e3e; 
+  padding: 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.user-dashboard-sign-out:hover {
+  background-color: #e53e3e;
+  color: white;
+}

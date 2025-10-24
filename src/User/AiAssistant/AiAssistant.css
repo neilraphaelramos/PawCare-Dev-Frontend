@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+.ai-chatbox-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  height: 520px;
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.ai-chatbox-header {
+  background-color: #32b2b2;
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.ai-chatbox-header button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.ai-chatbox-body {
+  padding: 12px 14px;
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #f6f6f6;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-message {
+  margin: 6px 0;
+  padding: 10px 16px;
+  border-radius: 18px;
+  max-width: 80%;
+  line-height: 1.5;
+  word-break: break-word;
+  font-size: 0.92rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.ai-message.ai p {
+  margin: 0 0 12px 0; /* bottom margin between paragraphs */
+  line-height: 1.6;
+}
+
+.ai-message.ai {
+  background-color: #e0f7f7;
+  align-self: flex-start;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.ai-message.user {
+  background-color: #d1f0d0;
+  align-self: flex-end;
+  color: #222;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-faq-suggestions {
+  margin-top: 10px;
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+}
+
+.faq-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.ai-faq-suggestions button {
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  border: none;
+  background-color: #32b2b2;
+  color: white;
+  font-size: 0.85rem;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.ai-faq-suggestions button:hover {
+  background-color: #289999;
+  transform: translateY(-1px);
+}
+
+.ai-chatbox-footer {
+  display: flex;
+  border-top: 1px solid #eee;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.ai-chatbox-footer input {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  border-radius: 12px;
+  outline: none;
+}
+
+.ai-chatbox-footer button:hover {
+  background-color: #289999;
+}
+
+.send-ai-enter {
+  background: #32b2b2;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  max-height: 45px;
+  margin-left: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s
+}
+
+/* Common Questions container above footer */
+.ai-faq-footer {
+  border-top: 1px solid #ddd;
+  background-color: #f8f8f8;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-faq-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: #32b2b2;
+  padding: 4px 0;
+}
+
+.ai-faq-toggle span {
+  font-size: 0.9rem;
+}
+
+.ai-faq-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-faq-list button {
+  width: 100%;
+  padding: 6px 10px;
+  background-color: #32b2b2;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+}
+
+.ai-faq-list button:hover {
+  background-color: #289999;
+}
+
+.ai-avatar {
+  font-weight: 600;
+  color: #2a7f7f;
+  margin-bottom: 6px;
+}
+

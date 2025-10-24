@@ -1,0 +1,365 @@
+/* Generic resets retained */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: #f7f9fc;
+  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Profile Container */
+.pf-profile {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 2rem 3rem;
+  background-color: #edf2f7;
+  font-family: 'Poppins', sans-serif;
+  overflow-y: auto;
+}
+
+/* Title */
+.pf-profile__title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #1a202c;
+}
+
+/* Card styling */
+.pf-profile__card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* Card Header */
+.pf-profile__card--header {
+  padding: 0 0 1rem;
+}
+
+.pf-profile__card-header h4 {
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Two-column form layout */
+.pf-profile__card-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.pf-profile__card-body--two-columns {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Input Group */
+.pf-profile__input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-profile__input-group--full-width {
+  grid-column: 1 / -1;
+}
+
+.pf-profile__label {
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.4rem;
+}
+
+.pf-profile__input {
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.pf-profile__input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.pf-profile__input:focus:not(:disabled) {
+  border-color: #32b2b2;
+  outline: none;
+}
+
+/* Save Button */
+.pf-profile__save-btn {
+  background-color: #32b2b2;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 2rem auto 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pf-profile__save-btn:hover {
+  background-color: #259797;
+}
+
+/* Avatar Section */
+.pf-profile__avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pf-profile__avatar-wrapper {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.pf-profile__avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+}
+
+.pf-profile__edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #32b2b2;
+  color: white;
+  border-radius: 50%;
+  padding: 0.4rem;
+  font-size: 0.9rem;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pf-profile__edit-icon:hover {
+  background-color: #259797;
+}
+
+/* User Info */
+.pf-profile__user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-profile__user-name {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+.pf-profile__user-bio {
+  color: #4b5563;
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.pf-profile__user-location {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* Modal Overlay */
+.pf-profile__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal Card */
+.pf-profile__modal-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.pf-profile__modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.pf-profile__modal-avatar {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 100%;
+  margin-bottom: 1rem;
+}
+
+.pf-profile__modal-file-input {
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+/* Close Modal Button */
+.pf-profile__close-modal-btn {
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pf-profile__close-modal-btn:hover {
+  background-color: #4b5563;
+}
+
+/* ================================
+   Confirm Update Modal Styles
+   ================================ */
+.profileupdateconfirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.profileupdateconfirm-modal {
+  background: #fff;
+  max-width: 400px;
+  width: 90%;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.profileupdateconfirm-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.profileupdateconfirm-message {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.profileupdateconfirm-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profileupdateconfirm-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.profileupdateconfirm-btn.cancel {
+  background: #ccc;
+}
+
+.profileupdateconfirm-btn.confirm {
+  background: #32b2b2;
+  color: #fff;
+}
+
+/* ================================
+   Result Modal Styles
+   ================================ */
+.profileupdateresult-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.profileupdateresult-modal {
+  background: #fff;
+  max-width: 350px;
+  width: 90%;
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.profileupdateresult-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.profileupdateresult-message {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profileupdateresult-btn {
+  background: #32b2b2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.profileupdateresult-btn:hover {
+  background: #259797;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

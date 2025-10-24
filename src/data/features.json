@@ -1,0 +1,33 @@
+[
+  {
+    "icon": "camera",
+    "title": "Online Consultation",
+    "description": "Talk to our vets from the comfort of your home—no need to travel."
+  },
+  {
+    "icon": "calendar",
+    "title": "Appointment Scheduling",
+    "description": "Book and manage vet visits easily."
+  },
+  {
+    "icon": "clipboard",
+    "title": "Pet Medical Records",
+    "description": "Access your pet’s health history anytime."
+  },
+  {
+  "icon": "robot",
+  "title": "AI Vet Doctor",
+  "description": "Get smart insights on your pet’s symptoms before a clinic visit."
+},
+  {
+    "icon": "bell",
+    "title": "Reminders",
+    "description": "Never miss a checkup with timely alerts and notifications."
+  },
+{
+    "icon": "box",
+    "title": "Shop Pet Products Online",
+    "description": "Browse and purchase trusted pet essentials with ease."
+  }
+
+]

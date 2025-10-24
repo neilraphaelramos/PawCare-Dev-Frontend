@@ -1,0 +1,149 @@
+.invmodal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(50, 178, 178, 0.2); /* adjusted to match your theme */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 1rem;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.invmodal-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 24px rgba(50, 178, 178, 0.25);
+  animation: invmodal-popIn 0.25s ease forwards;
+}
+
+@keyframes invmodal-popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.invmodal-title {
+  color: #32b2b2;
+  font-weight: bold;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.invmodal-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.invmodal-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.invmodal-input,
+.invmodal-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #333;
+  transition: border-color 0.2s ease;
+}
+
+.invmodal-input:focus,
+.invmodal-select:focus {
+  border-color: #32b2b2;
+  outline: none;
+  box-shadow: 0 0 6px rgba(50, 178, 178, 0.3);
+}
+
+.invmodal-input:disabled {
+  background-color: #f1f1f1;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.invmodal-form-group input::placeholder {
+  font-style: italic;
+  color: #aaa;
+}
+
+.invmodal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.invmodal-btn {
+  padding: 0.65rem 1.6rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.invmodal-btn--add {
+  background-color: #32b2b2;
+  color: #fff;
+}
+
+.invmodal-btn--add:hover {
+  background-color: #279292;
+}
+
+.invmodal-btn--cancel {
+  background-color: #e2e8f0;
+  color: #333;
+}
+
+.invmodal-btn--cancel:hover {
+  background-color: #cbd5e1;
+}
+.invmodal-form-group input[type="file"] {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #333;
+}
+
+.invmodal-form-group input[type="file"]:focus {
+  border-color: #32b2b2;
+  outline: none;
+  box-shadow: 0 0 6px rgba(50, 178, 178, 0.3);
+}
+.invmodal-image-preview {
+  margin-top: 0.75rem;
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  object-fit: contain;
+  border: 1px solid #ccc;
+}
+.invmodal-box {
+  /* existing styles */
+  max-height: 90vh;      /* limit max height to 90% of viewport height */
+  overflow-y: auto;      /* enable vertical scrolling when content is too tall */
+  box-sizing: border-box; /* make sure padding is counted inside height */
+}

@@ -1,0 +1,305 @@
+.vet-admin-container {
+  height: 100vh;          /* full viewport height */
+  max-width: 100%;        /* full viewport width */
+  margin: 0;              /* remove margin */
+  padding: 2rem 3rem;     /* add some padding */
+  background: #edf2f7;
+  border-radius: 0;       /* remove rounding */
+  font-family: 'Poppins', sans-serif;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.vet-admin-container h2 {
+  color: #32b2b2;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Filter buttons (unchanged) */
+.filter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-buttons button {
+  padding: 0.6rem 1.2rem;
+  background-color: #32b2b2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.filter-buttons button.active-filter,
+.filter-buttons button:hover {
+  background-color: #289e9e;
+}
+
+/* Requests list (unchanged) */
+.requests-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding-right: 1rem;
+}
+
+/* Request card (unchanged) */
+.request-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgb(50 178 178 / 0.15);
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.3s ease;
+  max-height: fit-content;
+}
+
+.request-card:hover {
+  box-shadow: 0 6px 15px rgb(50 178 178 / 0.3);
+}
+
+.request-card h3 {
+  margin-bottom: 0.5rem;
+  color: #1a7373;
+}
+
+.request-card p {
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Consultation type text inside cards */
+.request-card .urgent {
+  color: #d9534f;
+  font-weight: 700;
+}
+
+.request-card .regular {
+  color: #5bc0de;
+  font-weight: 700;
+}
+
+/* Accommodate button (unchanged) */
+.accommodate-btn {
+  margin-top: 0.5rem;
+  padding: 0.4rem 1rem;
+  background-color: #32b2b2;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.accommodate-btn:hover {
+  background-color: #289e9e;
+}
+
+/* ----------------------------- */
+/* Chat Panel Styling Inspired by Dribbble Concept */
+/* ----------------------------- */
+
+.chat-panel {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 360px;
+  max-height: 500px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(50, 178, 178, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 14px;
+  color: #333;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Chat Header */
+.chat-header {
+  background: #32b2b2;
+  color: white;
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  user-select: none;
+}
+
+.close-chat-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: color 0.3s ease;
+}
+
+.close-chat-btn:hover {
+  color: #ff6b6b;
+}
+
+/* Chat messages container */
+.chat-messages {
+  flex-grow: 1;
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  background: #f6f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  scroll-behavior: smooth;
+}
+
+/* Individual chat messages */
+.chat-message {
+  max-width: 75%;
+  padding: 0.65rem 1rem;
+  border-radius: 24px;
+  position: relative;
+  line-height: 1.3;
+  box-shadow: 0 3px 6px rgb(0 0 0 / 0.1);
+  word-wrap: break-word;
+  font-size: 0.95rem;
+  user-select: text;
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+/* Vet messages aligned right */
+.from-vet {
+  background: #32b2b2;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 8px 15px rgb(50 178 178 / 0.35);
+}
+
+/* Client messages aligned left */
+.from-client {
+  background: #e0f2f2;
+  color: #333;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Optional timestamp placeholder (small text) */
+/* If you want to add timestamps later, you can add spans inside message divs and style here */
+/*
+.chat-message span.timestamp {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: 0.15rem;
+  display: block;
+  user-select: none;
+}
+*/
+
+/* Chat input row */
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f0f5f5;
+  border-top: 1px solid #d8e6e6;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  gap: 0.6rem;
+}
+
+/* Input field */
+.chat-input-row input[type="text"] {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 24px;
+  background: white;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.chat-input-row input[type="text"]:focus {
+  box-shadow: 0 0 5px #32b2b2;
+}
+
+/* Send button */
+.chat-input-row button {
+  background: #32b2b2;
+  border: none;
+  border-radius: 50%;
+  padding: 0.55rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgb(50 178 178 / 0.35);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chat-input-row button:hover {
+  background: #289e9e;
+  box-shadow: 0 6px 15px rgb(40 158 158 / 0.5);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling for chat messages */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f6f9f9;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #32b2b2;
+  border-radius: 3px;
+}
+
+/* Responsive: Smaller screens, smaller chat */
+@media (max-width: 400px) {
+  .chat-panel {
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    bottom: 0;
+    right: 0;
+  }
+
+  .chat-input-row input[type="text"] {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,226 @@
+.vieworders-container {
+  padding: 2rem;
+  background: #edf2f7;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+.vieworders-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.vieworders-title {
+  font-size: 1.75rem;
+  color: #32b2b2;
+}
+
+
+.vieworders-search-input {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  height: 35px;
+  width: 400px;
+  text-align: start;
+}
+
+.vieworders-date-input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+.search-date-row {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+
+
+.export-group .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background-color: #32b2b2;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.export-group .btn:hover {
+  background-color: #279292;;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.badge.pending {
+  background-color: #fde68a;
+  color: #92400e;
+}
+
+.badge.shipped {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.badge.delivery {
+  background-color: #d7d6f1;
+  color: #166534;
+}
+
+.badge.cancelled {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+}
+
+
+
+.vieworders-table {
+  width: 100%;
+  border-collapse: separate;     
+  border-spacing: 0 12px;        
+}
+
+
+.vieworders-table thead {
+  background-color: #eaf7f3;
+  text-align: left;
+}
+
+.vieworders-table th {
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #d9e5e2;
+}
+
+.vieworders-table tbody tr {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.vieworders-table td {
+  padding: 16px;
+  background-color: transparent; /* ✅ Remove per-cell white background */
+  font-size: 14px;
+  color: #444;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.vieworders-table td:first-child {
+  border-left: 1px solid #f0f0f0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.vieworders-table td:last-child {
+  border-right: 1px solid #f0f0f0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.vieworders-table td img {
+  width: 80px;
+  height: 80px;
+  border-radius: 5%;
+}
+
+.vieworders-status-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vieworders-status-button {
+  padding: 6px 12px;
+  border: 1px solid #32b2b2;
+  border-radius: 999px;
+  background-color: white;
+  color: #32b2b2;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.vieworders-status-button.active {
+  background-color: #32b2b2;
+  color: white;
+}
+
+.vieworders-export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.vieworders-dropdown-toggle {
+  background-color: #cbf0f0;
+  color: #32b2b2;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.vieworders-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 120px;
+}
+
+.vieworders-export-dropdown:hover .vieworders-dropdown-menu {
+  display: block;
+}
+
+.vieworders-dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.vieworders-dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* space between status buttons and export */
+  flex-wrap: wrap; /* allow wrapping on smaller screens */
+}
+

@@ -1,0 +1,233 @@
+[
+  {
+    "id": 1,
+    "name": "Buddy",
+    "species": "Dog",
+    "breed": "Golden Retriever",
+    "age": 3,
+    "gender": "Male",
+    "birthday": "2022-01-15",
+    "condition": "Stable",
+    "lastVisit": "2025-04-10",
+    "status": "Healthy",
+    "vaccinations": ["Rabies", "Parvo", "Distemper"],
+    "diagnosis": "No issues reported",
+    "treatments": [],
+    "photo": "https://cdn.shopify.com/s/files/1/0086/0795/7054/files/Golden-Retriever.jpg?v=1645179525",
+    "ownerName": "Jemma Alonzo",
+    "ownerAddress": "012 Bernardo St. Bolacan, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "elaizapugosa@gmail.com",
+    "checkups": [
+      {
+        "day": "Thursday",
+        "date": "10 April 2025",
+        "service": "Routine Check-up",
+        "complaint": "Annual exam",
+        "diagnosis": "Healthy",
+        "status": "Discharged after check-up",
+        "completed": "10-04-2025"
+      },
+       {
+        "day": "Thursday",
+        "date": "12 June 2025",
+        "service": "Routine Check-up",
+        "complaint": "Annual exam",
+        "diagnosis": "Healthy",
+        "status": "Discharged after check-up",
+        "completed": "10-04-2025"
+      },
+      {
+        "day": "Tuesday",
+        "date": "10 October 2024",
+        "service": "Vaccination",
+        "complaint": "Distemper vaccine",
+        "diagnosis": "Vaccine successful",
+        "status": "Completed",
+        "completed": "12-11-2024"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Whiskers",
+    "species": "Cat",
+    "breed": "Siamese",
+    "age": 2,
+    "gender": "Female",
+    "birthday": "2023-03-12",
+    "condition": "Under Observation",
+    "lastVisit": "2025-03-22",
+    "status": "Needs Attention",
+    "vaccinations": ["Rabies", "Feline Distemper"],
+    "diagnosis": "Mild fever due to infection",
+    "treatments": ["Antibiotics", "Hydration Therapy"],
+    "photo": "https://cdn2.thecatapi.com/images/MTY3ODIyMQ.jpg",
+     "ownerName": "Ace Matamis",
+    "ownerAddress": "013 Bernardo St. Bolacan, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "matamis@gmail.com",
+    "checkups": [
+      {
+        "day": "Saturday",
+        "date": "22 March 2025",
+        "service": "Outpatient",
+        "complaint": "Mild fever",
+        "diagnosis": "Viral infection",
+        "status": "Given antibiotics",
+        "completed": "22-03-2025"
+      },
+      {
+        "day": "Wednesday",
+        "date": "10 January 2025",
+        "service": "Consultation",
+        "complaint": "Loss of appetite",
+        "diagnosis": "Digestive issues",
+        "status": "Referred to specialist",
+        "completed": "10-01-2025"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Max",
+    "species": "Dog",
+    "breed": "Bulldog",
+    "age": 4,
+    "gender": "Male",
+    "birthday": "2021-08-03",
+    "condition": "Needs Attention",
+    "lastVisit": "2025-05-15",
+    "status": "Needs Attention",
+    "vaccinations": ["Rabies", "Parvo"],
+    "diagnosis": "Skin allergy detected",
+    "treatments": ["Topical Cream"],
+    "photo": "https://cdn.shopify.com/s/files/1/0086/0795/7054/files/Golden-Retriever.jpg?v=1645179525",
+     "ownerName": "Aaron Sapiter",
+    "ownerAddress": "03 Bernardo St. Turo, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "sapiter@gmail.com",
+    "checkups": [
+      {
+        "day": "Thursday",
+        "date": "15 May 2025",
+        "service": "Outpatient",
+        "complaint": "Skin irritation",
+        "diagnosis": "Skin allergy",
+        "status": "Topical cream prescribed",
+        "completed": "15-05-2025"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Luna",
+    "species": "Cat",
+    "breed": "Maine Coon",
+    "age": 5,
+    "gender": "Female",
+    "birthday": "2020-06-21",
+    "condition": "Stable",
+    "lastVisit": "2025-02-08",
+    "status": "Healthy",
+    "vaccinations": ["Rabies", "FVRCP"],
+    "diagnosis": "Routine checkup",
+    "treatments": [],
+    "photo": "https://cdn2.thecatapi.com/images/MTY3ODIyMQ.jpg",
+     "ownerName": "Janella Cruz",
+    "ownerAddress": "012 Bernardo St. Bolacan, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "elaizapugosa@gmail.com",
+    "checkups": [
+      {
+        "day": "Saturday",
+        "date": "08 February 2025",
+        "service": "Routine Check-up",
+        "complaint": "Monthly exam",
+        "diagnosis": "All normal",
+        "status": "Discharged in good health",
+        "completed": "08-02-2025"
+      },
+      {
+        "day": "Monday",
+        "date": "08 January 2024",
+        "service": "Sterilization",
+        "complaint": "Scheduled procedure",
+        "diagnosis": "Surgery successful",
+        "status": "Recovering at home",
+        "completed": "10-01-2024"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Rocky",
+    "species": "Dog",
+    "breed": "German Shepherd",
+    "age": 6,
+    "gender": "Male",
+    "birthday": "2019-11-30",
+    "condition": "Under Observation",
+    "lastVisit": "2025-04-28",
+    "status": "Under Observation",
+    "vaccinations": ["Rabies", "Parvo", "Distemper"],
+    "diagnosis": "Recovering from leg injury",
+    "treatments": ["Physical therapy"],
+    "photo": "https://cdn.shopify.com/s/files/1/0086/0795/7054/files/Golden-Retriever.jpg?v=1645179525",
+     "ownerName": "Jemma Alonzo",
+    "ownerAddress": "012 Bernardo St. Bolacan, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "alonzo@gmail.com",
+    "checkups": [
+      {
+        "day": "Monday",
+        "date": "28 April 2025",
+        "service": "Inpatient Care",
+        "complaint": "Leg injury",
+        "diagnosis": "Minor muscle tear",
+        "status": "Under recovery",
+        "completed": "30-04-2025"
+      },
+      {
+        "day": "Thursday",
+        "date": "01 February 2025",
+        "service": "Physical Therapy",
+        "complaint": "First session",
+        "diagnosis": "Improving condition",
+        "status": "Continue therapy",
+        "completed": "01-02-2025"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Mochi",
+    "species": "Rabbit",
+    "breed": "Lop",
+    "age": 1,
+    "gender": "Female",
+    "birthday": "2024-04-01",
+    "condition": "Stable",
+    "lastVisit": "2025-05-10",
+    "status": "Healthy",
+    "vaccinations": ["Myxomatosis", "RHD"],
+    "diagnosis": "Good health",
+    "treatments": [],
+     "photo": "https://cdn2.thecatapi.com/images/MTY3ODIyMQ.jpg",
+      "ownerName": "James Cruz",
+    "ownerAddress": "012 Bernardo St. Bolacan, Bocaue, Bulacan",
+    "ownerPhoneNum": "0948262382",
+    "ownerEmail": "eajames@gmail.com",
+    "checkups": [
+      {
+        "day": "Saturday",
+        "date": "10 May 2025",
+        "service": "Routine Check-up",
+        "complaint": "Health screening",
+        "diagnosis": "All good",
+        "status": "Completed with good results",
+        "completed": "10-05-2025"
+      }
+    ]
+  }
+]

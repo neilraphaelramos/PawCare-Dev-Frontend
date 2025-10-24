@@ -1,0 +1,379 @@
+/* ───────────────────────────  Reset & Base  ───────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+  background: #f7f9fc;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ───────────────────────────  Layout  ───────────────────────────── */
+.appointment-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 2rem;
+  gap: 2rem;
+  min-height: 100vh;
+  background-color: #edf2f7;
+}
+
+/* ───────────────────────────  Panels  ───────────────────────────── */
+.left-panel,
+.calendar-panel,
+.time-panel {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  min-height: 85vh;
+}
+
+.left-panel {
+  max-width: 300px;
+  justify-content: space-between;
+}
+
+/* ───────────────────────────  Titles & Headings  ───────────────── */
+.left-panel h3,
+.calendar-panel h4,
+.time-panel h4 {
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #1a202c;
+}
+
+/* ───────────────────────────  Duration & Info Cards  ───────────── */
+.duration {
+  background: #e0f7f7;
+  color: #32b2b2;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 14px;
+  margin-top: 1rem;
+  align-self: center;
+}
+
+.info-card {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 14px;
+  margin-top: auto;
+  color: #333;
+}
+
+/* ───────────────────────────  Actions Buttons  ─────────────────── */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.actions button {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #32b2b2;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.actions button:hover {
+  background: #289c9c;
+}
+
+/* ───────────────────────────  Calendar Grid  ───────────────────── */
+.calendar-header,
+.toggle-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 16px;
+  color: #1a202c;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.day-name,
+.calendar-day {
+  text-align: center;
+  font-size: 14px;
+  padding: 0.5rem 0;
+  color: #444;
+}
+
+.calendar-day {
+  background: #f1f1f1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.calendar-day:hover {
+  background: #cfd8dc;
+}
+
+.calendar-day.selected {
+  background: #32b2b2;
+  color: #fff;
+}
+
+.calendar-day.disabled {
+  background: #eee;
+  color: #aaa;
+  pointer-events: none;
+}
+
+/* ───────────────────────────  Time Slots  ───────────────────────── */
+.time-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.time-slot {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.time-slot:hover {
+  background: #e0f7f7;
+}
+
+.time-slot.selected {
+  background: #32b2b2;
+  color: #fff;
+  border-color: #32b2b2;
+}
+
+.appoint-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.appoint-modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.appoint-modal-content::-webkit-scrollbar {
+  display: none;
+}
+
+.appoint-appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.appoint-appointment-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appoint-appointment-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.appoint-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.appoint-value {
+  color: #555;
+}
+
+.appoint-status {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Optional color coding for status */
+.appoint-status.pending {
+  color: #d98c00;
+}
+
+.appoint-status.confirmed {
+  color: #008a1e;
+}
+
+.appoint-status.cancelled {
+  color: #c40000;
+}
+
+.appoint-close-modal {
+  margin-top: 15px;
+  background: #32b2b2;
+  color: #fff;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.appoint-close-modal:hover {
+  background: #555;
+}
+
+.appoint-relative-text {
+  font-size: 12px;
+  color: #777;
+  margin-left: 5px;
+  font-style: italic;
+}
+
+.appoint-view-btn {
+  background: #32b2b2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ===== Appointment Message Modal Styles ===== */
+.AppointMessage-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: AppointMessage-fadeIn 0.3s ease;
+}
+
+@keyframes AppointMessage-fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.AppointMessage-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: AppointMessage-slideIn 0.3s ease;
+}
+
+@keyframes AppointMessage-slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.AppointMessage-header {
+  background: #4ae2a8;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+.AppointMessage-body {
+  padding: 1rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+}
+
+.AppointMessage-footer {
+  padding: 0.75rem;
+  text-align: center;
+  background: #f7f7f7;
+}
+
+.AppointMessage-close-btn {
+  background: #32b2b2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.AppointMessage-close-btn:hover {
+  background: #248181;
+}

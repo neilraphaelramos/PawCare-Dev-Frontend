@@ -1,0 +1,391 @@
+.inventory-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.inventory-search-input {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  height: 35px;
+  margin-top: 15px;
+  width: 350px;
+  text-align: start; /* Center placeholder and text */
+}
+
+
+
+/* Export button */
+.admin-inventory-export-btn {
+  background-color: #cbf0f0;
+  color: #32b2b2;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.admin-inventory-add-item-btn {
+  background-color: #32b2b2;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+
+.admin-inventory-container {
+  padding: 2rem;
+  background: #edf2f7;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+.admin-inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-inventory-header h2 {
+  color: #32b2b2;
+  font-size: 1.8rem;
+}
+
+.inventory-table-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: separate;     
+  border-spacing: 0 12px;        
+}
+
+
+.inventory-table thead {
+  background-color: #eaf7f3;
+  text-align: left;
+}
+
+.inventory-table th {
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #d9e5e2;
+}
+
+.inventory-table tbody tr {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.inventory-table td {
+  padding: 16px;
+  background-color: transparent; /* ✅ Remove per-cell white background */
+  font-size: 14px;
+  color: #444;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.inventory-table td:first-child {
+  border-left: 1px solid #f0f0f0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.inventory-table td:last-child {
+  border-right: 1px solid #f0f0f0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.inventory-table td img {
+  width: 80px;
+  height: 80px;
+  border-radius: 5%;
+}
+
+.inventory-table td .admin-inventory-edit-icon-btn {
+  background-color: #eaf7f3;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-right: 10px;
+
+}
+
+.inventory-table td .admin-inventory-delete-icon-btn:hover {
+  background-color: #d2efe8;
+}
+
+.inventory-table td .admin-inventory-delete-icon-btn {
+  background-color: rgb(243, 212, 212);
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.inventory-table td .admin-inventory-delete-icon-btn:hover {
+  background-color: #d2efe8;
+}
+
+.status-down {
+  color: red;
+  font-weight: bold;
+}
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.page-controls button {
+  margin: 0 2px;
+  padding: 4px 8px;
+  border: none;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.page-controls .active {
+  background-color: #34c38f;
+  color: white;
+}
+
+.show-entries select {
+  margin: 0 5px;
+  padding: 2px 5px;
+}
+
+.item-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.admin-inventory-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-inventory-modal-content {
+  background: white;
+  width: 100%;
+  max-width: 768px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  padding-bottom: 4rem;
+}
+
+.admin-inventory-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.admin-inventory-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.admin-inventory-image-upload-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.admin-inventory-image-upload {
+  width: 140px;
+  height: 140px;
+  background-color: #f3f3f3;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: 2px dashed #ccc;
+
+}
+
+.admin-inventory-image-upload:hover {
+  background-color: #e2e2e2;
+}
+
+.admin-inventory-uploaded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.admin-inventory-upload-icon {
+  width: 24px;
+  height: 24px;
+  color: #999;
+}
+
+.admin-inventory-hidden-input {
+  display: none;
+}
+
+.admin-inventory-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.admin-inventory-date-qty-grid {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-inventory-input-field {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-inventory-select-field {
+  padding: 0.5rem 0.75rem;     /* Less vertical padding */
+  font-size: 0.9rem;          /* Slightly smaller font */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  height: 43px;               /* Fixed height if needed */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-inventory-modal-actions {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-inventory-btn {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.admin-inventory-btn.primary {
+  background-color: #0d9488;
+  color: white;
+}
+
+.admin-inventory-btn.primary:hover {
+  background-color: #0f766e;
+}
+
+.admin-inventory-btn.secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.admin-inventory-btn.secondary:hover {
+  background-color: #d1d5db;
+}
+
+.admin-inventory-export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-inventory-dropdown-toggle {
+  background-color: #cbf0f0;
+  color: #32b2b2;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.admin-inventory-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 120px;
+}
+
+.admin-inventory-export-dropdown:hover .admin-inventory-dropdown-menu {
+  display: block;
+}
+
+.admin-inventory-dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-inventory-dropdown-item:hover {
+  background-color: #f0f0f0;
+}

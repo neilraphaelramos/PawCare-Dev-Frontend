@@ -1,0 +1,46 @@
+/* ───────────────────────────  Sidebar  ─────────────────────────────────── */
+.admin-dashboard-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow:hidden;
+}
+
+.admin-dashboard-logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #32b2b2;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.admin-dashboard-nav a {
+  display: block;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  color: #444;
+  text-decoration: none;
+  border-radius: 8px;
+
+  transition: 0.2s;
+}
+
+.admin-dashboard-nav a.active,
+.admin-dashboard-nav a:hover {
+  background: #32b2b2;
+  color: #ffffff;
+}
+
+.admin-dashboard-sign-out {
+  margin-top: auto;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+

@@ -1,0 +1,135 @@
+.appointment-container {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: 100vh;
+  background-color: #edf2f7;
+}
+
+.calendar-panel {
+  flex: 1;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.admin-time-panel {
+  flex: 2;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Calendar Styles */
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.day-name,
+.calendar-day {
+  text-align: center;
+  font-size: 14px;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.calendar-day {
+  background: #f1f1f1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.calendar-day:hover {
+  background: #cfd8dc;
+}
+
+.calendar-day.selected {
+  background: #32b2b2;
+  color: #fff;
+}
+
+.calendar-day.disabled {
+  background: #eee;
+  color: #aaa;
+  pointer-events: none;
+}
+
+/* Toggle Time Header */
+.toggle-header {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-weight: 600;
+}
+
+/* Time Slots */
+.time-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.time-slot {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Reservation Cards */
+.reservation-list h5 {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.reservation-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f6f6f6;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.approve,
+.decline {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.approve {
+  background-color: #32b2b2;
+}
+
+.decline {
+  background-color: #e57373;
+}

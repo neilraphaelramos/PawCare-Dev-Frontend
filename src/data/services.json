@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Consultation",
+    "description": "Get expert advice and pet checkups.",
+    "image": "/images/LandingPage/consultation.png"
+  },
+  {
+    "title": "Laboratories",
+    "description": "Lab tests for accurate diagnoses.",
+    "image": "/images/LandingPage/laboratories.png"
+  },
+  {
+    "title": "Confinement",
+    "description": "Safe care for pets who need to stay.",
+    "image": "/images/LandingPage/confinement.png"
+  },
+  {
+    "title": "Vaccination",
+    "description": "Keep your pets protected and healthy.",
+    "image": "/images/LandingPage/vaccination.png"
+  },
+  {
+    "title": "Deworming",
+    "description": "Regular treatments for a healthier pet.",
+    "image": "/images/LandingPage/deworming.png"
+  },
+  {
+    "title": "Grooming",
+    "description": "Keep your pets clean and fresh.",
+    "image": "/images/LandingPage/grooming.png"
+  },
+  {
+    "title": "Surgery",
+    "description": "Trusted care for surgical needs.",
+    "image": "/images/LandingPage/surgery.png"
+  },
+  {
+    "title": "Home Service",
+    "description": "We come to you for stress-free care.",
+    "image": "/images/LandingPage/home-service.png"
+  }
+]

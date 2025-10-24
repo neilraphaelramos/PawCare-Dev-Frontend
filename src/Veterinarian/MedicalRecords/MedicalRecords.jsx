@@ -1,0 +1,1109 @@
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { FaPlus, FaRegEye, FaEdit } from 'react-icons/fa';
+import { UserContext } from '../../hook/authContext';
+import axios from 'axios'
+import './MedicalRecords.css';
+
+export default function PetRecords() {
+  const [pets, setPets] = useState([]);
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [showAddPetModal, setShowAddPetModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [addingRecord, setAddingRecord] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [newRecord, setNewRecord] = useState({
+    ownerEmail: '',
+    ownerAddress: '',
+    ownerPhoneNum: '',
+    day: '',
+    date: '',
+    service: '',
+    complaint: '',
+    diagnosis: '',
+    status: '',
+    completed: ''
+  });
+  const [type, setType] = useState("");
+  const [species, setSpecies] = useState("");
+  const [speciesOptions, setSpeciesOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [editType, setEditType] = useState("");
+  const [editSpecies, setEditSpecies] = useState("");
+  const [editSpeciesOptions, setEditSpeciesOptions] = useState([]);
+  const [editLoading, setEditLoading] = useState(false);
+
+  const [userInfo, setUserInfo] = useState([]);
+  const [switchBtn, setSwitchBtn] = useState(false);
+  const { user } = useContext(UserContext);
+
+  const name_vet = {
+      name: [
+        user.firstName,
+        user.middelName,
+        user.lastName,
+        user.suffix
+      ]
+        .filter(Boolean)
+        .join(' ')
+    };
+
+  const formRef = useRef(null);
+
+  const APIENDPOINT = '/server-api';
+
+  const handleView = (pet) => {
+    axios.get(`${APIENDPOINT}/fetch/visit_history/${pet.id}`)
+      .then((res) => {
+        setSelectedPet({ ...pet, checkups: res.data });
+      })
+      .catch((err) => {
+        console.error("Error fetching visit history:", err);
+        setSelectedPet({ ...pet, checkups: [] }); // fallback
+      });
+  };
+
+  const resetAddForm = () => {
+    setType("");
+    setSpecies("");
+    setSpeciesOptions([]);
+    setPreviewImage(null);
+  };
+
+  const resetEditForm = () => {
+    setEditData(null);
+    setEditType("");
+    setEditSpecies("");
+    setEditSpeciesOptions([]);
+  };
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedPet(null);
+    setModalSearchTerm('');
+    setAddingRecord(false);
+    setNewRecord({
+      ownerEmail: '',
+      ownerAddress: '',
+      ownerPhoneNum: '',
+      day: '',
+      date: '',
+      service: '',
+      complaint: '',
+      diagnosis: '',
+      status: '',
+      completed: ''
+    });
+    setUserInfo([]);
+  };
+
+  const handleUserInfo = async (ownerUsername) => {
+    try {
+      const res = await axios.get(`${APIENDPOINT}/fetch/user_medical/${ownerUsername}`);
+      if (res.data?.data) {
+        setUserInfo(res.data.data);
+        console.log("Fetched user info:", res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (userInfo && Object.keys(userInfo).length > 0) {
+      setNewRecord((prev) => ({
+        ...prev,
+        ownerEmail: userInfo.email || '',
+        ownerAddress: userInfo.address || '',
+        ownerPhoneNum: userInfo.phoneNumber || ''
+      }));
+    }
+  }, [userInfo]);
+
+
+  const handleAddPet = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData();
+
+    formData.append("owner_name", form.ownerName.value);
+    formData.append("user_name", form.userName.value);
+    formData.append("pet_name", form.name.value);
+    formData.append('type', form.type.value);
+    formData.append("species", form.species.value);
+    formData.append("pet_age", form.age.value);
+    formData.append("pet_gender", form.gender.value);
+    formData.append("pet_condition", form.condition.value);
+    formData.append("last_visit", form.lastVisit.value);
+    formData.append("diagnosis", form.diagnosis.value);
+
+    // ✅ Add uploaded file
+    if (form.petImage.files[0]) {
+      formData.append("photo", form.petImage.files[0]);
+    }
+
+    try {
+      const res = await axios.post(`${APIENDPOINT}/add_pet/pet_medical_records`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        // ✅ Refresh pets
+        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        setPets(updatedPets.data);
+        setShowAddPetModal(false);
+        form.reset();
+      }
+    } catch (err) {
+      console.error("Error adding pet:", err);
+    }
+  };
+
+  const handleEdit = (data) => {
+    setEditData(data);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData();
+
+    formData.append("owner_name", form.ownerName.value);
+    formData.append("user_name", form.userName.value);
+    formData.append("pet_name", form.name.value);
+    formData.append("type", editType);
+    formData.append("species", editSpecies);
+    formData.append("pet_age", form.age.value);
+    formData.append("pet_gender", form.gender.value);
+    formData.append("pet_condition", form.condition.value);
+    formData.append("last_visit", form.lastVisit.value);
+    formData.append("diagnosis", form.diagnosis.value);
+
+    // ✅ Only update photo if user selected one
+    if (form.petImage.files[0]) {
+      formData.append("photo", form.petImage.files[0]);
+    }
+
+    try {
+      const res = await axios.put(`${APIENDPOINT}/edit_pet/pet_medical_records/${editData.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        // ✅ Refresh pets
+        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        setPets(updatedPets.data);
+        setShowEditModal(false);
+        setEditData(null);
+      }
+    } catch (err) {
+      console.error("Error editing pet:", err);
+    }
+  };
+
+  useEffect(() => {
+    axios.get(`${APIENDPOINT}/fetch/pet_medical_records`)
+      .then((res) => setPets(res.data))
+      .catch((err) => console.error("Error fetching pets:", err));
+  }, []);
+
+  useEffect(() => {
+    async function fetchBreeds() {
+      if (!type) {
+        setSpeciesOptions([]);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const url =
+          type === "Dog"
+            ? "https://api.thedogapi.com/v1/breeds"
+            : "https://api.thecatapi.com/v1/breeds";
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const formatted = data.map((b) => ({
+          id: b.id,
+          name: b.name,
+        }));
+
+        setSpeciesOptions(formatted);
+      } catch (err) {
+        console.error("Failed to load breeds", err);
+        setSpeciesOptions([]);
+      } finally {
+        setLoading(false);
+        setSpecies("");
+      }
+    }
+
+    fetchBreeds();
+  }, [type]);
+
+  useEffect(() => {
+    if (editData) {
+      setEditType(editData.petType || "");
+      setEditSpecies(editData.species || "");
+    }
+  }, [editData]);
+
+  useEffect(() => {
+    async function fetchEditSpecies() {
+      if (!editType) {
+        setEditSpeciesOptions([]);
+        return;
+      }
+
+      setEditLoading(true);
+
+      try {
+        const url =
+          editType === "Dog"
+            ? "https://api.thedogapi.com/v1/breeds"
+            : "https://api.thecatapi.com/v1/breeds";
+
+        const res = await fetch(url);
+        const data = await res.json();
+        const formatted = data.map((b) => ({
+          id: b.id,
+          name: b.name,
+        }));
+
+        setEditSpeciesOptions(formatted);
+      } catch (err) {
+        console.error("Failed to fetch species for edit", err);
+        setEditSpeciesOptions([]);
+      } finally {
+        setEditLoading(false);
+      }
+    }
+
+    fetchEditSpecies();
+  }, [editType]);
+
+  const filteredPets = pets.filter((pet) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      pet.ownerName.toLowerCase().includes(term) ||
+      pet.name.toLowerCase().includes(term) ||
+      pet.petType.toLowerCase().includes(term) ||
+      pet.species.toLowerCase().includes(term) ||
+      pet.gender.toLowerCase().includes(term) ||
+      pet.condition.toLowerCase().includes(term) ||
+      pet.diagnosis.toLowerCase().includes(term) ||
+      pet.lastVisit.toLowerCase().includes(term)
+    );
+  });
+
+  const filterCheckups = (checkups) => {
+    const term = modalSearchTerm.toLowerCase();
+    return checkups.filter((visit) =>
+      [visit.day, visit.date, visit.service, visit.complaint, visit.diagnosis, visit.status, visit.completed]
+        .some((field) => field.toLowerCase().includes(term))
+    );
+  };
+
+  const handleAddRecord = () => {
+    setAddingRecord(true)
+  };
+
+  const handleNewRecordChange = (e) => {
+    const { name, value } = e.target;
+    setNewRecord({ ...newRecord, [name]: value });
+  };
+
+  const handleNewRecordSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await axios.post(`${APIENDPOINT}/add_pet_history/pet_medical_records`, {
+        id_pet_medical_records: selectedPet.id,
+        owner_email: newRecord.ownerEmail,
+        owner_address: newRecord.ownerAddress,
+        owner_phonenumber: newRecord.ownerPhoneNum,
+        day: newRecord.day,
+        date_visit: newRecord.date,
+        service_type: newRecord.service,
+        main_complaint: newRecord.complaint,
+        pet_diagnosis: newRecord.diagnosis,
+        treatment_status: newRecord.status,
+        date_completed_on: newRecord.completed,
+        nursing_issues: newRecord.nursingIssues || '',
+        care_plan: newRecord.carePlan || '',
+        local_status_check: newRecord.localStatus || '',
+        additional_complaint: newRecord.additionalComplaint || '',
+        weight: newRecord.weight || '',
+        height: newRecord.height || '',
+        bmi: newRecord.bmi || '',
+        blood_pressure: newRecord.bloodPressure || '',
+        pulse: newRecord.pulse || '',
+        medications: newRecord.medications || '',
+        veterinarian_name: `Dr. ${name_vet}`
+      });
+
+      if (res.data.success) {
+        // ✅ Refetch updated history
+        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        setSelectedPet({ ...selectedPet, checkups: history.data });
+
+        setAddingRecord(false);
+        setNewRecord({
+          day: '',
+          date: '',
+          service: '',
+          complaint: '',
+          diagnosis: '',
+          status: '',
+          completed: ''
+        });
+      }
+    } catch (err) {
+      console.error("Error adding new visit history:", err);
+    }
+  };
+
+  const handleUpdateVisit = async () => {
+    try {
+      const res = await axios.put(
+        `${APIENDPOINT}/edit_pet_history/pet_medical_records/${selectedVisit.history_id}`,
+        {
+          owner_email: selectedVisit.ownerEmail,
+          owner_address: selectedVisit.ownerAddress,
+          owner_phonenumber: selectedVisit.ownerPhoneNum,
+          day: selectedVisit.day,
+          date_visit: selectedVisit.date,   // yyyy-MM-dd format
+          service_type: selectedVisit.service,
+          main_complaint: selectedVisit.complaint,
+          pet_diagnosis: selectedVisit.diagnosis,
+          treatment_status: selectedVisit.status,
+          date_completed_on: selectedVisit.completed,
+          nursing_issues: selectedVisit.nursingIssues || '',
+          care_plan: selectedVisit.carePlan || '',
+          local_status_check: selectedVisit.localStatus || '',
+          additional_complaint: selectedVisit.additionalComplaint || '',
+          weight: selectedVisit.weight || '',
+          height: selectedVisit.height || '',
+          bmi: selectedVisit.bmi || '',
+          blood_pressure: selectedVisit.bloodPressure || '',
+          pulse: selectedVisit.pulse || '',
+          medications: selectedVisit.medications || '',
+          veterinarian_name: selectedVisit.veterinarianName || 'Not Assigned',
+        }
+      );
+
+      if (res.data.success) {
+        // ✅ Refresh history
+        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        setSelectedPet({ ...selectedPet, checkups: history.data });
+        setSelectedVisit(null);
+      }
+    } catch (err) {
+      console.error("Error updating visit history:", err);
+    }
+  };
+
+
+  return (
+    <div className="pet-records-wrapper">
+      <h2 className="pet-records-title">Pet Medical History</h2>
+
+      <div className="pet-records-toolbar">
+        <div className="pet-records-left-actions">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search records..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button className="add-btn margin1" onClick={() => setShowAddPetModal(true)}>
+            <FaPlus /> Add Pet
+          </button>
+        </div>
+      </div>
+
+      <div className="admin-pet-records-table">
+        <div className="admin-pet-records-header">
+          <div>Owner Name</div>
+          <div>Photo</div>
+          <div>Name</div>
+          <div>Pet Type</div>
+          <div>Species</div>
+          <div>Age</div>
+          <div>Gender</div>
+          <div>Condition</div>
+          <div>Last Visit</div>
+          <div>Diagnosis</div>
+          <div>Action</div>
+        </div>
+
+        {filteredPets.length > 0 ? (
+          filteredPets.map((pet) => (
+            <div className="admin-pet-records-row" key={pet.id}>
+              <div>{pet.ownerName}</div>
+              <div>
+                <img src={`${APIENDPOINT}/uploads/${pet.photo}`} alt={pet.name} className="pet-thumb" />
+              </div>
+              <div>{pet.name}</div>
+              <div>{pet.petType}</div>
+              <div>{pet.species}</div>
+              <div>{pet.age} yrs</div>
+              <div>{pet.gender}</div>
+              <div>{pet.condition}</div>
+              <div>{pet.lastVisit}</div>
+              <div className="diagnosis-text">
+                {pet.diagnosis?.length > 30
+                  ? pet.diagnosis.slice(0, 30) + '…'
+                  : pet.diagnosis || ""}
+              </div>
+              <div className="action-buttons">
+                <button
+                  className="aksi-btn"
+                  title="View Record"
+                  onClick={() => handleView(pet)}
+                >
+                  <FaRegEye size={16} />
+                </button>
+                <button
+                  className="aksi-btn"
+                  title="Edit Record"
+                  onClick={() => handleEdit(pet)}
+                >
+                  <FaEdit size={16} />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="no-records">Records Not Found</div>
+        )}
+      </div>
+
+      {selectedPet && (
+        <div className="pet-modal-overlay">
+          <div className="pet-modal">
+            <button className="close-btn" onClick={handleCloseModal}>×</button>
+            <h3>{selectedPet.name}'s Visit History</h3>
+
+            <div className="pet-modal-top-row">
+              <input
+                type="text"
+                className="modal-search-input"
+                placeholder="Search visit history..."
+                value={modalSearchTerm}
+                onChange={(e) => setModalSearchTerm(e.target.value)}
+              />
+              <button
+                className="add-btn margin2"
+                onClick={() => {
+                  if (switchBtn) {
+                    formRef.current?.requestSubmit();
+                    setSwitchBtn(false);
+                  } else {
+                    handleUserInfo(selectedPet.userName);
+                    handleAddRecord();
+                    setSwitchBtn(true);
+                  }
+                }}
+              >
+                {switchBtn ? "💾 Save" : <><FaPlus /> Add Record</>}
+              </button>
+
+            </div>
+
+            {addingRecord && (
+              <form className="new-record-form" ref={formRef} onSubmit={handleNewRecordSubmit}>
+                <input
+                  type="text"
+                  name="ownerEmail"
+                  placeholder="Email"
+                  value={newRecord.ownerEmail}
+                  onChange={handleNewRecordChange}
+                  required
+                  readOnly
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="ownerAddress"
+                  placeholder="Address"
+                  value={newRecord.ownerAddress}
+                  readOnly
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="ownerPhoneNum"
+                  placeholder="Phone Number"
+                  value={newRecord.ownerPhoneNum}
+                  readOnly
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="day"
+                  placeholder="Day of Visit (e.g., Monday)"
+                  value={newRecord.day}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <div className="addvisit-input-group">
+                  <input
+                    type="date"
+                    name="date"
+                    placeholder="Date"
+                    value={newRecord.date}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <label htmlFor="completed" className="addvisit-label">
+                    Date Visit
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  name="service"
+                  placeholder="Service Type"
+                  value={newRecord.service}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="complaint"
+                  placeholder="Main Complaint"
+                  value={newRecord.complaint}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="diagnosis"
+                  placeholder="Diagnosis"
+                  value={newRecord.diagnosis}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="status"
+                  placeholder="Treatment Status"
+                  value={newRecord.status}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <div className="addvisit-input-group">
+                  <input
+                    type="date"
+                    id="completed"
+                    name="completed"
+                    value={newRecord.completed}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <label htmlFor="completed" className="addvisit-label">
+                    Completed On
+                  </label>
+                </div>
+              </form>
+            )}
+
+            {selectedPet.checkups?.length > 0 ? (
+              <div className="checkup-history-row-style">
+                {filterCheckups(selectedPet.checkups).map((visit, i) => (
+                  <div key={i} className="checkup-card-wide">
+                    <div className="checkup-col">
+                      <p className="checkup-label">Date</p>
+                      <strong>{visit.day}</strong>
+                      <span>{visit.date}</span>
+                    </div>
+                    <div className="checkup-col">
+                      <p className="checkup-label">Service Type</p>
+                      <p>{visit.service}</p>
+                    </div>
+                    <div className="checkup-col">
+                      <p className="checkup-label">Main Complaint</p>
+                      <p>{visit.complaint}</p>
+                    </div>
+                    <div className="checkup-col">
+                      <p className="checkup-label">Diagnosis</p>
+                      <p>{visit.diagnosis}</p>
+                    </div>
+                    <div className="checkup-col">
+                      <p className="checkup-label">Treatment Status</p>
+                      <p>{visit.status}</p>
+                    </div>
+                    <div className="checkup-col">
+                      <p className="checkup-label">Completed On</p>
+                      <p>{visit.completed}</p>
+                    </div>
+                    <div className="checkup-col action-col">
+                      <p className="checkup-label">Action</p>
+                      <button className="aksi-btn" onClick={() => setSelectedVisit(visit)}>
+                        <FaRegEye size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No visit records found.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {selectedVisit && (
+        <div className="visit-detail-modal-overlay">
+          <div className="visit-detail-modal">
+            <button className="close-btn" onClick={() => setSelectedVisit(null)}>×</button>
+            <button className="print-btn" onClick={() => window.print()}>Print</button>
+            <div className="visit-detail-content scrollable-print">
+              <div className="mr-header-section">
+                <img src="/images/LandingPage/rivera-logo.png" alt="Clinic Logo" className="mr-clinic-logo" />
+                <div className="mr-clinic-details">
+                  <h1>PetCare Animal Clinic</h1>
+                  <p>123 Veterinary Street, Bocaue, Bulacan</p>
+                  <p>Contact: (044) 123-4567 | Email: petcare@clinic.com</p>
+                  <p>Date: {new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <h2 className="section-title">Patient Medical Summary</h2>
+              <div className="detail-field">
+                <div className="detail-label">Pet Name:</div>
+                <input
+                  type="text"
+                  value={selectedPet.name}
+                  disabled
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Species:</div>
+                <input
+                  type="text"
+                  value={selectedPet.species}
+                  disabled
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Owner Address:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.ownerAddress || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerAddress: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Age:</div>
+                <input
+                  type="number"
+                  value={selectedPet.age}
+                  disabled
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Owner Phone Number:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.ownerPhoneNum || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerPhoneNum: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Diagnosis:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.diagnosis}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, diagnosis: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Owner Email:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.ownerEmail || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerEmail: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Date Admitted:</div>
+                <input
+                  type="date"
+                  value={selectedVisit.date || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, date: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Date Discharged:</div>
+                <input
+                  type="date"
+                  value={selectedVisit.completed}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, completed: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Patient Status:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.status}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, status: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Nursing Issues:</div>
+                <textarea
+                  value={selectedVisit.nursingIssues || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, nursingIssues: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Care Plan:</div>
+                <textarea
+                  value={selectedVisit.carePlan || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, carePlan: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Local Status Check:</div>
+                <textarea
+                  value={selectedVisit.localStatus || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, localStatus: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+
+              <h2 className="section-title">Medical Assessment</h2>
+              <div className="detail-field">
+                <div className="detail-label">Main Complaint:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.complaint}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, complaint: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Additional Complaints:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.additionalComplaint || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, additionalComplaint: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Weight:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.weight || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, weight: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Height:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.height || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, height: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">BMI:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.bmi || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, bmi: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Blood Pressure:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.bloodPressure || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, bloodPressure: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+              <div className="detail-field">
+                <div className="detail-label">Pulse:</div>
+                <input
+                  type="text"
+                  value={selectedVisit.pulse || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, pulse: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+
+              <h2 className="section-title">Prescriptions</h2>
+              <div className="detail-field">
+                <div className="detail-label">Medications:</div>
+                <textarea
+                  value={selectedVisit.medications || ''}
+                  onChange={(e) => setSelectedVisit({ ...selectedVisit, medications: e.target.value })}
+                  className="editable-input"
+                />
+              </div>
+
+              <div className="signature-block">
+                <div className="signature-line"></div>
+                <div className="signature-caption">
+                  {selectedVisit.veterinarianName || 'Not Assigned'}
+                </div>
+              </div>
+
+              <div className="detail-actions">
+                <button
+                  className="save-btn"
+                  onClick={() => {
+                    handleUpdateVisit()
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {showAddPetModal && (
+        <div className="pet-modal-overlay">
+          <div className="pet-modal-add">
+            <button className="close-btn" onClick={() => setShowAddPetModal(false)}>×</button>
+            <h3 className="add-modal-title">Add New Pet Record</h3>
+            <form onSubmit={handleAddPet} className="add-pet-form-grid">
+              {/* Left Side: Image */}
+              <div className="add-pet-image-upload">
+                <label htmlFor="petImage" className="add-image-upload-box">
+                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden onChange={handleImageChange} />
+                  <img
+                    src={previewImage || "/images/upload_placehold.jpg"}
+                    alt="Upload"
+                    className="add-image-placeholder"
+                  />
+                </label>
+              </div>
+
+              {/* Right Side: Inputs */}
+              <div className="add-pet-form-fields">
+                <div className="add-form-group">
+                  <input name="ownerName" type="text" placeholder="Owner Name" required />
+                  <input name="userName" type="text" placeholder="Username" required />
+                </div>
+
+                <div className="add-form-group">
+                  <input name="name" type="text" placeholder="Pet Name" required />
+                  <input name="age" type="number" placeholder="Age" required />
+                </div>
+
+                <div className="add-form-group">
+                  <select
+                    name="type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Type</option>
+                    <option value="Dog">Dog</option>
+                    <option value="Cat">Cat</option>
+                  </select>
+                  <select
+                    name="species"
+                    value={species}
+                    onChange={(e) => setSpecies(e.target.value)}
+                    required
+                    disabled={!type || loading}
+                  >
+                    <option value="">
+                      {loading ? "Loading species..." : "Select species"}
+                    </option>
+                    {speciesOptions.map((opt) => (
+                      <option key={opt.id} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select name="gender" required defaultValue="">
+                    <option value="" disabled>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
+                <div className="add-form-group">
+                  <input name="condition" type="text" placeholder="Condition" required />
+                  <input name="lastVisit" type="date" placeholder="Last Visit" required />
+                </div>
+
+                <div className="add-form-group">
+                  <input name="diagnosis" type="text" placeholder="Diagnosis" required />
+                </div>
+
+                <div className="add-button-row">
+                  <button type="submit" className="add-add-btn">Add Pet</button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setShowAddPetModal(false);
+                      resetAddForm();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {showEditModal && (
+        <div className="pet-modal-overlay">
+          <div className="pet-modal-edit">
+            <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
+            <h3 className="edit-modal-title">Edit Pet Record</h3>
+            <form onSubmit={handleEditSubmit} className="edit-pet-form-grid">
+              {/* Left Side: Image */}
+              <div className="edit-pet-image-upload">
+                <label htmlFor="petImage" className="edit-image-upload-box">
+                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden />
+                  {editData?.photo ? (
+                    <img
+                      src={`${APIENDPOINT}/uploads/${editData.photo}`}
+                      alt="Current Pet"
+                      className="edit-image-placeholder"
+                    />
+                  ) : (
+                    <img
+                      src="/images/upload-placeholder.png"
+                      alt="Upload"
+                      className="edit-image-placeholder"
+                    />
+                  )}
+                </label>
+              </div>
+              {/* Right Side: Inputs */}
+              <div className="edit-pet-form-fields">
+                <div className="edit-form-group">
+                  <input name="ownerName" type="text" placeholder="Owner Name" defaultValue={editData?.ownerName} required />
+                  <input name="userName" type="text" placeholder="Username" defaultValue={editData?.userName} required />
+                </div>
+
+                <div className="edit-form-group">
+                  <input name="name" type="text" placeholder="Pet Name" defaultValue={editData?.name} required />
+                  <input name="age" type="number" placeholder="Age" defaultValue={editData?.age} required />
+                </div>
+
+                <div className="edit-form-group">
+                  <select
+                    name="type"
+                    required
+                    value={editType}
+                    onChange={(e) => {
+                      setEditType(e.target.value);
+                      setEditSpecies(""); // reset species when changing type
+                    }}
+                  >
+                    <option value="" disabled>Select Type</option>
+                    <option value="Dog">Dog</option>
+                    <option value="Cat">Cat</option>
+                  </select>
+
+                  <select
+                    name="species"
+                    required
+                    value={editSpecies}
+                    onChange={(e) => setEditSpecies(e.target.value)}
+                    disabled={!editType || editLoading}
+                  >
+                    <option value="">
+                      {editLoading ? "Loading species..." : "Select species"}
+                    </option>
+                    {editSpeciesOptions.map((opt) => (
+                      <option key={opt.id} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select name="gender" required defaultValue={editData?.gender || ""}>
+                    <option value="" disabled>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
+
+                <div className="edit-form-group">
+                  <input name="condition" type="text" placeholder="Condition" defaultValue={editData?.condition} required />
+                  <input name="lastVisit" type="date" placeholder="Last Visit" defaultValue={editData?.lastVisit} required />
+                </div>
+
+                <div className="edit-form-group">
+                  <input name="diagnosis" type="text" placeholder="Diagnosis" defaultValue={editData?.diagnosis} required />
+                </div>
+
+                <div className="edit-button-row">
+                  <button type="submit" className="edit-add-btn">Update Pet</button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      resetEditForm();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
