@@ -23,7 +23,7 @@ const Services = () => {
     try {
       setIsLoading(true);
       setError("")
-      const response = await axios.post("/server-api/services/fetch");
+      const response = await axios.get("/server-api/services/fetch");
       if (!Array.isArray(response.data)) {
         console.error("Invalid response format from server.");
         setError("Invalid data format from server.");

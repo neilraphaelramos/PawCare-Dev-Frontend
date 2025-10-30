@@ -17,8 +17,6 @@ export default function PetInfos() {
     const [message, setMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const APIENDPOINT = process.env.REACT_APP_API_URL;
-
     const fetchPets = async () => {
         try {
             setLoading(true);
@@ -99,7 +97,7 @@ export default function PetInfos() {
             );
 
             try {
-                await axios.post(`${APIENDPOINT}/notifications/api`, {
+                await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
                     UID: user.id,
                     title_notify: "New Pet Added",
                     type_notify: "Pet Info",
