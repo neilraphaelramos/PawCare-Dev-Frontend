@@ -335,7 +335,7 @@ export default function Profile() {
             <img
               className="pf-profile__modal-avatar"
               src={
-                formData.profileImage
+                formData.profileImage || "/images/Default_Pic.jpg"
               }
               alt="Current"
             />
