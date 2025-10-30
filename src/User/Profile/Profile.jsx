@@ -117,7 +117,7 @@ export default function Profile() {
             <div className="pf-profile__avatar-wrapper">
               <img
                 src={
-                  formData.profileImage
+                  formData.profileImage || "/images/Default_Pic.jpg"
                 }
                 alt="avatar"
                 className="pf-profile__avatar-image"
