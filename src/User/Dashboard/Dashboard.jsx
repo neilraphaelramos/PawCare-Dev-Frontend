@@ -152,7 +152,7 @@ const Dashboard = () => {
       <main className="user-dashboard-main">
         <header className="user-dashboard-header">
           <input type="text" placeholder="Search task, appointment, or doctor" />
-          <div className="user-dashboard-profile" />
+          <img className="user-dashboard-profile" src={user.pic || "/images/Default_Pic.jpg"}/>
         </header>
 
         <section className="user-dashboard-metrics">

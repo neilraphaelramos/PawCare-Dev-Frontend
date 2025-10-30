@@ -78,14 +78,13 @@ export default function Profile() {
       form.append("newPassword", formData.newPassword);
       form.append("password", formData.confirmPassword);
 
-      // ✅ append file only if selected
       if (formData.imageFile) {
         form.append("profile_Pic", formData.imageFile);
       }
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/update_profile`, {
         method: "POST",
-        body: form, // ✅ no Content-Type header; browser sets it automatically
+        body: form,
       });
 
       const data = await response.json();
