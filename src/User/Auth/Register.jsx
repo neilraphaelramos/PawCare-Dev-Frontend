@@ -166,7 +166,7 @@ export default function Register() {
         return;
       }
 
-      const emailRes = await axios.post("/server-api/check-email", {
+      const emailRes = await axios.post(`${process.env.REACT_APP_API_URL}/check-email`, {
         email: form.email,
       });
       if (emailRes.data.exists) {
@@ -175,7 +175,7 @@ export default function Register() {
         return;
       }
 
-      const res = await axios.post("/server-api/register", form);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/register`, form);
 
       if (res.data.message) {
         openModal("✅ " + res.data.message);

@@ -80,14 +80,14 @@ const Appointment = () => {
   useEffect(() => {
     if (selectedDate) {
       const dateStr = selectedDate.toLocaleDateString('en-CA');
-      axios.get(`/server-api/appointments/${dateStr}`)
+      axios.get(`${process.env.REACT_APP_API_URL}/appointments/${dateStr}`)
         .then(res => setBookedTimes(res.data))
         .catch(err => console.error(err));
     }
   }, [selectedDate]);
 
   useEffect(() => {
-    axios.get('/server-api/appointments/fully-booked')
+    axios.get(`${process.env.REACT_APP_API_URL}/appointments/fully-booked`)
       .then(res => {
         setFullyBookedDates(res.data || []);
       })
@@ -97,7 +97,7 @@ const Appointment = () => {
   useEffect(() => {
     const uid = user.id;
 
-    axios.get(`/server-api/appointments/user/${uid}`)
+    axios.get(`${process.env.REACT_APP_API_URL}/appointments/user/${uid}`)
       .then(res => setUserAppointments(res.data))
       .catch(err => console.error(err));
   }, [user])
@@ -123,10 +123,10 @@ const Appointment = () => {
     };
 
     try {
-      const res = await axios.post('/server-api/appointments', data);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/appointments`, data);
 
       try {
-        await axios.post(`/server-api/notifications/api`, {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
           UID: user.id,
           title_notify: "Appointment Reserved",
           type_notify: "Appointment",

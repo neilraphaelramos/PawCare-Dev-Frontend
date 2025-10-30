@@ -84,12 +84,12 @@ const OnlineConsultation = () => {
       formData.append("consult_type", fillUp.consult_type);
       formData.append("file_payment", fillUp.file_payment);
 
-      const res = await axios.post("/server-api/online_consult/submit", formData, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/online_consult/submit`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       try {
-        await axios.post('/server-api/notifications/api', {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
           UID: user.id,
           title_notify: 'Submit Request Successfully',
           type_notify: 'Online Consultation',
@@ -133,7 +133,7 @@ const OnlineConsultation = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const res = await axios.get(`/server-api/fetch_pet/${user.username}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/fetch_pet/${user.username}`);
         if (res.data.success) {
           setPetList(res.data.data);
         }

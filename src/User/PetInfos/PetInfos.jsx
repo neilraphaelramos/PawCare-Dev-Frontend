@@ -17,7 +17,7 @@ export default function PetInfos() {
     const [message, setMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const APIENDPOINT = "/server-api";
+    const APIENDPOINT = process.env.REACT_APP_API_URL;
 
     const fetchPets = async () => {
         try {

@@ -15,7 +15,7 @@ export default function PetRecords() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const APIENDPOINT = '/server-api';
+  const APIENDPOINT = process.env.REACT_APP_API_URL;
 
   const fetchPets = async () => {
     try {

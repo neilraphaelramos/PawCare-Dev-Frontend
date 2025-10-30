@@ -120,7 +120,7 @@ const Dashboard = () => {
 
   const handleMetricStatus = async (e) => {
     try {
-      const res = await axios.get(`/server-api/metric_dashboard/fetch/users/${user.id}/${user.username}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/users/${user.id}/${user.username}`);
       setTotalPets(res.data.totalPets);
       setTotalAppointment(res.data.totalAppointments);
       setTotalNotify(res.data.totalNotify)
@@ -136,7 +136,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchPurchasedProducts = async () => {
       try {
-        const res = await axios.get(`/server-api/orders/fetch/user_order/${user.id}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/fetch/user_order/${user.id}`);
         setPurchasedProducts(res.data);
       } catch (err) {
         console.error("Error fetching purchased products:", err);

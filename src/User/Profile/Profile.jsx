@@ -83,7 +83,7 @@ export default function Profile() {
         form.append("profile_Pic", formData.imageFile);
       }
 
-      const response = await fetch("/server-api/update_profile", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/update_profile`, {
         method: "POST",
         body: form, // ✅ no Content-Type header; browser sets it automatically
       });

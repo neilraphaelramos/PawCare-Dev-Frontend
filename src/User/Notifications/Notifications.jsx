@@ -24,7 +24,7 @@ export default function Notifications() {
 
   // Fetch initial notifications
   useEffect(() => {
-    fetch(`/server-api/notifications/api/${userId}`)
+    fetch(`${process.env.REACT_APP_API_URL}/notifications/api/${userId}`)
       .then(res => res.json())
       .then(data => setNotifications(data));
   }, [userId]);

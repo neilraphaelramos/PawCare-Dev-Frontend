@@ -82,10 +82,10 @@ const UserInventory = () => {
     };
 
     try {
-      const res = await axios.post('/server-api/orders/payment_setorder', payload);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/payment_setorder`, payload);
 
       try {
-        await axios.post('/server-api/notifications/api', {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
           UID: user.id,
           title_notify: 'Order Placed Successfully',
           type_notify: 'order',
@@ -133,7 +133,7 @@ const UserInventory = () => {
 
   const fetchInventory = async () => {
     try {
-      const res = await axios.get('/server-api/inventory/fetch');
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/inventory/fetch`);
       if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map(mapRowToUIItem);
         setItems(mapped);
@@ -177,7 +177,7 @@ const UserInventory = () => {
 
   const handleViewOrders = async () => {
     try {
-      const res = await axios.get(`/server-api/orders/${userId}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${userId}`);
       setOrders(res.data.orders || []);
       setShowOrdersModal(true);
     } catch (err) {

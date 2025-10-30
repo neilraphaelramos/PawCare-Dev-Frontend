@@ -56,7 +56,7 @@ export default function LandingPage() {
 
   const fetchDataServices = async () => {
     try {
-      const response = await axios.get("/server-api/services/fetch");
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/services/fetch`);
 
       if (!Array.isArray(response.data)) {
         console.error("Invalid response format from server.");
@@ -71,7 +71,7 @@ export default function LandingPage() {
 
   const fetchFeatures = async () => {
     try {
-      const res = await axios.get("/server-api/feature/fetch");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/feature/fetch`);
       if (res.data.success) {
         setFeatures(res.data.data);
       }
