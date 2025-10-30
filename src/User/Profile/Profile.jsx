@@ -26,7 +26,7 @@ export default function Profile() {
     currentPassword: "" || "",
     newPassword: "",
     confirmPassword: "",
-    profileImage: user.pic ? `data:image/jpeg;base64,${user.pic}` : null,
+    profileImage: user.pic,
   });
 
   const handleChange = (e) => {
@@ -59,28 +59,33 @@ export default function Profile() {
 
   const confirmUpdate = async () => {
     setShowConfirmModal(false);
+
     try {
+      const form = new FormData();
+      form.append("id", user.id);
+      form.append("firstName", formData.firstName);
+      form.append("middleName", formData.middleName);
+      form.append("lastName", formData.lastName);
+      form.append("suffix", formData.suffix);
+      form.append("phone", formData.phone);
+      form.append("bio", formData.bio);
+      form.append("houseNumber", formData.houseNumber);
+      form.append("province", formData.province);
+      form.append("municipality", formData.municipality);
+      form.append("barangay", formData.barangay);
+      form.append("zipCode", formData.zipCode);
+      form.append("currentPassword", formData.currentPassword);
+      form.append("newPassword", formData.newPassword);
+      form.append("password", formData.confirmPassword);
+
+      // ✅ append file only if selected
+      if (formData.imageFile) {
+        form.append("profile_Pic", formData.imageFile);
+      }
+
       const response = await fetch("/server-api/update_profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: user.id,
-          firstName: formData.firstName,
-          middleName: formData.middleName,
-          lastName: formData.lastName,
-          suffix: formData.suffix,
-          phone: formData.phone,
-          bio: formData.bio,
-          houseNumber: formData.houseNumber,
-          province: formData.province,
-          municipality: formData.municipality,
-          barangay: formData.barangay,
-          zipCode: formData.zipCode,
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-          password: formData.confirmPassword,
-          image: formData.profileImage,
-        }),
+        body: form, // ✅ no Content-Type header; browser sets it automatically
       });
 
       const data = await response.json();
@@ -97,6 +102,7 @@ export default function Profile() {
       console.error("Update error:", err);
       setResultMessage("Server error. Please try again.");
     }
+
     setShowResultModal(true);
   };
 

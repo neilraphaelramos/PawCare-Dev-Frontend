@@ -144,6 +144,8 @@ html, body {
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid #e2e8f0;
+  margin-top: 5px;
+  margin-left: 10px;
 }
 
 .pf-profile__edit-icon {

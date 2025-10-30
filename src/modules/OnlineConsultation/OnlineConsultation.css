@@ -1,10 +1,15 @@
 .vet-admin-container {
-  height: 100vh;          /* full viewport height */
-  max-width: 100%;        /* full viewport width */
-  margin: 0;              /* remove margin */
-  padding: 2rem 3rem;     /* add some padding */
+  height: 100vh;
+  /* full viewport height */
+  max-width: 100%;
+  /* full viewport width */
+  margin: 0;
+  /* remove margin */
+  padding: 2rem 3rem;
+  /* add some padding */
   background: #edf2f7;
-  border-radius: 0;       /* remove rounding */
+  border-radius: 0;
+  /* remove rounding */
   font-family: 'Poppins', sans-serif;
 
   display: flex;
@@ -268,6 +273,7 @@
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -302,4 +308,138 @@
   .chat-input-row input[type="text"] {
     font-size: 1rem;
   }
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  font-size: 3rem;
+  animation: spin 1s linear infinite;
+  color: #2c3e50;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  background: #ffe8e8;
+  border: 1px solid #ffb3b3;
+  color: #b30000;
+  padding: 1rem;
+  text-align: center;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.error-message button {
+  background: #b30000;
+  color: #fff;
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 6px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+/* Modal Overlay */
+.proof-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal Box */
+.proof-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  width: 80%;
+  max-width: 700px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Close button */
+.close-modal-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #555;
+}
+
+.proof-image {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.proof-unknown {
+  text-align: center;
+  padding: 1rem;
+}
+
+.proof-frame {
+  width: 100%;
+  height: 70vh;
+  border: none;
+  border-radius: 8px;
+}
+
+.view-proof-btn {
+  background: #32b2b2;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.view-proof-btn:hover {
+  background: #1f6e6e;
+}
+
+.admin-no-requests {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #777;
+  margin-top: 20px;
+  font-weight: 500;
 }

@@ -125,7 +125,7 @@ body {
   max-width: 100%;
 }
 
-.aksi-btn {
+.admin-aksi-btn {
   background-color: #eaf7f5;
   border: none;
   border-radius: 6px;
@@ -133,6 +133,10 @@ body {
   font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
+}
+
+.margin-btn {
+  margin-left: 8px;
 }
 
 .pet-records-toolbar {
@@ -149,7 +153,7 @@ body {
 }
 
 
-.add-btn {
+.admin-add-btn {
   padding: 4px 20px;
   border: none;
   border-radius: 4px;
@@ -195,12 +199,12 @@ body {
   animation: fadeInScale 0.3s ease-in-out;
 }
 
-.pet-modal-add,
-.pet-modal-edit {
+.admin-pet-modal-add,
+.admin-pet-modal-edit {
   background-color: white;
   border-radius: 12px;
-  width: 800px;
-  max-width: 95%;
+  width: 835px;
+  max-width: 100%;
   padding: 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -232,7 +236,6 @@ body {
 .no-records {
   text-align: center;
   grid-column: 1 / -1;
-  /* span full width of grid */
   padding: 12px;
   color: #888;
   font-style: italic;
@@ -336,6 +339,15 @@ body {
   cursor: pointer;
 }
 
+.add-add-btn:disabled,
+.edit-add-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc !important;
+  color: #666;
+}
+
 .add-add-btn,
 .edit-add-btn {
   background-color: #2b7cff;
@@ -425,6 +437,10 @@ body {
   color: #32b2b2;
   margin-bottom: 0.3rem;
   font-size: 0.875rem;
+}
+
+.label-admin-date {
+  align-items: center;
 }
 
 .action-col {
@@ -696,4 +712,143 @@ body {
 
 .detail-field {
   margin-bottom: 12px;
+}
+
+.loading-records {
+  text-align: center;
+  padding: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.no-records {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.clickable-owner-field {
+  cursor: pointer;
+  background-color: #f8f9fa;
+}
+.clickable-owner-field:hover {
+  background-color: #eef1f4;
+}
+
+/* === Admin Owner Search Modal === */
+.admin-ownersearch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.admin-ownersearch-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 85%;
+  max-width: 900px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.25s ease;
+}
+
+.admin-ownersearch-title {
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 18px;
+  color: #333;
+}
+
+.admin-ownersearch-input {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.admin-ownersearch-input:focus {
+  border-color: #16a085;
+  box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.15);
+}
+
+.admin-ownersearch-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.admin-ownersearch-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-ownersearch-table th,
+.admin-ownersearch-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-ownersearch-table th {
+  background-color: #e7f6f6;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.admin-ownersearch-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-ownersearch-row:hover {
+  background-color: #f3f8f8;
+}
+
+.admin-ownersearch-photo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.admin-ownersearch-loading {
+  text-align: center;
+  padding: 20px;
+  color: #16a085;
+}
+
+.admin-ownersearch-close-btn {
+  margin-top: 16px;
+  background-color: #16a085;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.admin-ownersearch-close-btn:hover {
+  background-color: #138d75;
+}
+
+.admin-action-buttons {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

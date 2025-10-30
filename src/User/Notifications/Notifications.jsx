@@ -3,7 +3,7 @@ import io from "socket.io-client";
 import "./Notifications.css";
 import { UserContext } from "../../hook/authContext";
 
-const socket = io("http://localhost:5001");
+const socket = io(process.env.REACT_APP_SOCKET_URL);
 function NotificationCard({ notification, onDismiss }) {
   return (
     <div className="notification-card">
@@ -24,7 +24,7 @@ export default function Notifications() {
 
   // Fetch initial notifications
   useEffect(() => {
-    fetch(`/server-api/api/notifications/${userId}`)
+    fetch(`/server-api/notifications/api/${userId}`)
       .then(res => res.json())
       .then(data => setNotifications(data));
   }, [userId]);

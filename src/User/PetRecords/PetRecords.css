@@ -73,42 +73,46 @@ body {
     background-color: white;
 }
 
-
-/* Table-like layout */
-.pet-records-table {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.user-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.pet-records-header,
-.pet-records-row {
-  display: grid;
-  grid-template-columns:
-    80px                 
-    minmax(120px, 1fr)   
-    minmax(100px, 0.8fr) 
-    minmax(140px, 1fr)   
-    minmax(60px, 0.5fr) 
-    minmax(90px, 0.6fr) 
-    minmax(140px, 1fr)  
-    minmax(120px, 1fr)  
-    minmax(160px, 1.5fr)
-    80px;                
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
+.user-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
   font-size: 0.875rem;
+}
+
+.user-table th,
+.user-table td {
+  padding: 0.75rem 1rem;
   background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  text-align: left;
+  vertical-align: middle;
+  text-align: center;
 }
 
-.pet-records-header {
-  font-weight: bold;
+.user-table thead th {
   background-color: #e7f6f6;
+  font-weight: 600;
+  box-shadow: none;
 }
 
-.pet-thumb {
+.user-table th:first-child,
+.user-table td:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.user-table th:last-child,
+.user-table td:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.user-thumb {
   width: 45px;
   height: 45px;
   object-fit: cover;
@@ -116,21 +120,40 @@ body {
   border: 1px solid #ddd;
 }
 
-.diagnosis-text {
+.user-diagnosis {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  max-width: 160px;
 }
 
-.aksi-btn {
+.user-action-btn {
   background-color: #eaf7f5;
   border: none;
   border-radius: 6px;
   padding: 0.4rem 0.6rem;
   font-size: 1rem;
   cursor: pointer;
+  transition: background 0.2s;
 }
+
+.user-loading,
+.user-no-records {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 20px 0;
+  color: #8f8f8f;
+}
+
+.user-action-btn:hover {
+  background-color: #d1f0ea;
+}
+
+.aksi-btn:hover {
+  background-color: #d1f0ea;
+}
+
 .pet-records-toolbar {
   
   align-items: center;
@@ -623,3 +646,4 @@ body {
 .recordMessage-close-btn:hover {
   background: #289797;
 }
+

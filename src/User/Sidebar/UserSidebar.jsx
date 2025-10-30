@@ -20,6 +20,7 @@ const UserSidebar = () => {
         <Link to="">Dashboard</Link>
         <Link to="appointments">Appointment</Link>
         <Link to="pet-records">Pet Records</Link>
+        <Link to="pet-infos">My Pets</Link>
         <Link to="pet-products">Pet Products</Link>
         <Link to="notification">Notification</Link>
         <Link to="online-consultation">Online Consultation</Link>

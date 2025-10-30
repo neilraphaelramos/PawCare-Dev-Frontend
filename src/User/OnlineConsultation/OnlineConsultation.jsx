@@ -84,12 +84,12 @@ const OnlineConsultation = () => {
       formData.append("consult_type", fillUp.consult_type);
       formData.append("file_payment", fillUp.file_payment);
 
-      const res = await axios.post("/server-api/online_consult", formData, {
+      const res = await axios.post("/server-api/online_consult/submit", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       try {
-        await axios.post('/server-api/api/notifications', {
+        await axios.post('/server-api/notifications/api', {
           UID: user.id,
           title_notify: 'Submit Request Successfully',
           type_notify: 'Online Consultation',
@@ -190,7 +190,7 @@ const OnlineConsultation = () => {
 
     console.log('[Socket] Initializing connection...');
 
-    socketRef.current = io('http://localhost:5001', {
+    socketRef.current = io(process.env.REACT_APP_API_URL, {
       transports: ['websocket', 'polling'],
     });
 
@@ -322,7 +322,7 @@ const OnlineConsultation = () => {
                   <div key={index} className={`chat-message-wrapper ${msg.from}`}>
                     <img
                       src={msg.from === 'user'
-                        ? `data:image/png;base64,${user.pic}`
+                        ? user.pic
                         : 'https://i.ibb.co/GtY8N6t/vet-avatar.png'
                       }
                       alt={msg.from}

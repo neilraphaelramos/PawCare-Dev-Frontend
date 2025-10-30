@@ -48,6 +48,7 @@ import UserSettings from "./User/Settings/Settings";
 import OnlineConsultation from "./User/OnlineConsultation/OnlineConsultation";
 import AiAssistant from "./User/AiAssistant/AiAssistant";
 import OrderStatus from "./User/OrdersStatus/OrderStatus";
+import UserPetInfo from "./User/PetInfos/PetInfos";
 
 
 
@@ -66,6 +67,7 @@ import VetProfile from "./Veterinarian/Profile/Profile";
 import VerifyPage from "./User/Auth/verified/VerifyPage";
 
 import "./App.css";
+import "./modal/modal_design.css"
 
 export default function App() {
   return (
@@ -121,6 +123,7 @@ export default function App() {
           <Route index element={<UserDashboard />} />
           <Route path="appointments" element={<UserAppointments />} />
           <Route path="pet-records" element={<PetRecords />} />
+          <Route path="pet-infos" element={<UserPetInfo />} />
           <Route path="pet-products" element={<PetProducts />} />
           <Route path="your-orders" element={<OrderStatus />} />
           <Route path="notification" element={<UserNotifications />} />

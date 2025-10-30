@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaRegEye, FaEdit } from 'react-icons/fa';
+import { Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios'
 import './MedicalRecords.css';
 
@@ -26,6 +27,21 @@ export default function PetRecords() {
     status: '',
     completed: ''
   });
+
+  const [showOwnerSearchModal, setShowOwnerSearchModal] = useState(false);
+  const [owners, setOwners] = useState([]);
+  const [selectedOwner, setSelectedOwner] = useState(null);
+  const [autoFill, setAutoFill] = useState({
+    photo_pet: "",
+    ownerName: "",
+    userName: "",
+    name: "",
+    age: "",
+    type: "",
+    species: "",
+    gender: ""
+  });
+
   const [type, setType] = useState("");
   const [species, setSpecies] = useState("");
   const [speciesOptions, setSpeciesOptions] = useState([]);
@@ -35,11 +51,22 @@ export default function PetRecords() {
   const [editSpecies, setEditSpecies] = useState("");
   const [editSpeciesOptions, setEditSpeciesOptions] = useState([]);
   const [editLoading, setEditLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [userInfo, setUserInfo] = useState([]);
+  const [switchBtn, setSwitchBtn] = useState(false);
+
+  const [petID, setPetID] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [messageModal, setMessageModal] = useState("");
+
+  const formRef = useRef(null);
 
   const APIENDPOINT = '/server-api';
 
   const handleView = (pet) => {
-    axios.get(`${APIENDPOINT}/fetch/visit_history/${pet.id}`)
+    axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${pet.id}`)
       .then((res) => {
         setSelectedPet({ ...pet, checkups: res.data });
       })
@@ -50,10 +77,16 @@ export default function PetRecords() {
   };
 
   const resetAddForm = () => {
-    setType("");
-    setSpecies("");
-    setSpeciesOptions([]);
-    setPreviewImage(null);
+    setAutoFill({
+      photo_pet: "",
+      ownerName: "",
+      userName: "",
+      name: "",
+      age: "",
+      type: "",
+      species: "",
+      gender: ""
+    });
   };
 
   const resetEditForm = () => {
@@ -61,14 +94,6 @@ export default function PetRecords() {
     setEditType("");
     setEditSpecies("");
     setEditSpeciesOptions([]);
-  };
-
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-    }
   };
 
   const handleCloseModal = () => {
@@ -87,43 +112,76 @@ export default function PetRecords() {
       status: '',
       completed: ''
     });
+    setSwitchBtn(false);
   };
+
+  const handleUserInfo = async (ownerUsername) => {
+    try {
+      const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/user_medical/${ownerUsername}`);
+      if (res.data?.data) {
+        setUserInfo(res.data.data);
+        console.log("Fetched user info:", res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+    }
+  };
+  useEffect(() => {
+    if (userInfo && Object.keys(userInfo).length > 0) {
+      setNewRecord((prev) => ({
+        ...prev,
+        ownerEmail: userInfo.email || '',
+        ownerAddress: userInfo.address || '',
+        ownerPhoneNum: userInfo.phoneNumber || ''
+      }));
+    }
+  }, [userInfo]);
+
+  useEffect(() => {
+    if (showAddPetModal) {
+      axios.get(`${APIENDPOINT}/pet_infos/owners`)
+        .then(res => setOwners(res.data))
+        .catch(err => console.error("Error fetching owners:", err));
+    }
+  }, [showAddPetModal]);
 
   const handleAddPet = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData();
 
-    formData.append("owner_name", form.ownerName.value);
-    formData.append("user_name", form.userName.value);
-    formData.append("pet_name", form.name.value);
-    formData.append('type', form.type.value);
-    formData.append("species", form.species.value);
-    formData.append("pet_age", form.age.value);
-    formData.append("pet_gender", form.gender.value);
-    formData.append("pet_condition", form.condition.value);
-    formData.append("last_visit", form.lastVisit.value);
-    formData.append("diagnosis", form.diagnosis.value);
-
-    // ✅ Add uploaded file
-    if (form.petImage.files[0]) {
-      formData.append("photo", form.petImage.files[0]);
+    const formdata = {
+      owner_name: form.ownerName.value,
+      user_name: form.userName.value,
+      pet_name: form.name.value,
+      petType: form.type.value,
+      species: form.species.value,
+      pet_age: form.age.value,
+      pet_gender: form.gender.value,
+      pet_condition: form.condition.value,
+      last_visit: form.lastVisit.value,
+      diagnosis: form.diagnosis.value,
+      photo: autoFill.photo_pet,
     }
 
+    console.table(formdata);
     try {
-      const res = await axios.post(`${APIENDPOINT}/add_pet/pet_medical_records`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      setIsProcessing(true);
+
+      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet`, formdata, {
+        headers: { "Content-Type": "application/json" }
       });
 
       if (res.data.success) {
-        // ✅ Refresh pets
-        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
+
         setShowAddPetModal(false);
         form.reset();
       }
     } catch (err) {
       console.error("Error adding pet:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -154,27 +212,52 @@ export default function PetRecords() {
     }
 
     try {
-      const res = await axios.put(`${APIENDPOINT}/edit_pet/pet_medical_records/${editData.id}`, formData, {
+      setIsProcessing(true);
+      const res = await axios.put(`${APIENDPOINT}/pet_medical_records/edit_pet/${editData.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data.success) {
         // ✅ Refresh pets
-        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
         setShowEditModal(false);
         setEditData(null);
       }
     } catch (err) {
       console.error("Error editing pet:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
+  const handleDelete = (index) => {
+    setPetID(index);
+    setMessageModal("Are you sure to delete pet records including the visit history?");
+    setShowConfirmModal(true);
+  }
+
+  const confirmDelete = (id) => {
+    
+  }
+
   useEffect(() => {
-    axios.get(`${APIENDPOINT}/fetch/pet_medical_records`)
-      .then((res) => setPets(res.data))
-      .catch((err) => console.error("Error fetching pets:", err));
+    const fetchPets = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
+        setPets(res.data);
+        console.table(res.data);
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPets();
   }, []);
+
 
   useEffect(() => {
     async function fetchBreeds() {
@@ -286,7 +369,8 @@ export default function PetRecords() {
     e.preventDefault();
 
     try {
-      const res = await axios.post(`${APIENDPOINT}/add_pet_history/pet_medical_records`, {
+      setIsProcessing(true);
+      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet_history`, {
         id_pet_medical_records: selectedPet.id,
         owner_email: newRecord.ownerEmail,
         owner_address: newRecord.ownerAddress,
@@ -308,7 +392,7 @@ export default function PetRecords() {
         blood_pressure: newRecord.bloodPressure || '',
         pulse: newRecord.pulse || '',
         medications: newRecord.medications || '',
-        veterinarian_name: "Dr. Default" // or get from logged-in vet context
+        veterinarian_name: "Admin"
       });
 
       if (res.data.success) {
@@ -329,13 +413,16 @@ export default function PetRecords() {
       }
     } catch (err) {
       console.error("Error adding new visit history:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleUpdateVisit = async () => {
     try {
+      setIsProcessing(true);
       const res = await axios.put(
-        `${APIENDPOINT}/edit_pet_history/pet_medical_records/${selectedVisit.history_id}`,
+        `${APIENDPOINT}/pet_medical_records/edit_pet_history/${selectedVisit.history_id}`,
         {
           owner_email: selectedVisit.ownerEmail,
           owner_address: selectedVisit.ownerAddress,
@@ -362,13 +449,14 @@ export default function PetRecords() {
       );
 
       if (res.data.success) {
-        // ✅ Refresh history
         const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
       }
     } catch (err) {
       console.error("Error updating visit history:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -386,7 +474,7 @@ export default function PetRecords() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="add-btn" onClick={() => setShowAddPetModal(true)}>
+          <button className="admin-add-btn" onClick={() => setShowAddPetModal(true)}>
             <FaPlus /> Add Pet
           </button>
         </div>
@@ -407,12 +495,16 @@ export default function PetRecords() {
           <div>Action</div>
         </div>
 
-        {filteredPets.length > 0 ? (
+        {isLoading ? (
+          <div className="loading-records">
+            Loading pet records...
+          </div>
+        ) : filteredPets.length > 0 ? (
           filteredPets.map((pet) => (
             <div className="admin-pet-records-row" key={pet.id}>
               <div>{pet.ownerName}</div>
               <div>
-                <img src={`${APIENDPOINT}/uploads/${pet.photo}`} alt={pet.name} className="pet-thumb" />
+                <img src={pet.photo} alt={pet.name} className="pet-thumb" />
               </div>
               <div>{pet.name}</div>
               <div>{pet.petType}</div>
@@ -426,20 +518,27 @@ export default function PetRecords() {
                   ? pet.diagnosis.slice(0, 30) + '…'
                   : pet.diagnosis || ""}
               </div>
-              <div className="action-buttons">
+              <div className="admin-action-buttons">
                 <button
-                  className="aksi-btn"
+                  className="admin-aksi-btn"
                   title="View Record"
                   onClick={() => handleView(pet)}
                 >
                   <FaRegEye size={16} />
                 </button>
                 <button
-                  className="aksi-btn"
+                  className="admin-aksi-btn margin-btn"
                   title="Edit Record"
                   onClick={() => handleEdit(pet)}
                 >
                   <FaEdit size={16} />
+                </button>
+                <button
+                  className="admin-aksi-btn"
+                  title="Delete Record"
+                  onClick={() => handleDelete(pet.id)}
+                >
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>
@@ -447,6 +546,7 @@ export default function PetRecords() {
         ) : (
           <div className="no-records">Records Not Found</div>
         )}
+
       </div>
 
       {selectedPet && (
@@ -463,24 +563,128 @@ export default function PetRecords() {
                 value={modalSearchTerm}
                 onChange={(e) => setModalSearchTerm(e.target.value)}
               />
-              <button className="add-btn" onClick={handleAddRecord}>
-                <FaPlus /> Add Record
+              <button
+                className="add-btn margin2"
+                onClick={() => {
+                  if (switchBtn) {
+                    formRef.current?.requestSubmit();
+                    setSwitchBtn(false);
+                  } else {
+                    handleUserInfo(selectedPet.userName);
+                    handleAddRecord();
+                    setSwitchBtn(true);
+                  }
+                }}
+              >
+                {switchBtn ? "💾 Save" : <><FaPlus /> Add Record</>}
               </button>
             </div>
 
             {addingRecord && (
-              <form className="new-record-form" onSubmit={handleNewRecordSubmit}>
-                <input type="text" name="ownerEmail" placeholder="Email" value={newRecord.ownerEmail} onChange={handleNewRecordChange} required />
-                <input type="text" name="ownerAddress" placeholder="Address" value={newRecord.ownerAddress} onChange={handleNewRecordChange} required />
-                <input type="text" name="ownerPhoneNum" placeholder="Phone Number" value={newRecord.ownerPhoneNum} onChange={handleNewRecordChange} required />
-                <input type="text" name="day" placeholder="Day" value={newRecord.day} onChange={handleNewRecordChange} required />
-                <input type="date" name="date" placeholder="Date" value={newRecord.date} onChange={handleNewRecordChange} required />
-                <input type="text" name="service" placeholder="Service Type" value={newRecord.service} onChange={handleNewRecordChange} required />
-                <input type="text" name="complaint" placeholder="Main Complaint" value={newRecord.complaint} onChange={handleNewRecordChange} required />
-                <input type="text" name="diagnosis" placeholder="Diagnosis" value={newRecord.diagnosis} onChange={handleNewRecordChange} required />
-                <input type="text" name="status" placeholder="Treatment Status" value={newRecord.status} onChange={handleNewRecordChange} required />
-                <input type="date" name="completed" placeholder="Completed On" value={newRecord.completed} onChange={handleNewRecordChange} required />
-                <button type="submit" className="submit-btn">Save</button>
+              <form className="new-record-form" ref={formRef} onSubmit={handleNewRecordSubmit}>
+                <input
+                  type="text"
+                  name="ownerEmail"
+                  placeholder="Email"
+                  value={newRecord.ownerEmail}
+                  onChange={handleNewRecordChange}
+                  required
+                  readOnly
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="ownerAddress"
+                  placeholder="Address"
+                  value={newRecord.ownerAddress}
+                  readOnly
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="ownerPhoneNum"
+                  placeholder="Phone Number"
+                  value={newRecord.ownerPhoneNum}
+                  readOnly
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="day"
+                  placeholder="Day of Visit (e.g., Monday)"
+                  value={newRecord.day}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <div className="addvisit-input-group">
+                  <input
+                    type="date"
+                    name="date"
+                    placeholder="Date"
+                    value={newRecord.date}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <label htmlFor="completed" className="addvisit-label">
+                    Date Visit
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  name="service"
+                  placeholder="Service Type"
+                  value={newRecord.service}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="complaint"
+                  placeholder="Main Complaint"
+                  value={newRecord.complaint}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="diagnosis"
+                  placeholder="Diagnosis"
+                  value={newRecord.diagnosis}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <input
+                  type="text"
+                  name="status"
+                  placeholder="Treatment Status"
+                  value={newRecord.status}
+                  onChange={handleNewRecordChange}
+                  required
+                  className="addvisit-input"
+                />
+                <div className="addvisit-input-group">
+                  <input
+                    type="date"
+                    id="completed"
+                    name="completed"
+                    value={newRecord.completed}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <label htmlFor="completed" className="addvisit-label">
+                    Completed On
+                  </label>
+                </div>
               </form>
             )}
 
@@ -490,8 +694,11 @@ export default function PetRecords() {
                   <div key={i} className="checkup-card-wide">
                     <div className="checkup-col">
                       <p className="checkup-label">Date</p>
-                      <strong>{visit.day}</strong>
-                      <span>{visit.date}</span>
+                      <p>
+                        <strong className='label-admin-date'>{visit.day}</strong>
+                        <br />
+                        <span className='label-admin-date'>{visit.date}</span>
+                      </p>
                     </div>
                     <div className="checkup-col">
                       <p className="checkup-label">Service Type</p>
@@ -749,8 +956,9 @@ export default function PetRecords() {
                   onClick={() => {
                     handleUpdateVisit()
                   }}
+                  disabled={isProcessing}
                 >
-                  Save Changes
+                  {isProcessing ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -758,19 +966,17 @@ export default function PetRecords() {
         </div>
       )}
 
-
       {showAddPetModal && (
         <div className="pet-modal-overlay">
-          <div className="pet-modal-add">
+          <div className="admin-pet-modal-add">
             <button className="close-btn" onClick={() => setShowAddPetModal(false)}>×</button>
             <h3 className="add-modal-title">Add New Pet Record</h3>
             <form onSubmit={handleAddPet} className="add-pet-form-grid">
               {/* Left Side: Image */}
               <div className="add-pet-image-upload">
                 <label htmlFor="petImage" className="add-image-upload-box">
-                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden onChange={handleImageChange} />
                   <img
-                    src={previewImage || "/images/upload_placehold.jpg"}
+                    src={autoFill.photo_pet || "/images/upload_placehold.jpg"}
                     alt="Upload"
                     className="add-image-placeholder"
                   />
@@ -780,47 +986,68 @@ export default function PetRecords() {
               {/* Right Side: Inputs */}
               <div className="add-pet-form-fields">
                 <div className="add-form-group">
-                  <input name="ownerName" type="text" placeholder="Owner Name" required />
-                  <input name="userName" type="text" placeholder="Username" required />
+                  <input
+                    name="ownerName"
+                    type="text"
+                    placeholder="Click to select Owner and Pet"
+                    value={
+                      autoFill.ownerName
+                        ? `${autoFill.ownerName}`
+                        : ""
+                    }
+                    readOnly
+                    onClick={() => setShowOwnerSearchModal(true)}
+                    className="clickable-owner-field"
+                  />
+
+                  <input
+                    name="userName"
+                    type="text"
+                    placeholder="Username"
+                    value={autoFill.userName}
+                    readOnly
+                  />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="name" type="text" placeholder="Pet Name" required />
-                  <input name="age" type="number" placeholder="Age" required />
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Pet Name"
+                    value={autoFill.name}
+                    readOnly
+                  />
+                  <input
+                    name="age"
+                    type="number"
+                    placeholder="Age"
+                    value={autoFill.age}
+                    readOnly
+                  />
                 </div>
 
                 <div className="add-form-group">
-                  <select
+                  <input
                     name="type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Dog">Dog</option>
-                    <option value="Cat">Cat</option>
-                  </select>
-                  <select
+                    type="text"
+                    placeholder="Pet Type"
+                    value={autoFill.type}
+                    readOnly
+                  />
+                  <input
                     name="species"
-                    value={species}
-                    onChange={(e) => setSpecies(e.target.value)}
-                    required
-                    disabled={!type || loading}
-                  >
-                    <option value="">
-                      {loading ? "Loading species..." : "Select species"}
-                    </option>
-                    {speciesOptions.map((opt) => (
-                      <option key={opt.id} value={opt.name}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select name="gender" required defaultValue="">
-                    <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                    type="text"
+                    placeholder="Species"
+                    value={autoFill.species}
+                    readOnly
+                  />
+                  <input
+                    name="gender"
+                    type="text"
+                    placeholder="Gender"
+                    value={autoFill.gender}
+                    readOnly
+                  />
                 </div>
 
                 <div className="add-form-group">
@@ -833,7 +1060,9 @@ export default function PetRecords() {
                 </div>
 
                 <div className="add-button-row">
-                  <button type="submit" className="add-add-btn">Add Pet</button>
+                  <button type="submit" className="add-add-btn" disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : "Add Pet"}
+                  </button>
                   <button
                     type="button"
                     className="cancel-btn"
@@ -850,9 +1079,10 @@ export default function PetRecords() {
           </div>
         </div>
       )}
+
       {showEditModal && (
         <div className="pet-modal-overlay">
-          <div className="pet-modal-edit">
+          <div className="admin-pet-modal-edit">
             <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
             <h3 className="edit-modal-title">Edit Pet Record</h3>
             <form onSubmit={handleEditSubmit} className="edit-pet-form-grid">
@@ -862,7 +1092,7 @@ export default function PetRecords() {
                   <input type="file" id="petImage" name="petImage" accept="image/*" hidden />
                   {editData?.photo ? (
                     <img
-                      src={`${APIENDPOINT}/uploads/${editData.photo}`}
+                      src={editData.photo}
                       alt="Current Pet"
                       className="edit-image-placeholder"
                     />
@@ -937,7 +1167,9 @@ export default function PetRecords() {
                 </div>
 
                 <div className="edit-button-row">
-                  <button type="submit" className="edit-add-btn">Update Pet</button>
+                  <button type="submit" className="edit-add-btn" disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : "Update Pet"}
+                  </button>
                   <button
                     type="button"
                     className="cancel-btn"
@@ -951,6 +1183,134 @@ export default function PetRecords() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showOwnerSearchModal && (
+        <div className="admin-ownersearch-overlay" onClick={() => setShowOwnerSearchModal(false)}>
+          <div className="admin-ownersearch-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-ownersearch-title">Select Owner and Pet</h3>
+
+            <input
+              type="text"
+              placeholder="Search owner or pet..."
+              className="admin-ownersearch-input"
+              onChange={(e) => {
+                const val = e.target.value.toLowerCase();
+                setOwners((prev) =>
+                  prev.map((o) => ({
+                    ...o,
+                    hidden:
+                      !o.owner_name.toLowerCase().includes(val) &&
+                      !o.pet_name.toLowerCase().includes(val),
+                  }))
+                );
+              }}
+            />
+
+            <div className="admin-ownersearch-table-wrapper">
+              <table className="admin-ownersearch-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Owner Name</th>
+                    <th>Pet Name</th>
+                    <th>Type</th>
+                    <th>Species</th>
+                    <th>Gender</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {owners.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="admin-ownersearch-loading">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : (
+                    owners
+                      .filter((o) => !o.hidden)
+                      .map((owner, index) => (
+                        <tr
+                          key={index}
+                          className="admin-ownersearch-row"
+                          onClick={() => {
+                            setAutoFill({
+                              photo_pet: owner.photo_pet || owner.photo,
+                              ownerName: owner.owner_name,
+                              userName: owner.owner_username,
+                              name: owner.pet_name,
+                              age: owner.pet_age,
+                              type: owner.petType,
+                              species: owner.species,
+                              gender: owner.pet_gender,
+                            });
+                            setShowOwnerSearchModal(false);
+                          }}
+                        >
+                          <td>
+                            <img
+                              src={owner.photo_pet || "/images/upload_placehold.jpg"}
+                              alt="pet"
+                              className="admin-ownersearch-photo"
+                            />
+                          </td>
+                          <td>{owner.owner_name}</td>
+                          <td>{owner.pet_name}</td>
+                          <td>{owner.petType}</td>
+                          <td>{owner.species}</td>
+                          <td>{owner.pet_gender}</td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              className="admin-ownersearch-close-btn"
+              onClick={() => setShowOwnerSearchModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="All-deleteconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
+            <p className="All-deleteconfirm-message">
+              {messageModal}
+            </p>
+            <div className="All-deleteconfirm-actions">
+              <button
+                className="All-deleteconfirm-btn confirm"
+                onClick={() => confirmDelete(petID)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    Processing... <Loader2 size={16} className="feature-spinner" />
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </button>
+              <button
+                className="All-deleteconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+            </div>
+
           </div>
         </div>
       )}

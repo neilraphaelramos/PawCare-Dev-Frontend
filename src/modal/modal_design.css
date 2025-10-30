@@ -1,0 +1,146 @@
+.All-Message-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 4000;
+  backdrop-filter: blur(3px);
+  animation: recordMessageFadeIn 0.3s ease;
+}
+
+@keyframes recordMessageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.All-Message-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 420px;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  animation: recordMessagePopIn 0.35s ease;
+}
+
+@keyframes recordMessagePopIn {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.All-Message-modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 0.8rem;
+}
+
+.All-Message-modal-body p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+}
+
+.All-Message-modal-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.All-Message-close-btn {
+  background: #32b2b2;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.25s ease;
+}
+
+.All-Message-close-btn:hover {
+  background: #289797;
+}
+
+.All-deleteconfirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.All-deleteconfirm-modal {
+  background: #fff;
+  max-width: 400px;
+  width: 90%;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.All-deleteconfirm-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.All-deleteconfirm-message {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.All-deleteconfirm-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.All-deleteconfirm-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px; 
+}
+
+.All-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.All-deleteconfirm-btn.cancel {
+  background: #ccc;
+}
+
+.All-deleteconfirm-btn.confirm {
+  background: #32b2b2;
+  color: #fff;
+}

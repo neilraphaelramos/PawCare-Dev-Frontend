@@ -163,6 +163,7 @@ const ViewOrders = () => {
   const [orders, setOrders] = useState([]);
   const [dateFilter, setDateFilter] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // ✅ Format date from yyyy-mm-dd → dd/mm/yyyy
   const formatDate = (dateStr) => {
@@ -187,9 +188,9 @@ const ViewOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        setIsLoading(true);
         const res = await axios.get('/server-api/fetch/orders');
         if (res.data.success) {
-          // Group items under each order
           const grouped = {};
           res.data.data.forEach(row => {
             if (!grouped[row.id_order]) {
@@ -211,13 +212,14 @@ const ViewOrders = () => {
             }
           });
 
-          // 👉 keep original DB order (no sorting)
           setOrders(Object.values(grouped));
         } else {
           console.error("Failed to fetch orders:", res.data.message);
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -352,14 +354,22 @@ const ViewOrders = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="8" className="loading-message">
+                  Loading orders...
+                </td>
+              </tr>
+            ) : filteredOrders.length > 0 ? (
               filteredOrders.map(order => (
                 <tr key={order.id}>
                   <td>{order.id}</td>
                   <td>{order.customer}</td>
                   <td>
                     {order.items.map((item, idx) => (
-                      <div key={idx}>{item.name} × {item.quantity}</div>
+                      <div key={idx}>
+                        {item.name} × {item.quantity}
+                      </div>
                     ))}
                   </td>
                   <td>{order.address}</td>
@@ -375,11 +385,11 @@ const ViewOrders = () => {
                       value={order.status}
                       onChange={async e => {
                         const newStatus = e.target.value;
-
                         try {
-                          await axios.put(`http://localhost:5000/update_status/orders/${order.id}`, {
-                            status: newStatus
-                          });
+                          await axios.put(
+                            `/server-api/update_status/orders/${order.id}`,
+                            { status: newStatus }
+                          );
 
                           setOrders(prevOrders =>
                             prevOrders.map(o =>
@@ -402,7 +412,9 @@ const ViewOrders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="empty-message">No orders found.</td>
+                <td colSpan="8" className="empty-message">
+                  No orders found.
+                </td>
               </tr>
             )}
           </tbody>

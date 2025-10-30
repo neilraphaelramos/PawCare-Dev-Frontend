@@ -38,7 +38,7 @@ const UserInventory = () => {
   const handleConfirmOrder = async () => {
     if (cart.length === 0) {
       setShowMessageModal(true);
-      setMessageModal('🛍️ Your order is empty. Please add at least one item before confirming.');
+      setMessageModal('Your order is empty. Please add at least one item before confirming.');
       return;
     }
 
@@ -52,7 +52,7 @@ const UserInventory = () => {
       const currentStock = items.find(i => i.id === item.id)?.quantity || 0;
       if (item.qty > currentStock) {
         setShowMessageModal(true);
-        setMessageModal(`⚠️ "${item.name}" only has ${currentStock} left in stock.`);
+        setMessageModal(`"${item.name}" only has ${currentStock} left in stock.`);
         return;
       }
     }
@@ -82,10 +82,10 @@ const UserInventory = () => {
     };
 
     try {
-      const res = await axios.post('/server-api/payment_setorder', payload);
+      const res = await axios.post('/server-api/orders/payment_setorder', payload);
 
       try {
-        await axios.post('/server-api/api/notifications', {
+        await axios.post('/server-api/notifications/api', {
           UID: user.id,
           title_notify: 'Order Placed Successfully',
           type_notify: 'order',
@@ -98,7 +98,7 @@ const UserInventory = () => {
       if (res.data.success) {
         if (paymentMethod.toLowerCase() === 'cod') {
           setShowMessageModal(true);
-          setMessageModal('✅ Order placed successfully with Cash on Delivery!');
+          setMessageModal('Order placed successfully with Cash on Delivery!');
           setCart([]);         // 🧹 clear cart
           setShowModal(false); // close modal
           setPaymentMethod('');
@@ -128,12 +128,12 @@ const UserInventory = () => {
     quantity: row.stock,
     unit: row.unit,
     price: parseFloat(row.price),
-    image: row.photo ? `http://localhost:5000/uploads/${row.photo}` : '/images/default-product.png',
+    image: row.photo,
   });
 
   const fetchInventory = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/fetch_inventory');
+      const res = await axios.get('/server-api/inventory/fetch');
       if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map(mapRowToUIItem);
         setItems(mapped);
@@ -162,7 +162,7 @@ const UserInventory = () => {
       // prevent adding more than available
       if (exists.qty + 1 > item.quantity) {
         setShowMessageModal(true);
-        setMessageModal(`⚠️ Only ${item.quantity} units of "${item.name}" are available.`);
+        setMessageModal(`Only ${item.quantity} units of "${item.name}" are available.`);
         return;
       }
 
@@ -224,7 +224,7 @@ const UserInventory = () => {
       ));
     } else {
       setShowMessageModal(true);
-      setMessageModal(`⚠️ Only ${inventoryItem.quantity} units of "${inventoryItem.name}" are available.`);
+      setMessageModal(`Only ${inventoryItem.quantity} units of "${inventoryItem.name}" are available.`);
     }
   };
   const decreaseQty = (id) => setCart(cart.map(item => item.id === id && item.qty > 1 ? { ...item, qty: item.qty - 1 } : item));
@@ -338,7 +338,8 @@ const UserInventory = () => {
             className="checkout-btn"
             onClick={() => {
               if (cart.length === 0) {
-                alert('🛒 Your cart is empty. Please add items before checking out.');
+                setMessageModal('Your cart is empty. Please add items before checking out.');
+                setShowMessageModal(true);
                 return;
               }
               setShowModal(true);
@@ -569,7 +570,7 @@ const UserInventory = () => {
         <div className="messOrd-modal-overlay">
           <div className="messOrd-modal">
             <div className="messOrd-modal-header">
-              <h2>Order Message</h2>
+              <h2>Alert Message</h2>
             </div>
             <div className="messOrd-modal-body">
               <p>{messageModal || "Your order message goes here."}</p>

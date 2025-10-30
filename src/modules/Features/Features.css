@@ -119,6 +119,16 @@
   vertical-align: middle;
 }
 
+.features-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.features-table tr td[colspan] {
+  color: #555;
+  font-size: 15px;
+}
+
 .icon-cell svg {
   font-size: 1.25rem;
 }

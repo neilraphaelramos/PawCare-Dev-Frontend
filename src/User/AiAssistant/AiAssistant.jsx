@@ -31,7 +31,7 @@ const AiChatBox = ({ onClose }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("/server-api/api/ask-ai", {
+      const response = await fetch("/server-api/ask-ai/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: msg })

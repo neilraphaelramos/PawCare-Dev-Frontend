@@ -22,76 +22,114 @@ const Accounts = () => {
   });
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
+  // 🔹 Fetch all accounts
   const handleAccounts = async () => {
     try {
+      setIsLoading(true);
+      setError('');
       const { data } = await axios.post("/server-api/data");
 
       if (!Array.isArray(data)) {
-        console.error("Invalid response format from server.");
+        setError("Invalid response format from server.");
         return;
       }
 
       setAllUser(data);
-
+      setUsers(data);
     } catch (err) {
       console.error("Error fetching accounts:", err);
+      setError("Failed to load accounts. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleUpdate = async (id) => {
     if (!window.confirm("Are you sure you want to update this account?")) return;
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch("/server-api/update_account_admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          firstName: newUser.firstName,
-          middleName: newUser.middleName,
-          lastName: newUser.lastName,
-          suffix: newUser.suffix,
-          username: newUser.username,
-          email: newUser.email,
-          phone: newUser.phone,
-          password: newUser.password,
-          role: newUser.role,
-          image: newUser.image
-        })
+      const formData = new FormData();
+      Object.entries(newUser).forEach(([key, value]) => {
+        if (key !== "imageFile") formData.append(key, value);
+      });
+      formData.append("id", id);
+
+      if (newUser.imageFile) {
+        formData.append("image", newUser.imageFile);
+      }
+
+      const res = await axios.post("/server-api/update_account_admin", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        alert(data.message);
-        setEditingIndex(null);
-        handleAccounts();
-        closeModal();
-      } else {
-        alert(data.error || "Update failed");
-      }
+      alert(res.data.message || "Account updated successfully!");
+      closeModal();
+      handleAccounts();
     } catch (err) {
       console.error("Update error:", err);
-      alert("Server error");
+      alert("Failed to update account.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleAddAccount = async (e) => {
-    e.preventDefault();
+  const handleAddAccount = async () => {
+    setIsSubmitting(true);
     try {
-      const res = await axios.post("/server-api/add_account", newUser);
-      alert(res.data.message);
+      const formData = new FormData();
+      Object.entries(newUser).forEach(([key, value]) => {
+        if (key !== "imageFile") formData.append(key, value);
+      });
+
+      if (newUser.imageFile) {
+        formData.append("image", newUser.imageFile);
+      }
+
+      const res = await axios.post("/server-api/add_account", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert(res.data.message || "Account added successfully!");
       closeModal();
       handleAccounts();
     } catch (err) {
       console.error("Error adding account:", err);
+      alert("Failed to add account.");
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    setUsers(allUser);
-  }, [allUser]);
+  const handleDeleteAccount = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this account?")) return;
 
+    try {
+      const response = await fetch("/server-api/delete_account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || "Account deleted successfully");
+        handleAccounts();
+      } else {
+        alert(data.error || "Failed to delete account");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Server error");
+    }
+  };
+
+  // 🔹 Effects
   useEffect(() => {
     handleAccounts();
   }, []);
@@ -102,7 +140,10 @@ const Accounts = () => {
       setEditingIndex(index);
     } else {
       setNewUser({
-        fullName: '',
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        suffix: '',
         username: '',
         email: '',
         phone: '',
@@ -119,7 +160,10 @@ const Accounts = () => {
     setModalOpen(false);
     setEditingIndex(null);
     setNewUser({
-      fullName: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      suffix: '',
       username: '',
       email: '',
       phone: '',
@@ -136,40 +180,23 @@ const Accounts = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewUser((prev) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      setNewUser((prev) => ({
+        ...prev,
+        imageFile: file,
+        image: URL.createObjectURL(file),
+      }));
     }
   };
 
-  const handleDeleteAccount = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this account?")) return;
 
-    try {
-      const response = await fetch("/server-api/delete_account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(data.message || "Account deleted successfully");
-        handleAccounts();
-        closeModal();
-      } else {
-        alert(data.error || "Failed to delete account");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Server error");
-    }
-  };
+  const filteredUsers = users.filter(
+    (user) =>
+      `${user.firstName || ""} ${user.middleName || ""} ${user.lastName || ""}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="account-container">
@@ -183,7 +210,12 @@ const Accounts = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="services-search-input"
           />
-          <button className="services-primary-btn" onClick={() => openModal()}>
+          <button
+            className="services-primary-btn"
+            onClick={() => openModal()}
+            disabled={isSubmitting}
+            style={{ opacity: isSubmitting ? 0.5 : 1 }}
+          >
             Add Account
           </button>
         </div>
@@ -204,29 +236,53 @@ const Accounts = () => {
             </tr>
           </thead>
           <tbody>
-            {users
-              .filter(
-                (user) =>
-                  user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .map((user, index) => (
+            {isLoading ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                  Loading...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                  {error}
+                </td>
+              </tr>
+            ) : filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                  No data found.
+                </td>
+              </tr>
+            ) : (
+              filteredUsers.map((user, index) => (
                 <tr key={user.id}>
                   <td>{index + 1}</td>
                   <td>
                     {user.image ? (
-                      <img src={user.image} alt={user.fullName} className="inventory-img-thumb" />
+                      <img src={user.image} alt={user.firstName} className="inventory-img-thumb" />
                     ) : (
-                      <div className="inventory-img-thumb empty-avatar" />
+                      <img
+                        src={
+                          user.role === "Admin"
+                            ? "/images/logo.png"
+                            : user.role === "Veterinarian" || user.role === "Veterinarian/Staff"
+                              ? `/images/Default_Pic.jpg`
+                              : `/images/Default_Pic.jpg`
+                        }
+                        alt="Default Avatar"
+                        className="inventory-img-thumb"
+                      />
                     )}
                   </td>
                   <td>
-                    {`${user.firstName || ""} ${user.middleName || ""} ${user.lastName || ""} ${user.suffix || ""}`.trim()}
+                    {user.role === "Admin"
+                      ? "PawCare Admin"
+                      : `${user.firstName || ""} ${user.middleName || ""} ${user.lastName || ""} ${user.suffix || ""}`.trim() || "N/A"}
                   </td>
                   <td>{user.username}</td>
                   <td>{user.email}</td>
-                  <td>{user.phone}</td>
+                  <td>{user.phone || "N/A"}</td>
                   <td>{user.role}</td>
                   <td>
                     <button className="services-edit-icon-btn" onClick={() => openModal(index)}>
@@ -237,7 +293,8 @@ const Accounts = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -245,12 +302,12 @@ const Accounts = () => {
       {modalOpen && (
         <div className="accounts-modal-overlay">
           <div className="accounts-modal-content">
-            <h3>{editingIndex !== null ? 'Edit Account' : 'Add Account'}</h3>
+            <h3>{editingIndex !== null ? "Edit Account" : "Add Account"}</h3>
 
             <div className="accounts-image-upload-wrapper">
               <div
                 className="accounts-image-upload"
-                onClick={() => document.getElementById('avatar-upload').click()}
+                onClick={() => document.getElementById("avatar-upload").click()}
               >
                 {newUser.image ? (
                   <img src={newUser.image} alt="Avatar" className="uploaded-image" />
@@ -270,63 +327,18 @@ const Accounts = () => {
             </div>
 
             <div className="accounts-form-grid">
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name"
-                value={newUser.firstName}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="middleName"
-                placeholder="Middle Name"
-                value={newUser.middleName}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name"
-                value={newUser.lastName}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="suffix"
-                placeholder="Suffix"
-                value={newUser.suffix}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={newUser.username}
-                onChange={handleInputChange}
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="phone"
-                placeholder="Phone"
-                value={newUser.phone}
-                onChange={handleInputChange}
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={newUser.password}
-                onChange={handleInputChange}
-
-              />
+              {["firstName", "middleName", "lastName", "suffix", "username", "email", "phone", "password"].map(
+                (field, i) => (
+                  <input
+                    key={i}
+                    type={field === "email" ? "email" : field === "password" ? "password" : "text"}
+                    name={field}
+                    placeholder={field.replace(/([A-Z])/g, " $1")}
+                    value={newUser[field]}
+                    onChange={handleInputChange}
+                  />
+                )
+              )}
               <select name="role" value={newUser.role} onChange={handleInputChange}>
                 <option value="">Select Role</option>
                 <option value="Admin">Admin</option>
@@ -339,14 +351,16 @@ const Accounts = () => {
               <button
                 className="accounts-primary-btn"
                 onClick={() => {
-                  if (editingIndex !== null) {
-                    handleUpdate(users[editingIndex].id);  // pass id here
-                  } else {
-                    handleAddAccount();
-                  }
+                  if (editingIndex !== null) handleUpdate(users[editingIndex].id);
+                  else handleAddAccount();
+                }}
+                disabled={isSubmitting}
+                style={{
+                  backgroundColor: isSubmitting ? "#ccc" : "",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
                 }}
               >
-                {editingIndex !== null ? "Update" : "Add"}
+                {isSubmitting ? "Processing..." : editingIndex !== null ? "Update" : "Add"}
               </button>
               <button className="accounts-cancel-btn" onClick={closeModal}>Cancel</button>
             </div>

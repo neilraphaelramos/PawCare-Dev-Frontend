@@ -156,6 +156,17 @@ body {
   pointer-events: none;
 }
 
+.calendar-day.fully-booked {
+  background-color: #f8d7da;
+  color: #a94442;
+  cursor: not-allowed;
+  border: 1px solid #f5c2c7;
+}
+
+.calendar-day.fully-booked:hover {
+  background-color: #f5c6cb;
+}
+
 /* ───────────────────────────  Time Slots  ───────────────────────── */
 .time-grid {
   display: flex;

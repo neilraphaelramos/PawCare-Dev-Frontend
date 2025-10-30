@@ -57,7 +57,7 @@ export default function PetRecords() {
   const APIENDPOINT = '/server-api';
 
   const handleView = (pet) => {
-    axios.get(`${APIENDPOINT}/fetch/visit_history/${pet.id}`)
+    axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${pet.id}`)
       .then((res) => {
         setSelectedPet({ ...pet, checkups: res.data });
       })
@@ -110,7 +110,7 @@ export default function PetRecords() {
 
   const handleUserInfo = async (ownerUsername) => {
     try {
-      const res = await axios.get(`${APIENDPOINT}/fetch/user_medical/${ownerUsername}`);
+      const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/user_medical/${ownerUsername}`);
       if (res.data?.data) {
         setUserInfo(res.data.data);
         console.log("Fetched user info:", res.data.data);
@@ -154,13 +154,13 @@ export default function PetRecords() {
     }
 
     try {
-      const res = await axios.post(`${APIENDPOINT}/add_pet/pet_medical_records`, formData, {
+      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data.success) {
         // ✅ Refresh pets
-        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
         setShowAddPetModal(false);
         form.reset();
@@ -197,13 +197,13 @@ export default function PetRecords() {
     }
 
     try {
-      const res = await axios.put(`${APIENDPOINT}/edit_pet/pet_medical_records/${editData.id}`, formData, {
+      const res = await axios.put(`${APIENDPOINT}/pet_medical_records/edit_pet/${editData.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data.success) {
         // ✅ Refresh pets
-        const updatedPets = await axios.get(`${APIENDPOINT}/fetch/pet_medical_records`);
+        const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
         setShowEditModal(false);
         setEditData(null);
@@ -214,7 +214,7 @@ export default function PetRecords() {
   };
 
   useEffect(() => {
-    axios.get(`${APIENDPOINT}/fetch/pet_medical_records`)
+    axios.get(`${APIENDPOINT}/pet_medical_records/fetch`)
       .then((res) => setPets(res.data))
       .catch((err) => console.error("Error fetching pets:", err));
   }, []);
@@ -331,7 +331,7 @@ export default function PetRecords() {
     e.preventDefault();
 
     try {
-      const res = await axios.post(`${APIENDPOINT}/add_pet_history/pet_medical_records`, {
+      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet_history`, {
         id_pet_medical_records: selectedPet.id,
         owner_email: newRecord.ownerEmail,
         owner_address: newRecord.ownerAddress,
@@ -358,7 +358,7 @@ export default function PetRecords() {
 
       if (res.data.success) {
         // ✅ Refetch updated history
-        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/visit_history//fetch${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
 
         setAddingRecord(false);
@@ -380,7 +380,7 @@ export default function PetRecords() {
   const handleUpdateVisit = async () => {
     try {
       const res = await axios.put(
-        `${APIENDPOINT}/edit_pet_history/pet_medical_records/${selectedVisit.history_id}`,
+        `${APIENDPOINT}/pet_medical_records/edit_pet_history/${selectedVisit.history_id}`,
         {
           owner_email: selectedVisit.ownerEmail,
           owner_address: selectedVisit.ownerAddress,
@@ -408,7 +408,7 @@ export default function PetRecords() {
 
       if (res.data.success) {
         // ✅ Refresh history
-        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
       }
@@ -457,7 +457,7 @@ export default function PetRecords() {
             <div className="admin-pet-records-row" key={pet.id}>
               <div>{pet.ownerName}</div>
               <div>
-                <img src={`${APIENDPOINT}/uploads/${pet.photo}`} alt={pet.name} className="pet-thumb" />
+                <img src={pet.photo} alt={pet.name} className="pet-thumb" />
               </div>
               <div>{pet.name}</div>
               <div>{pet.petType}</div>

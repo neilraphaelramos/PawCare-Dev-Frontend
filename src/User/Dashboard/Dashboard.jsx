@@ -120,7 +120,7 @@ const Dashboard = () => {
 
   const handleMetricStatus = async (e) => {
     try {
-      const res = await axios.get(`/server-api/fetch/metric_dashboard/${user.id}/${user.username}`);
+      const res = await axios.get(`/server-api/metric_dashboard/fetch/users/${user.id}/${user.username}`);
       setTotalPets(res.data.totalPets);
       setTotalAppointment(res.data.totalAppointments);
       setTotalNotify(res.data.totalNotify)
@@ -136,7 +136,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchPurchasedProducts = async () => {
       try {
-        const res = await axios.get(`/server-api/fetch/user_order/${user.id}`);
+        const res = await axios.get(`/server-api/orders/fetch/user_order/${user.id}`);
         setPurchasedProducts(res.data);
       } catch (err) {
         console.error("Error fetching purchased products:", err);
@@ -252,7 +252,7 @@ const Dashboard = () => {
             ) : (
               purchasedProducts.map((item, i) => (
                 <div key={i} className="user-dashboard-product-item">
-                  <img src={`/server-api/uploads/${item.product_image}`} alt={item.product_name} />
+                  <img src={item.product_image} alt={item.product_name} />
                   <span><a onClick={() => navigate('/users/pet-products')}>{item.product_name}</a></span>
                 </div>
               ))

@@ -43,6 +43,18 @@
   background-color: #279292;
 }
 
+.services-primary-btn:hover:not(:disabled) {
+  background-color: #279292;
+}
+
+/* Disabled state */
+.services-primary-btn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
 
 /* Modal */
 .services-modal-overlay {
@@ -231,4 +243,14 @@
   margin-top: 15px;
   width: 450px;
   text-align: start;
+}
+
+.inventory-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.inventory-table tr td[colspan] {
+  color: #555;
+  font-size: 15px;
 }

@@ -40,7 +40,8 @@ const Appointment = () => {
   const { user } = useContext(UserContext);
   const [bookedTimes, setBookedTimes] = useState([]);
   const [messageModal, setMessageModal] = useState('');
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(false);
+  const [fullyBookedDates, setFullyBookedDates] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userAppointments, setUserAppointments] = useState([]);
@@ -86,6 +87,14 @@ const Appointment = () => {
   }, [selectedDate]);
 
   useEffect(() => {
+    axios.get('/server-api/appointments/fully-booked')
+      .then(res => {
+        setFullyBookedDates(res.data || []);
+      })
+      .catch(err => console.error("Error fetching fully booked dates:", err));
+  }, []);
+
+  useEffect(() => {
     const uid = user.id;
 
     axios.get(`/server-api/appointments/user/${uid}`)
@@ -114,10 +123,10 @@ const Appointment = () => {
     };
 
     try {
-      const res = await axios.post('http://localhost:5000/appointments', data);
+      const res = await axios.post('/server-api/appointments', data);
 
       try {
-        await axios.post(`/server-api/api/notifications`, {
+        await axios.post(`/server-api/notifications/api`, {
           UID: user.id,
           title_notify: "Appointment Reserved",
           type_notify: "Appointment",
@@ -179,11 +188,13 @@ const Appointment = () => {
           {daysInMonth.map(day => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
 
+            const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+
             const isPast = date < new Date().setHours(0, 0, 0, 0);
-
             const isWednesday = date.getDay() === 3;
+            const isFullyBooked = fullyBookedDates.includes(dateStr);
 
-            const isDisabled = isPast || isWednesday;
+            const isDisabled = isPast || isWednesday || isFullyBooked;
 
             const isSelected =
               selectedDate?.getDate() === day &&
@@ -192,7 +203,9 @@ const Appointment = () => {
             return (
               <div
                 key={day}
-                className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                className={`calendar-day 
+                  ${isDisabled ? (isFullyBooked ? 'fully-booked' : 'disabled') : ''} 
+                  ${isSelected ? 'selected' : ''}`}
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}

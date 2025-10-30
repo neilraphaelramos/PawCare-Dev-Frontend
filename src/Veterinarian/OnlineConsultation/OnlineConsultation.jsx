@@ -35,7 +35,7 @@ const VetConsultationAdmin = () => {
     fetchOnlineConsult();
 
     // Initialize Socket.IO client only once
-    const socket = io('http://localhost:5001');
+    const socket = io(process.env.REACT_APP_SOCKET_URL);
     socketRef.current = socket;
 
     // Define handlers

@@ -12,6 +12,7 @@ const InventoryModal = ({ onClose, onAddItem }) => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [types, setTypes] = useState([...defaultTypes]);
+  const [error, setError] = useState('');
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -26,21 +27,22 @@ const InventoryModal = ({ onClose, onAddItem }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError(''); // clear old error
 
     const finalType = selectedType || customType.trim();
 
     if (!name.trim() || !finalType || !quantity || !unit.trim()) {
-      alert('Please fill in all fields');
+      setError('⚠️ Please fill in all fields.');
       return;
     }
 
     const quantityNum = Number(quantity);
     if (isNaN(quantityNum) || quantityNum <= 0) {
-      alert('Quantity must be a positive number');
+      setError('⚠️ Quantity must be a positive number.');
       return;
     }
 
-    // Add new type if it’s valid and not already included
+    // Add new type if valid and new
     if (!selectedType && customType.trim() && !types.includes(customType.trim())) {
       setTypes((prev) => [...prev, customType.trim()]);
     }
@@ -50,10 +52,10 @@ const InventoryModal = ({ onClose, onAddItem }) => {
       type: finalType,
       quantity: quantityNum,
       unit: unit.trim(),
-      image: imageFile, // send the image file object
+      image: imageFile,
     });
 
-    // Reset fields
+    // Reset
     setName('');
     setSelectedType('');
     setCustomType('');
@@ -68,6 +70,14 @@ const InventoryModal = ({ onClose, onAddItem }) => {
     <div className="invmodal-overlay" onClick={onClose}>
       <div className="invmodal-box" onClick={(e) => e.stopPropagation()}>
         <h3 className="invmodal-title">Add New Inventory Item</h3>
+
+        {/* 🟥 Inline error message */}
+        {error && (
+          <div className="invmodal-error">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="invmodal-form">
           <div className="invmodal-form-group">
             <label className="invmodal-label">Name:</label>
@@ -131,7 +141,7 @@ const InventoryModal = ({ onClose, onAddItem }) => {
             />
           </div>
 
-          {/* New image upload input */}
+          {/* Image upload */}
           <div className="invmodal-form-group">
             <label className="invmodal-label">Upload Image:</label>
             <input
@@ -144,14 +154,27 @@ const InventoryModal = ({ onClose, onAddItem }) => {
               <img
                 src={imagePreview}
                 alt="Preview"
-                style={{ marginTop: '10px', maxHeight: '150px', borderRadius: '8px' }}
+                style={{
+                  marginTop: '10px',
+                  maxHeight: '150px',
+                  borderRadius: '8px',
+                  objectFit: 'cover'
+                }}
               />
             )}
           </div>
 
           <div className="invmodal-buttons">
-            <button type="submit" className="invmodal-btn invmodal-btn--add">Add</button>
-            <button type="button" className="invmodal-btn invmodal-btn--cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="invmodal-btn invmodal-btn--add">
+              Add
+            </button>
+            <button
+              type="button"
+              className="invmodal-btn invmodal-btn--cancel"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
