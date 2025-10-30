@@ -91,7 +91,7 @@ export default function PetInfos() {
         try {
             setIsProcessing(true);
             const res = await axios.post(
-                `${APIENDPOINT}/pet_infos/add_pet_info`,
+                `${process.env.REACT_APP_API_URL}/pet_infos/add_pet_info`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -136,7 +136,7 @@ export default function PetInfos() {
         try {
             setIsProcessing(true);
             const res = await axios.put(
-                `${APIENDPOINT}/pet_infos/edit_pet_info/${editPet.id}`,
+                `${process.env.REACT_APP_API_URL}/pet_infos/edit_pet_info/${editPet.id}`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
