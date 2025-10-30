@@ -56,7 +56,7 @@ export default function LandingPage() {
 
   const fetchDataServices = async () => {
     try {
-      const response = await axios.get(`https://pawcare-backend-z2jx.onrender.com/services/fetch`);
+      const response = await axios.get("/server-api/services/fetch");
 
       if (!Array.isArray(response.data)) {
         console.error("Invalid response format from server.");
@@ -71,7 +71,7 @@ export default function LandingPage() {
 
   const fetchFeatures = async () => {
     try {
-      const res = await axios.get("https://pawcare-backend-z2jx.onrender.com/feature/fetch");
+      const res = await axios.get("/server-api/feature/fetch");
       if (res.data.success) {
         setFeatures(res.data.data);
       }

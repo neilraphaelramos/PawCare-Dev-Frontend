@@ -157,7 +157,7 @@ export default function Register() {
     }
 
     try {
-      const usernameRes = await axios.post("/server-api/check-username", {
+      const usernameRes = await axios.post(`${process.env.REACT_APP_API_URL}/check-username`, {
         username: form.username,
       });
       if (usernameRes.data.exists) {

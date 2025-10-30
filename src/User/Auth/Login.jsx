@@ -39,7 +39,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoggingIn(true)
     try {
-      const res = await axios.post("server-api/login", form);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, form);
 
       if (res.data.message === "Login successful") {
         const role = res.data.user.role;
@@ -65,7 +65,7 @@ export default function Login() {
 
   const handleGoogleAuth = async (credentialResponse) => {
     try {
-      const res = await axios.post("server-api/auth/google", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/google`, {
         token: credentialResponse.credential,
       });
 
