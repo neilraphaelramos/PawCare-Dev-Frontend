@@ -56,7 +56,7 @@ export default function LandingPage() {
 
   const fetchDataServices = async () => {
     try {
-      const response = await axios.post("/server-api/services/fetch");
+      const response = await axios.get("/server-api/services/fetch");
 
       if (!Array.isArray(response.data)) {
         console.error("Invalid response format from server.");
