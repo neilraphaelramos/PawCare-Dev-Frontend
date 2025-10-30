@@ -21,7 +21,7 @@ export default function PetInfos() {
         try {
             setLoading(true);
             const res = await axios.get(
-                `${APIENDPOINT}/pet_infos/fetch/${user.username}`
+                `${process.env.REACT_APP_API_URL}/pet_infos/fetch/${user.username}`
             );
             setPets(res.data || []);
         } catch (err) {
