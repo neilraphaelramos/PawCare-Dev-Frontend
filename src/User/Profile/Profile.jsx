@@ -79,7 +79,7 @@ export default function Profile() {
       form.append("password", formData.confirmPassword);
 
       if (formData.imageFile) {
-        form.append("profile_Pic", formData.imageFile);
+        form.append("photo", formData.imageFile);
       }
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/update_profile`, {
