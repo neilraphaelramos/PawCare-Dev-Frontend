@@ -10,14 +10,9 @@ const frequentQuestions = [
 ];
 
 const AiChatBox = ({ onClose }) => {
-  const savedMessages = JSON.parse(localStorage.getItem("aiChatMessages") || "[]");
-
-  const [messages, setMessages] = useState(
-    savedMessages.length > 0
-      ? savedMessages
-      : [{ sender: "ai", text: "Hello! I’m your AI Assistant, Dr. Paw. Ask me anything!" }]
-  );
-
+  const [messages, setMessages] = useState([
+    { sender: "ai", text: "Hello! I’m your AI Assistant, Dr. Paw. Ask me anything!" }
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
@@ -25,10 +20,6 @@ const AiChatBox = ({ onClose }) => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    localStorage.setItem("aiChatMessages", JSON.stringify(messages));
   }, [messages]);
 
   const sendMessage = async (msg) => {
@@ -45,6 +36,7 @@ const AiChatBox = ({ onClose }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: msg })
       });
+
       const data = await response.json();
       const aiMessage = { sender: "ai", text: data.reply };
       setMessages((prev) => [...prev, aiMessage]);
@@ -62,15 +54,11 @@ const AiChatBox = ({ onClose }) => {
     sendMessage(q.question);
   };
 
-  const handleClose = () => {
-    onClose();
-  };
-
   return (
     <div className="ai-chatbox-container">
       <div className="ai-chatbox-header">
         <span>🐾 AI Assistant</span>
-        <button onClick={handleClose}>✕</button>
+        <button onClick={onClose}>✕</button>
       </div>
 
       <div className="ai-chatbox-body">
