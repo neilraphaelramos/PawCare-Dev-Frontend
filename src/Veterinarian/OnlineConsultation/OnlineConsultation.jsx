@@ -20,7 +20,7 @@ const VetConsultationAdmin = () => {
   // Fetch consultations
   const fetchOnlineConsult = async () => {
     try {
-      const res = await axios.get("/server-api/online_consult_fetch");
+      const res = await axios.get(`"/server-api/online_consult_fetch"`);
       setFetchOC(res.data.fetchData);
     } catch (err) {
       console.error("Error fetching consultations:", err);

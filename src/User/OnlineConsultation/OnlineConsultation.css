@@ -49,6 +49,11 @@
   background: #fefefe;
 }
 
+.or-textarea {
+  min-height: 150px;
+  max-height: 300px;
+}
+
 .payment-instructions {
   background: #edf2f7;
   padding: 1rem;

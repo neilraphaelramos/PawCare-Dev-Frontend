@@ -29,7 +29,7 @@ export default function Announcements() {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axios.get("/server-api/announcements/fetch");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/announcements/fetch`);
       if (res.data.success) {
         setAnnouncements(res.data.data);
       } else {
@@ -91,11 +91,11 @@ export default function Announcements() {
       setIsSaving(true);
       if (editingAnnouncement) {
         await axios.put(
-          `/server-api/announcements/update/${editingAnnouncement.id}`,
+          `${process.env.REACT_APP_API_URL}/announcements/update/${editingAnnouncement.id}`,
           form
         );
       } else {
-        await axios.post("/server-api/announcements/add", form);
+        await axios.post(`${process.env.REACT_APP_API_URL}/announcements/add`, form);
       }
       fetchAnnouncements();
       closeModal();
@@ -116,7 +116,7 @@ export default function Announcements() {
   const confirmDelete = async (id) => {
     try {
       setIsLoading(true);
-      await axios.delete(`/server-api/announcements/delete/${id}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/announcements/delete/${id}`);
       fetchAnnouncements();
     } catch (err) {
       console.error("Error deleting announcement:", err);

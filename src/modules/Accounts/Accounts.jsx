@@ -31,7 +31,7 @@ const Accounts = () => {
     try {
       setIsLoading(true);
       setError('');
-      const { data } = await axios.post("/server-api/data");
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/data`);
 
       if (!Array.isArray(data)) {
         setError("Invalid response format from server.");
@@ -63,7 +63,7 @@ const Accounts = () => {
         formData.append("image", newUser.imageFile);
       }
 
-      const res = await axios.post("/server-api/update_account_admin", formData, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/update_account_admin`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -90,7 +90,7 @@ const Accounts = () => {
         formData.append("image", newUser.imageFile);
       }
 
-      const res = await axios.post("/server-api/add_account", formData, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/add_account`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -109,7 +109,7 @@ const Accounts = () => {
     if (!window.confirm("Are you sure you want to delete this account?")) return;
 
     try {
-      const response = await fetch("/server-api/delete_account", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/delete_account`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),

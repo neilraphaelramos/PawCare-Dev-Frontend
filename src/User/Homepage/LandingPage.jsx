@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 import HeroSection from './HeroSection'
 import AnnouncementBanner from './banner/AnnouncementBanner-User-side';
 import "./LandingPage.css";
-import { FaUser } from 'react-icons/fa';
+import { FaUser, FaComments } from 'react-icons/fa';
 import { Navigation } from "swiper/modules";
+import AiAssistant from "../AiAssistant/AiAssistant";
 import "swiper/css/navigation";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
@@ -53,6 +54,7 @@ export default function LandingPage() {
   const [services, setServices] = useState([]);
   const [features, setFeatures] = useState([]);
   const [bannerHeight, setBannerHeight] = useState(0);
+  const [showAssistant, setShowAssistant] = useState(false);
 
   const fetchDataServices = async () => {
     try {
@@ -369,6 +371,24 @@ export default function LandingPage() {
           <p>&copy; 2025 Rivera Veterinary Clinic. All rights reserved.</p>
         </div>
       </footer>
+
+      {!showAssistant && (
+        <div className="ai-assistant-btn-wrapper">
+          <button
+            className="ai-assistant-btn"
+            onClick={() => setShowAssistant(!showAssistant)}
+            aria-label="Toggle AI Assistant"
+          >
+            <FaComments size={22} color="white" />
+            <span className="ai-assistant-tooltip">Chat with our AI Assistant</span>
+          </button>
+        </div>
+      )}
+
+      {showAssistant && (
+        <AiAssistant onClose={() => setShowAssistant(false)} />
+      )}
+
 
     </div>
   );

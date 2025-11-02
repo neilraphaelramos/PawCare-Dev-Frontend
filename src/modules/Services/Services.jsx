@@ -23,7 +23,7 @@ const Services = () => {
     try {
       setIsLoading(true);
       setError("")
-      const response = await axios.get("/server-api/services/fetch");
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/services/fetch`);
       if (!Array.isArray(response.data)) {
         console.error("Invalid response format from server.");
         setError("Invalid data format from server.");
@@ -100,7 +100,7 @@ const Services = () => {
       setisSumbitting(true);
 
       if (editingIndex !== null && newService.id) {
-        const response = await axios.put(`/server-api/services/update/${newService.id}`, formData, {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/services/update/${newService.id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         if (response.data.success) {
@@ -112,7 +112,7 @@ const Services = () => {
           console.error("Failed to update service:", response.data.message);
         }
       } else {
-        const response = await axios.post("/server-api/services/add", formData, {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/services/add`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         if (response.data.success) {
@@ -139,7 +139,7 @@ const Services = () => {
     const service = services[selectedServiceId];
 
     try {
-      const response = await axios.delete(`/server-api/services/delete/${service.id}`);
+      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/services/delete/${service.id}`);
       if (response.data.success) {
         setMessageModal(response.data.message);
         fetchDataServices();

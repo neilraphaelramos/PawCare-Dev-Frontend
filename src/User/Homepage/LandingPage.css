@@ -963,3 +963,68 @@ body {
   max-width: 900px;
   flex: 1;
 }
+
+.ai-assistant-btn-wrapper {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 9999;
+}
+
+/* Tooltip container */
+.ai-assistant-btn {
+  position: relative;
+  background-color: #26a0a0;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.ai-assistant-btn:hover {
+  background-color: #1f8585;
+  transform: scale(1.05);
+}
+
+/* Tooltip text */
+.ai-assistant-tooltip {
+  position: absolute;
+  right: 65px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Tooltip arrow */
+.ai-assistant-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent #333;
+}
+
+/* Show tooltip on hover */
+.ai-assistant-btn:hover .ai-assistant-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+

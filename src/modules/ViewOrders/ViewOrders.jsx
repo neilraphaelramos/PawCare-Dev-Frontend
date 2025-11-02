@@ -189,7 +189,7 @@ const ViewOrders = () => {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get('/server-api/fetch/orders');
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/fetch`);
         if (res.data.success) {
           const grouped = {};
           res.data.data.forEach(row => {
@@ -387,7 +387,7 @@ const ViewOrders = () => {
                         const newStatus = e.target.value;
                         try {
                           await axios.put(
-                            `/server-api/update_status/orders/${order.id}`,
+                            `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
                             { status: newStatus }
                           );
 

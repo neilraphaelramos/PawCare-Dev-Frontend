@@ -63,7 +63,7 @@ export default function PetRecords() {
 
   const formRef = useRef(null);
 
-  const APIENDPOINT = '/server-api';
+  const APIENDPOINT = process.env.REACT_APP_API_URL;
 
   const handleView = (pet) => {
     axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${pet.id}`)

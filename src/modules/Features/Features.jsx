@@ -37,7 +37,7 @@ export default function Features() {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axios.get("/server-api/feature/fetch");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/feature/fetch`);
       if (res.data.success) {
         setFeatures(res.data.data);
       } else {
@@ -82,9 +82,9 @@ export default function Features() {
     try {
       setIsProcessing(true);
       if (editingFeature) {
-        await axios.put(`/server-api/feature/update/${editingFeature.id}`, form);
+        await axios.put(`${process.env.REACT_APP_API_URL}/feature/update/${editingFeature.id}`, form);
       } else {
-        await axios.post("/server-api/feature/add", form);
+        await axios.post(`${process.env.REACT_APP_API_URL}/feature/add`, form);
       }
       setIsProcessing(false);
       fetchFeatures();
@@ -105,7 +105,7 @@ export default function Features() {
     setIsProcessing(true);
 
     try {
-      await axios.delete(`/server-api/feature/delete/${featureId}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/feature/delete/${featureId}`);
       setIsProcessing(false);
       setShowConfirmModal(false);
       fetchFeatures();

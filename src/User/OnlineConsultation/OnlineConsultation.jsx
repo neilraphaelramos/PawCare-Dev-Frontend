@@ -82,7 +82,7 @@ const OnlineConsultation = () => {
       formData.append("pet_species", fillUp.pet_species);
       formData.append("concern_description", fillUp.concern_description);
       formData.append("consult_type", fillUp.consult_type);
-      formData.append("file_payment", fillUp.file_payment);
+      formData.append("photo", fillUp.file_payment);
 
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/online_consult/submit`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -133,9 +133,11 @@ const OnlineConsultation = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/fetch_pet/${user.username}`);
-        if (res.data.success) {
-          setPetList(res.data.data);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/pet_infos/fetch/${user.username}`);
+        if (res.data) {
+          setPetList(res.data);
+        } else {
+          console.error("Failed to fetch pets:", res.data.error);
         }
       } catch (err) {
         console.error("Error fetching pet list:", err);
@@ -144,9 +146,10 @@ const OnlineConsultation = () => {
     fetchPets();
   }, [user.username]);
 
+
   const handlePetSelect = (e) => {
     const selectedPetName = e.target.value;
-    const selectedPet = petList.find(pet => pet.pet_name === selectedPetName);
+    const selectedPet = petList.find(pet => pet.petName === selectedPetName);
 
     setFillUp((prev) => ({
       ...prev,
@@ -161,6 +164,10 @@ const OnlineConsultation = () => {
     sessionStorage.removeItem("isSubmitted");
     sessionStorage.removeItem("startCall");
 
+    if (channelConsultID) {
+      localStorage.removeItem(`chat_${channelConsultID}`);
+    }
+
     setChannelConsultID(null);
     setStartCall(false);
     setFormSubmitted(false);
@@ -174,11 +181,29 @@ const OnlineConsultation = () => {
   const handleSendMessage = () => {
     if (message.trim() === '' || !socketRef.current) return;
 
-    const msgObj = { from: 'user', text: message };
+    const name = [
+      user.firstName,
+      user.lastName,
+    ].filter(Boolean).join(' ');
+
+    const msgObj = { from: 'user', text: message, name: name };
     socketRef.current.emit('sendMessage', { consultID: channelConsultID, ...msgObj });
     setMessages((prev) => [...prev, msgObj]);
     setMessage('');
   };
+
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(`chat_${channelConsultID}`);
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }, [channelConsultID]);
+
+  useEffect(() => {
+    if (channelConsultID) {
+      localStorage.setItem(`chat_${channelConsultID}`, JSON.stringify(messages));
+    }
+  }, [messages, channelConsultID]);
 
   // Auto-scroll to newest message
   useEffect(() => {
@@ -197,9 +222,15 @@ const OnlineConsultation = () => {
     socketRef.current.on('connect', () => {
       console.log('[Socket] Connected with ID:', socketRef.current.id);
 
+      const name = [
+        user.firstName,
+        user.lastName,
+      ].filter(Boolean).join(' ');
+
       socketRef.current.emit('joinConsult', {
         consultID: channelConsultID,
         userType: 'user',
+        name: name
       });
     });
 
@@ -212,13 +243,15 @@ const OnlineConsultation = () => {
     });
 
     socketRef.current.on('receiveMessage', (msg) => {
-      console.log('[Socket] Received message:', msg);
       setMessages((prev) => [...prev, msg]);
     });
 
     socketRef.current.on('systemMessage', (msg) => {
-      console.log('[Socket] System message:', msg);
-      setMessages((prev) => [...prev, { from: 'bot', text: msg }]);
+      setMessages((prev) => [...prev, {
+        from: 'bot',
+        text: msg,
+        photo: 'https://i.ibb.co/GtY8N6t/vet-avatar.png'
+      }]);
     });
 
     return () => {
@@ -240,8 +273,8 @@ const OnlineConsultation = () => {
             <select name="pet_name" onChange={handlePetSelect} required>
               <option value="">Select your pet</option>
               {petList.map((pet, idx) => (
-                <option key={idx} value={pet.pet_name}>
-                  {pet.pet_name}
+                <option key={idx} value={pet.petName}>
+                  {pet.petName}
                 </option>
               ))}
             </select>
@@ -277,6 +310,7 @@ const OnlineConsultation = () => {
               required
               rows="4"
               placeholder="Describe your concern..."
+              className='or-textarea'
             ></textarea>
           </div>
 
@@ -318,21 +352,36 @@ const OnlineConsultation = () => {
           {!startCall ? (
             <div className="chat-section">
               <div className="chat-box">
-                {messages.map((msg, index) => (
-                  <div key={index} className={`chat-message-wrapper ${msg.from}`}>
-                    <img
-                      src={msg.from === 'user'
-                        ? user.pic
-                        : 'https://i.ibb.co/GtY8N6t/vet-avatar.png'
-                      }
-                      alt={msg.from}
-                      className="chat-avatar"
-                    />
-                    <div className={`chat-message ${msg.from}`}>{msg.text}</div>
-                  </div>
-                ))}
+                {messages.map((msg, index) => {
+                  // Log the message sender
+                  console.log(`[Chat] msg.from: ${msg.from}`, msg);
+
+                  let avatar = '';
+
+                  if (msg.photo) {
+                    avatar = msg.photo;
+                  } else if (msg.from === 'vet') {
+                    avatar = `${process.env.REACT_APP_MAIN_URL}/images/logo.png`;
+                  } else if (msg.from === 'user') {
+                    avatar = user.pic;
+                  } else if (msg.from === 'bot') {
+                    avatar = 'https://i.ibb.co/GtY8N6t/vet-avatar.png';
+                  }
+
+                  return (
+                    <div key={index} className={`chat-message-wrapper ${msg.from}`}>
+                      <img
+                        src={avatar}
+                        alt={msg.from}
+                        className="chat-avatar"
+                      />
+                      <div className={`chat-message ${msg.from}`}>{msg.text}</div>
+                    </div>
+                  );
+                })}
                 <div ref={chatEndRef} />
               </div>
+
 
               <div className="chat-input-row">
                 <input

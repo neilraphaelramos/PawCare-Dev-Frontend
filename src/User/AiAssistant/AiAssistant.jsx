@@ -10,23 +10,32 @@ const frequentQuestions = [
 ];
 
 const AiChatBox = ({ onClose }) => {
-  const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! I’m your AI Assistant, Dr. Paw. Ask me anything!" }
-  ]);
+  const savedMessages = JSON.parse(localStorage.getItem("aiChatMessages") || "[]");
+
+  const [messages, setMessages] = useState(
+    savedMessages.length > 0
+      ? savedMessages
+      : [{ sender: "ai", text: "Hello! I’m your AI Assistant, Dr. Paw. Ask me anything!" }]
+  );
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
-
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    localStorage.setItem("aiChatMessages", JSON.stringify(messages));
+  }, [messages]);
+
   const sendMessage = async (msg) => {
     if (!msg.trim()) return;
+
     const userMessage = { sender: "user", text: msg };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
@@ -38,9 +47,9 @@ const AiChatBox = ({ onClose }) => {
       });
       const data = await response.json();
       const aiMessage = { sender: "ai", text: data.reply };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (err) {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         { sender: "ai", text: "Oops! Something went wrong. Please try again." }
       ]);
@@ -53,11 +62,15 @@ const AiChatBox = ({ onClose }) => {
     sendMessage(q.question);
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
     <div className="ai-chatbox-container">
       <div className="ai-chatbox-header">
         <span>🐾 AI Assistant</span>
-        <button onClick={onClose}>✕</button>
+        <button onClick={handleClose}>✕</button>
       </div>
 
       <div className="ai-chatbox-body">
@@ -80,7 +93,6 @@ const AiChatBox = ({ onClose }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Collapsible Common Questions */}
       <div className="ai-faq-footer">
         <div className="ai-faq-toggle" onClick={() => setFaqOpen(!faqOpen)}>
           <span>💡 Common Questions</span>
@@ -105,7 +117,9 @@ const AiChatBox = ({ onClose }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
         />
-        <button onClick={() => sendMessage(input)} className="send-ai-enter">Send</button>
+        <button onClick={() => sendMessage(input)} className="send-ai-enter">
+          Send
+        </button>
       </div>
     </div>
   );

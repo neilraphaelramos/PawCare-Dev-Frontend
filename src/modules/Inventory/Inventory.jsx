@@ -11,30 +11,6 @@ const generateItemCode = (group = 'X') => {
   return `${prefix}${randomDigits}`;
 };
 
-function MessageModal({ message, type = "info", onClose }) {
-  if (!message) return null;
-
-  const colors = {
-    success: "#28a745",
-    error: "#dc3545",
-    warning: "#ffc107",
-    info: "#007bff",
-  };
-
-  return (
-    <div className="invent-message-overlay">
-      <div className="invent-message-box" style={{ borderLeft: `6px solid ${colors[type]}` }}>
-        <div className="invent-message-content">
-          <p>{message}</p>
-          <button className="invent-message-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // CSV export helper (unchanged)
 function exportToCSV(data) {
   const headers = ['Item Code', 'Item Name', 'Item Group', 'Last Purchase', 'Expiration', 'Price', 'Stocks'];
@@ -162,7 +138,7 @@ export default function InventoryTable() {
   const getPhotoUrl = (photo) => {
     if (!photo) return "";
     if (photo.startsWith("http") || photo.startsWith("data:")) return photo;
-    return `${API_BASE}/uploads/${photo}`;
+    return `${process.env.REACT_APP_API_URL}/uploads/${photo}`;
   };
 
   const mapRowToUIItem = (row) => {
@@ -184,7 +160,7 @@ export default function InventoryTable() {
   const fetchInventory = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('/server-api/inventory/fetch');
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/inventory/fetch`);
       if (res.data?.success && Array.isArray(res.data.data)) {
         setInventoryData(res.data.data.map(mapRowToUIItem));
       } else {
@@ -238,7 +214,7 @@ export default function InventoryTable() {
     const item = inventoryData[selectedInventoryId];
 
     try {
-      await axios.delete(`${API_BASE}/inventory/delete/${item.id}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${item.id}`);
       setInventoryData(prev => prev.filter((_, i) => i !== index));
     } catch (err) {
       console.error("Error deleting inventory:", err);
@@ -355,7 +331,7 @@ export default function InventoryTable() {
       try {
         if (editingIndex !== null) {
           const editingItem = inventoryData[editingIndex];
-          await axios.put(`${API_BASE}/inventory/update/${editingItem.id}`, formData, {
+          await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingItem.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setSuccessMessage("Item updated successfully!");

@@ -22,13 +22,23 @@ const VetConsultationAdmin = () => {
   const [showProofModal, setShowProofModal] = useState(false);
   const [selectedProof, setSelectedProof] = useState(null);
 
+  useEffect(() => {
+    const storedChats = localStorage.getItem("vetChats");
+    if (storedChats) {
+      setChats(JSON.parse(storedChats));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("vetChats", JSON.stringify(chats));
+  }, [chats]);
 
   // Fetch consultations
   const fetchOnlineConsult = async () => {
     try {
       setIsLoading(true);
       setError("");
-      const res = await axios.get("/server-api/online_consult");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/online_consult`);
       setFetchOC(res.data.fetchData);
     } catch (err) {
       console.error("Error fetching consultations:", err);
@@ -51,10 +61,10 @@ const VetConsultationAdmin = () => {
 
     // Define handlers
     const handleReceiveMessage = (message) => {
-      const { consultID } = message;
+      const { consultID, from, text, name, photo } = message;
       setChats(prev => ({
         ...prev,
-        [consultID]: [...(prev[consultID] || []), message]
+        [consultID]: [...(prev[consultID] || []), { from, text, name, photo  }]
       }));
     };
 
@@ -85,7 +95,8 @@ const VetConsultationAdmin = () => {
   const startChat = (id) => {
     setActiveChatId(id);
     sessionStorage.setItem("ConsultId", id);
-    socketRef.current.emit('joinConsult', { consultID: id, userType: 'vet' });
+    const adminName = "Admin"
+    socketRef.current.emit('joinConsult', { consultID: id, name: adminName, userType: 'vet' });
 
     if (!chats[id]) {
       setChats(prev => ({
@@ -100,18 +111,23 @@ const VetConsultationAdmin = () => {
   const obtainConsult = () => {
     setActiveChatId(null);
     sessionStorage.removeItem('ConsultId');
+    localStorage.removeItem("vetChats");
     fetchOnlineConsult();
   };
 
   const sendMessage = () => {
     if (!inputMessage.trim() || !activeChatId) return;
 
-    const messageData = { consultID: activeChatId, from: 'vet', text: inputMessage.trim() };
+    const messageData = {
+      consultID: activeChatId,
+      from: 'vet',
+      name: "Admin",
+      text: inputMessage.trim(),
+      photo: `${process.env.REACT_APP_MAIN_URL}/images/logo.png`
+    };
 
-    // Emit message to backend
     socketRef.current.emit('sendMessage', messageData);
 
-    // Only add locally if you want instant UI (optional)
     setChats(prev => ({
       ...prev,
       [activeChatId]: [...(prev[activeChatId] || []), messageData]
