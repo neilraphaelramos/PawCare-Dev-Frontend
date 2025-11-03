@@ -24,6 +24,19 @@
   gap: 1rem;
 }
 
+.user-notify-type-tag {
+  display: inline-block;
+  margin: 4px 6px 8px;
+  padding: 2px 8px;
+  background-color: #e3f5fd;
+  color: #585858;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 5px;
+  text-transform: capitalize;
+}
+
+
 .notification-card {
   background: #ffffff;
   border-radius: 10px;

@@ -90,6 +90,7 @@ const Appointment = () => {
     axios.get(`${process.env.REACT_APP_API_URL}/appointments/fully-booked`)
       .then(res => {
         setFullyBookedDates(res.data || []);
+        console.table(res.data || [])
       })
       .catch(err => console.error("Error fetching fully booked dates:", err));
   }, []);
@@ -103,7 +104,11 @@ const Appointment = () => {
   }, [user])
 
   const handleReserve = async () => {
-    if (!selectedDate || !selectedTime) return alert("Please select date and time");
+    if (!selectedDate || !selectedTime) {
+      setMessageModal("Please select date and time");
+      setShowModal(true);
+      return;
+    }
 
     const owner_name = `${user?.firstName || ''} ${user?.middleName || ''} ${user?.lastName || ''} ${user?.suffix || ''}`.trim();
 
@@ -209,10 +214,13 @@ const Appointment = () => {
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}
+
+                {isFullyBooked && (
+                  <span className="tooltip">This date is full booked</span>
+                )}
               </div>
             );
           })}
-
         </div>
       </div>
 

@@ -3,12 +3,15 @@ import io from "socket.io-client";
 import "./Notifications.css";
 import { UserContext } from "../../hook/authContext";
 
-const socket = io(process.env.REACT_APP_SOCKET_URL);
+const socket = io(process.env.REACT_APP_API_URL);
 function NotificationCard({ notification, onDismiss }) {
   return (
     <div className="notification-card">
       <div className="notification-content">
-        <strong className="type-label">{notification.type_notify}</strong>
+        <strong className="type-label">{notification.title_notify}</strong>
+
+        <div className="user-notify-type-tag">{notification.type_notify}</div>
+
         <p>{notification.details}</p>
         <span className="timestamp">{new Date(notification.notify_date).toLocaleString()}</span>
       </div>
