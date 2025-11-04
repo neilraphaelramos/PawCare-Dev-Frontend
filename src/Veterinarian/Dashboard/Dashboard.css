@@ -1,31 +1,6 @@
 
-
-/* ─────────────────────────── Generic Resets ─────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', sans-serif;
-}
-
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-  background: #f7f9fc;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-::-webkit-scrollbar {
-  display: none;
-}
-
 /* ─────────────────────────── Layout ─────────────────────────── */
-.admin-dashboard {
+.vet-dashboard {
   display: flex;
   height: 100vh;
   background-color: #f9f9f9;
@@ -33,13 +8,13 @@ body {
   font-family: 'Poppins';
 }
 
-.admin-dashboard-sidebar,
-.admin-dashboard-right-panel {
+.vet-dashboard-sidebar,
+.vet-dashboard-right-panel {
   overflow-y: auto;
 }
 
 /* Main content */
-.admin-dashboard-main {
+.vet-dashboard-main {
   flex-grow: 1;    
   flex-shrink: 1; 
   flex-basis: 0;  
@@ -55,14 +30,14 @@ body {
 }
 
 /* Left column */
-.admin-dashboard-left {
+.vet-dashboard-left {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
 /* Right panel */
-.admin-dashboard-right-panel {
+.vet-dashboard-right-panel {
   background: #f9fafb;
   padding: 1.5rem;
   border-left: 1px solid #e5e7eb;
@@ -76,13 +51,13 @@ body {
 
 
 /* ─────────────────────────── Header ─────────────────────────── */
-.admin-dashboard-header {
+.vet-dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.admin-dashboard-header h2 {
+.vet-dashboard-header h2 {
   font-size: 1.5rem;
   font-weight: 700;
   color: #32b2b2;
@@ -90,7 +65,7 @@ body {
   justify-content: center;
 }
 
-.admin-dashboard-header input {
+.vet-dashboard-header input {
   flex: 1;
   padding: 0.75rem 1rem;
   font-size: 0.95rem;
@@ -101,18 +76,18 @@ body {
   transition: border-color 0.2s;
 }
 
-.admin-dashboard-header input:focus {
+.vet-dashboard-header input:focus {
   outline: none;
   border-color: #32b2b2;
 }
 
 /* ─────────────────────────── Metrics Cards ─────────────────────────── */
-.admin-dashboard-metrics {
+.vet-dashboard-metrics {
   display: flex;
   gap: 1rem;
 }
 
-.admin-dashboard-metric {
+.vet-dashboard-metric {
   flex: 1;
   background: #ffffff;
   padding: 1rem;
@@ -124,38 +99,38 @@ body {
   color: #32b2b2;
 }
 
-.admin-dashboard-metric svg {
+.vet-dashboard-metric svg {
   font-size: 1.1rem;
 }
 
-.admin-dashboard-metric span {
+.vet-dashboard-metric span {
   font-size: 1rem;
   font-weight: 600;
   color: #1a202c;
 }
 
 /* ─────────────────────────── Cards ─────────────────────────── */
-.admin-dashboard-card {
+.vet-dashboard-card {
   background: #ffffff;
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.admin-dashboard-card-graph-box {
+.vet-dashboard-card-graph-box {
   background: #ffffff;
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.admin-dashboard-charts-row {
+.vet-dashboard-charts-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1rem;
 }
 
-.admin-dashboard-orders-chart {
+.vet-dashboard-orders-chart {
   padding: 16px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -165,7 +140,7 @@ body {
   box-sizing: border-box;
 }
 
-.admin-dashboard-services-chart {
+.vet-dashboard-services-chart {
   padding: 16px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -364,22 +339,22 @@ body {
 
 /* ─────────────────────────── Responsive ─────────────────────────── */
 @media (max-width: 900px) {
-  .admin-dashboard {
+  .vet-dashboard {
     flex-direction: column;
   }
 
-  .admin-dashboard-metrics,
-  .admin-dashboard-row,
+  .vet-dashboard-metrics,
+  .vet-dashboard-row,
   .reminder-section {
     flex-direction: column;
   }
 
-  .admin-dashboard-right-panel {
+  .vet-dashboard-right-panel {
     width: 100%;
   }
 }
 
-.admin-dashboard-tab-buttons {
+.vet-dashboard-tab-buttons {
   display: flex;
   justify-content: flex-start;
   gap: 12px;
@@ -387,7 +362,7 @@ body {
 
 }
 
-.admin-dashboard-tab-buttons button {
+.vet-dashboard-tab-buttons button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -401,16 +376,16 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.admin-dashboard-tab-buttons button:hover {
+.vet-dashboard-tab-buttons button:hover {
   background-color: #e5e7eb;
 }
 
-.admin-dashboard-tab-buttons button:focus {
+.vet-dashboard-tab-buttons button:focus {
   outline: none;
   box-shadow: 0 0 0 2px #32b2b2;
 }
 
-.admin-dashboard-tab-buttons button.active {
+.vet-dashboard-tab-buttons button.active {
   background-color: #32b2b2;
   color: white;
   border-color: #dff5f5;

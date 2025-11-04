@@ -36,6 +36,7 @@ const Appointment = () => {
   const [isAM, setIsAM] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [fullyBookedDates, setFullyBookedDates] = useState([]);
 
   const { am, pm } = generateTimeSlots();
 
@@ -62,18 +63,40 @@ const Appointment = () => {
     }
   };
 
-  const updateStatus = (id, status) => {
-    axios.put(`${process.env.REACT_APP_API_URL}/appointments/${id}/status`, { status })
-      .then(() => {
-        setAppointments(prev => prev.map(a => a.id_appoint === id ? { ...a, status } : a));
-      })
-      .catch(err => console.error(err));
+  const updateStatus = async (id, status, uid, setDate, setTime) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/appointments/${id}/status`, { status })
+      setAppointments(
+        prev => prev.map(a => a.id_appoint === id ? { ...a, status } : a)
+      );
+
+      const readableDate = new Date(setDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      const details =
+        status === "Approved"
+          ? `Your appointment on ${readableDate} at ${setTime} has been approved.`
+          : `Your appointment on ${readableDate} at ${setTime} has been declined.`;
+
+      await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+        UID: uid,
+        title_notify:  `Appointment ${status}`,
+        type_notify: "Appointment",
+        details,
+      });
+
+    } catch (error) {
+      console.error(error)
+    }
   };
 
   useEffect(() => {
     if (selectedDate) {
       const dateStr = selectedDate.toLocaleDateString('en-CA');
-      axios.get(`${process.env.REACT_APP_API_URL}/appointmentsvets/${dateStr}`)
+      axios.get(`${process.env.REACT_APP_API_URL}/appointments/vets/${dateStr}`)
         .then(res => {
           console.log('Appointments fetched:', res.data);
           setAppointments(res.data);
@@ -81,6 +104,16 @@ const Appointment = () => {
         .catch(err => console.error(err));
     }
   }, [selectedDate]);
+
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_URL}/appointments/fully-booked`)
+      .then(res => {
+        console.log("✅ Fully booked dates:", res.data);
+        setFullyBookedDates(res.data || []);
+      })
+      .catch(err => console.error("Error fetching fully booked dates:", err));
+  }, []);
+
 
   const filterSlots = (slots) => {
     return slots.filter((slot) => {
@@ -126,15 +159,32 @@ const Appointment = () => {
           {[...Array(startDay === 0 ? 6 : startDay - 1)].map((_, i) => <div key={i}></div>)}
           {daysInMonth.map(day => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-            const isDisabled = date < new Date().setHours(0, 0, 0, 0);
-            const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
+            const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+            const isPast = date < new Date().setHours(0, 0, 0, 0);
+            const isSelected =
+              selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
+
+            const isWednesday = date.getDay() === 3;
+            const isFullyBooked = fullyBookedDates.includes(dateStr);
+
+            // Admin can still click full-booked dates
+            const isDisabled = isPast || isWednesday;
+
             return (
               <div
                 key={day}
-                className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                className={`admin-calendar-day 
+                  ${isFullyBooked ? 'admin-fully-booked' : ''} 
+                  ${isDisabled ? 'admin-disabled' : ''} 
+                  ${isSelected ? 'selected' : ''}`}
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}
+                {isFullyBooked && <span className="admin-tooltip">This date is full</span>}
+                {isWednesday && !isFullyBooked && (
+                  <span className="admin-tooltip">Closed (Wednesday)</span>
+                )}
               </div>
             );
           })}
@@ -186,8 +236,26 @@ const Appointment = () => {
                     Status: {selectedAppointment.status || 'Pending'}
                   </div>
                   <div className="action-buttons">
-                    <button className="approve" onClick={() => updateStatus(selectedAppointment.id_appoint, 'Approved')}>Approve</button>
-                    <button className="decline" onClick={() => updateStatus(selectedAppointment.id_appoint, 'Declined')}>Decline</button>
+                    <button className="approve" onClick={() =>
+                      updateStatus(
+                        selectedAppointment.id_appoint,
+                        'Approved',
+                        selectedAppointment.UID,
+                        selectedAppointment.set_date,
+                        selectedAppointment.set_time
+                      )}>
+                      Approve
+                    </button>
+                    <button className="decline" onClick={() =>
+                      updateStatus(
+                        selectedAppointment.id_appoint,
+                        'Declined',
+                        selectedAppointment.UID,
+                        selectedAppointment.set_date,
+                        selectedAppointment.set_time
+                      )}>
+                      Decline
+                    </button>
                   </div>
                 </div>
               ) : (

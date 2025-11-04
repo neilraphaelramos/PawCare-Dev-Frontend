@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { FaTimes, FaPaperPlane, FaVideo } from 'react-icons/fa';
+import { FaTimes, FaPaperPlane, FaVideo, FaSpinner } from 'react-icons/fa';
 import './OnlineConsultation.css';
 import axios from 'axios';
 import { UserContext } from '../../hook/authContext';
@@ -16,14 +16,35 @@ const VetConsultationAdmin = () => {
   const { user, tokenData } = useContext(UserContext);
   const socketRef = useRef(null);
   const chatEndRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [selectedProof, setSelectedProof] = useState(null);
+
+  useEffect(() => {
+    const storedChats = localStorage.getItem("vetChats");
+    if (storedChats) {
+      setChats(JSON.parse(storedChats));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("vetChats", JSON.stringify(chats));
+  }, [chats]);
 
   // Fetch consultations
   const fetchOnlineConsult = async () => {
     try {
-      const res = await axios.get(`"/server-api/online_consult_fetch"`);
+      setIsLoading(true);
+      setError("");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/online_consult`);
       setFetchOC(res.data.fetchData);
     } catch (err) {
       console.error("Error fetching consultations:", err);
+      setError("Failed to load consultations. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -35,15 +56,15 @@ const VetConsultationAdmin = () => {
     fetchOnlineConsult();
 
     // Initialize Socket.IO client only once
-    const socket = io(process.env.REACT_APP_SOCKET_URL);
+    const socket = io(process.env.REACT_APP_API_URL);
     socketRef.current = socket;
 
     // Define handlers
     const handleReceiveMessage = (message) => {
-      const { consultID } = message;
+      const { consultID, from, text, name, photo } = message;
       setChats(prev => ({
         ...prev,
-        [consultID]: [...(prev[consultID] || []), message]
+        [consultID]: [...(prev[consultID] || []), { from, text, name, photo }]
       }));
     };
 
@@ -74,7 +95,8 @@ const VetConsultationAdmin = () => {
   const startChat = (id) => {
     setActiveChatId(id);
     sessionStorage.setItem("ConsultId", id);
-    socketRef.current.emit('joinConsult', { consultID: id, userType: 'vet' });
+    const vetName = `Dr. ${user.firstName}`
+    socketRef.current.emit('joinConsult', { consultID: id, name: vetName, userType: 'vet' });
 
     if (!chats[id]) {
       setChats(prev => ({
@@ -89,18 +111,23 @@ const VetConsultationAdmin = () => {
   const obtainConsult = () => {
     setActiveChatId(null);
     sessionStorage.removeItem('ConsultId');
+    localStorage.removeItem("vetChats");
     fetchOnlineConsult();
   };
 
   const sendMessage = () => {
     if (!inputMessage.trim() || !activeChatId) return;
 
-    const messageData = { consultID: activeChatId, from: 'vet', text: inputMessage.trim() };
+    const messageData = {
+      consultID: activeChatId,
+      from: 'vet',
+      name: `Dr. ${user.firstName}`,
+      text: inputMessage.trim(),
+      photo: user.pic
+    };
 
-    // Emit message to backend
     socketRef.current.emit('sendMessage', messageData);
 
-    // Only add locally if you want instant UI (optional)
     setChats(prev => ({
       ...prev,
       [activeChatId]: [...(prev[activeChatId] || []), messageData]
@@ -109,9 +136,33 @@ const VetConsultationAdmin = () => {
     setInputMessage('');
   };
 
+  const openProofModal = (proofUrl) => {
+    setSelectedProof(proofUrl);
+    setShowProofModal(true);
+  };
+
+  const closeProofModal = () => {
+    setSelectedProof(null);
+    setShowProofModal(false);
+  };
+
   return (
     <div className="vet-admin-container">
       <h2>Vet Consultation Requests</h2>
+
+      {isLoading && (
+        <div className="loading-overlay">
+          <FaSpinner className="loading-spinner" />
+          <p>Loading consultations...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={fetchOnlineConsult}>Retry</button>
+        </div>
+      )}
 
       {!inCall ? (
         <>
@@ -122,16 +173,38 @@ const VetConsultationAdmin = () => {
           </div>
 
           <div className="requests-list">
-            {fetchOC.filter(req => filter === 'all' || req.consultationType === filter).map(req => (
-              <div key={req.id} className={`request-card ${req.consultationType}`}>
-                <h3>{req.petName} ({req.petType})</h3>
-                <p><strong>Owner:</strong> {req.ownerName}</p>
-                <p><strong>Payment Proof:</strong> <a href={`/server-api${req.paymentProof}`} target="_blank" rel="noopener noreferrer">View File</a></p>
-                <p><strong>Concern:</strong> {req.concern}</p>
-                <p><strong>Type:</strong> {req.consultationType}</p>
-                <button className="accommodate-btn" onClick={() => startChat(req.channelConsult)}>Accommodate</button>
+            {fetchOC.filter(req => filter === 'all' || req.consultationType === filter).length === 0 ? (
+              <div className="admin-no-requests">
+                No Consultation Requests Found.
               </div>
-            ))}
+            ) : (
+              fetchOC
+                .filter(req => filter === 'all' || req.consultationType === filter)
+                .map(req => (
+                  <div key={req.id} className={`request-card ${req.consultationType}`}>
+                    <h3>{req.petName} ({req.petSpecies})</h3>
+                    <p><strong>Pet Type:</strong> {req.petType}</p>
+                    <p><strong>Owner:</strong> {req.ownerName}</p>
+                    <p>
+                      <strong>Payment Proof:</strong>{' '}
+                      <button
+                        className="view-proof-btn"
+                        onClick={() => openProofModal(req.paymentProof)}
+                      >
+                        View Proof
+                      </button>
+                    </p>
+                    <p><strong>Concern:</strong> {req.concern}</p>
+                    <p><strong>Type:</strong> {req.consultationType}</p>
+                    <button
+                      className="accommodate-btn"
+                      onClick={() => startChat(req.channelConsult)}
+                    >
+                      Accommodate
+                    </button>
+                  </div>
+                ))
+            )}
           </div>
 
           {activeChatId && (
@@ -188,6 +261,23 @@ const VetConsultationAdmin = () => {
               }}
               onCallEnd={() => { setInCall(false); sessionStorage.removeItem('inCalling'); }}
             />
+          </div>
+        </div>
+      )}
+
+      {showProofModal && (
+        <div className="proof-modal-overlay" onClick={closeProofModal}>
+          <div className="proof-modal" onClick={e => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={closeProofModal}><FaTimes /></button>
+            {selectedProof ? (
+              selectedProof.endsWith(".pdf") ? (
+                <iframe src={selectedProof} title="Payment Proof" className="proof-frame" />
+              ) : (
+                <img src={selectedProof} alt="Payment Proof" className="proof-image" />
+              )
+            ) : (
+              <p>No proof available</p>
+            )}
           </div>
         </div>
       )}

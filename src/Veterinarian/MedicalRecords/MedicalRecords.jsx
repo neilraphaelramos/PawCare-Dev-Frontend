@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaRegEye, FaEdit } from 'react-icons/fa';
-import { UserContext } from '../../hook/authContext';
+import { Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios'
 import './MedicalRecords.css';
 
@@ -27,6 +27,21 @@ export default function PetRecords() {
     status: '',
     completed: ''
   });
+
+  const [showOwnerSearchModal, setShowOwnerSearchModal] = useState(false);
+  const [owners, setOwners] = useState([]);
+  const [selectedOwner, setSelectedOwner] = useState(null);
+  const [autoFill, setAutoFill] = useState({
+    photo_pet: "",
+    ownerName: "",
+    userName: "",
+    name: "",
+    age: "",
+    type: "",
+    species: "",
+    gender: ""
+  });
+
   const [type, setType] = useState("");
   const [species, setSpecies] = useState("");
   const [speciesOptions, setSpeciesOptions] = useState([]);
@@ -36,25 +51,19 @@ export default function PetRecords() {
   const [editSpecies, setEditSpecies] = useState("");
   const [editSpeciesOptions, setEditSpeciesOptions] = useState([]);
   const [editLoading, setEditLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [userInfo, setUserInfo] = useState([]);
   const [switchBtn, setSwitchBtn] = useState(false);
-  const { user } = useContext(UserContext);
 
-  const name_vet = {
-      name: [
-        user.firstName,
-        user.middelName,
-        user.lastName,
-        user.suffix
-      ]
-        .filter(Boolean)
-        .join(' ')
-    };
+  const [petID, setPetID] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [messageModal, setMessageModal] = useState("");
 
   const formRef = useRef(null);
 
-  const APIENDPOINT = '/server-api';
+  const APIENDPOINT = process.env.REACT_APP_API_URL;
 
   const handleView = (pet) => {
     axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${pet.id}`)
@@ -68,10 +77,16 @@ export default function PetRecords() {
   };
 
   const resetAddForm = () => {
-    setType("");
-    setSpecies("");
-    setSpeciesOptions([]);
-    setPreviewImage(null);
+    setAutoFill({
+      photo_pet: "",
+      ownerName: "",
+      userName: "",
+      name: "",
+      age: "",
+      type: "",
+      species: "",
+      gender: ""
+    });
   };
 
   const resetEditForm = () => {
@@ -79,14 +94,6 @@ export default function PetRecords() {
     setEditType("");
     setEditSpecies("");
     setEditSpeciesOptions([]);
-  };
-
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-    }
   };
 
   const handleCloseModal = () => {
@@ -105,7 +112,7 @@ export default function PetRecords() {
       status: '',
       completed: ''
     });
-    setUserInfo([]);
+    setSwitchBtn(false);
   };
 
   const handleUserInfo = async (ownerUsername) => {
@@ -119,7 +126,6 @@ export default function PetRecords() {
       console.error("Error fetching user info:", err);
     }
   };
-
   useEffect(() => {
     if (userInfo && Object.keys(userInfo).length > 0) {
       setNewRecord((prev) => ({
@@ -131,42 +137,51 @@ export default function PetRecords() {
     }
   }, [userInfo]);
 
+  useEffect(() => {
+    if (showAddPetModal) {
+      axios.get(`${APIENDPOINT}/pet_infos/owners`)
+        .then(res => setOwners(res.data))
+        .catch(err => console.error("Error fetching owners:", err));
+    }
+  }, [showAddPetModal]);
 
   const handleAddPet = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData();
 
-    formData.append("owner_name", form.ownerName.value);
-    formData.append("user_name", form.userName.value);
-    formData.append("pet_name", form.name.value);
-    formData.append('type', form.type.value);
-    formData.append("species", form.species.value);
-    formData.append("pet_age", form.age.value);
-    formData.append("pet_gender", form.gender.value);
-    formData.append("pet_condition", form.condition.value);
-    formData.append("last_visit", form.lastVisit.value);
-    formData.append("diagnosis", form.diagnosis.value);
-
-    // ✅ Add uploaded file
-    if (form.petImage.files[0]) {
-      formData.append("photo", form.petImage.files[0]);
+    const formdata = {
+      owner_name: form.ownerName.value,
+      user_name: form.userName.value,
+      pet_name: form.name.value,
+      petType: form.type.value,
+      species: form.species.value,
+      pet_age: form.age.value,
+      pet_gender: form.gender.value,
+      pet_condition: form.condition.value,
+      last_visit: form.lastVisit.value,
+      diagnosis: form.diagnosis.value,
+      photo: autoFill.photo_pet,
     }
 
+    console.table(formdata);
     try {
-      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      setIsProcessing(true);
+
+      const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet`, formdata, {
+        headers: { "Content-Type": "application/json" }
       });
 
       if (res.data.success) {
-        // ✅ Refresh pets
         const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
+
         setShowAddPetModal(false);
         form.reset();
       }
     } catch (err) {
       console.error("Error adding pet:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -197,6 +212,7 @@ export default function PetRecords() {
     }
 
     try {
+      setIsProcessing(true);
       const res = await axios.put(`${APIENDPOINT}/pet_medical_records/edit_pet/${editData.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -210,14 +226,38 @@ export default function PetRecords() {
       }
     } catch (err) {
       console.error("Error editing pet:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
+  const handleDelete = (index) => {
+    setPetID(index);
+    setMessageModal("Are you sure to delete pet records including the visit history?");
+    setShowConfirmModal(true);
+  }
+
+  const confirmDelete = (id) => {
+
+  }
+
   useEffect(() => {
-    axios.get(`${APIENDPOINT}/pet_medical_records/fetch`)
-      .then((res) => setPets(res.data))
-      .catch((err) => console.error("Error fetching pets:", err));
+    const fetchPets = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
+        setPets(res.data);
+        console.table(res.data);
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPets();
   }, []);
+
 
   useEffect(() => {
     async function fetchBreeds() {
@@ -318,9 +358,7 @@ export default function PetRecords() {
     );
   };
 
-  const handleAddRecord = () => {
-    setAddingRecord(true)
-  };
+  const handleAddRecord = () => setAddingRecord(true);
 
   const handleNewRecordChange = (e) => {
     const { name, value } = e.target;
@@ -331,6 +369,7 @@ export default function PetRecords() {
     e.preventDefault();
 
     try {
+      setIsProcessing(true);
       const res = await axios.post(`${APIENDPOINT}/pet_medical_records/add_pet_history`, {
         id_pet_medical_records: selectedPet.id,
         owner_email: newRecord.ownerEmail,
@@ -353,12 +392,12 @@ export default function PetRecords() {
         blood_pressure: newRecord.bloodPressure || '',
         pulse: newRecord.pulse || '',
         medications: newRecord.medications || '',
-        veterinarian_name: `Dr. ${name_vet}`
+        veterinarian_name: "Admin"
       });
 
       if (res.data.success) {
         // ✅ Refetch updated history
-        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/visit_history//fetch${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
 
         setAddingRecord(false);
@@ -374,11 +413,14 @@ export default function PetRecords() {
       }
     } catch (err) {
       console.error("Error adding new visit history:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleUpdateVisit = async () => {
     try {
+      setIsProcessing(true);
       const res = await axios.put(
         `${APIENDPOINT}/pet_medical_records/edit_pet_history/${selectedVisit.history_id}`,
         {
@@ -407,13 +449,14 @@ export default function PetRecords() {
       );
 
       if (res.data.success) {
-        // ✅ Refresh history
-        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/visit_history/fetch/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
       }
     } catch (err) {
       console.error("Error updating visit history:", err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -431,7 +474,7 @@ export default function PetRecords() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="add-btn margin1" onClick={() => setShowAddPetModal(true)}>
+          <button className="admin-add-btn" onClick={() => setShowAddPetModal(true)}>
             <FaPlus /> Add Pet
           </button>
         </div>
@@ -452,7 +495,11 @@ export default function PetRecords() {
           <div>Action</div>
         </div>
 
-        {filteredPets.length > 0 ? (
+        {isLoading ? (
+          <div className="loading-records">
+            Loading pet records...
+          </div>
+        ) : filteredPets.length > 0 ? (
           filteredPets.map((pet) => (
             <div className="admin-pet-records-row" key={pet.id}>
               <div>{pet.ownerName}</div>
@@ -471,20 +518,27 @@ export default function PetRecords() {
                   ? pet.diagnosis.slice(0, 30) + '…'
                   : pet.diagnosis || ""}
               </div>
-              <div className="action-buttons">
+              <div className="admin-action-buttons">
                 <button
-                  className="aksi-btn"
+                  className="admin-aksi-btn"
                   title="View Record"
                   onClick={() => handleView(pet)}
                 >
                   <FaRegEye size={16} />
                 </button>
                 <button
-                  className="aksi-btn"
+                  className="admin-aksi-btn margin-btn"
                   title="Edit Record"
                   onClick={() => handleEdit(pet)}
                 >
                   <FaEdit size={16} />
+                </button>
+                <button
+                  className="admin-aksi-btn"
+                  title="Delete Record"
+                  onClick={() => handleDelete(pet.id)}
+                >
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>
@@ -492,6 +546,7 @@ export default function PetRecords() {
         ) : (
           <div className="no-records">Records Not Found</div>
         )}
+
       </div>
 
       {selectedPet && (
@@ -523,7 +578,6 @@ export default function PetRecords() {
               >
                 {switchBtn ? "💾 Save" : <><FaPlus /> Add Record</>}
               </button>
-
             </div>
 
             {addingRecord && (
@@ -640,8 +694,11 @@ export default function PetRecords() {
                   <div key={i} className="checkup-card-wide">
                     <div className="checkup-col">
                       <p className="checkup-label">Date</p>
-                      <strong>{visit.day}</strong>
-                      <span>{visit.date}</span>
+                      <p>
+                        <strong className='label-admin-date'>{visit.day}</strong>
+                        <br />
+                        <span className='label-admin-date'>{visit.date}</span>
+                      </p>
                     </div>
                     <div className="checkup-col">
                       <p className="checkup-label">Service Type</p>
@@ -899,8 +956,9 @@ export default function PetRecords() {
                   onClick={() => {
                     handleUpdateVisit()
                   }}
+                  disabled={isProcessing}
                 >
-                  Save Changes
+                  {isProcessing ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -908,19 +966,17 @@ export default function PetRecords() {
         </div>
       )}
 
-
       {showAddPetModal && (
         <div className="pet-modal-overlay">
-          <div className="pet-modal-add">
+          <div className="admin-pet-modal-add">
             <button className="close-btn" onClick={() => setShowAddPetModal(false)}>×</button>
             <h3 className="add-modal-title">Add New Pet Record</h3>
             <form onSubmit={handleAddPet} className="add-pet-form-grid">
               {/* Left Side: Image */}
               <div className="add-pet-image-upload">
                 <label htmlFor="petImage" className="add-image-upload-box">
-                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden onChange={handleImageChange} />
                   <img
-                    src={previewImage || "/images/upload_placehold.jpg"}
+                    src={autoFill.photo_pet || "/images/upload_placehold.jpg"}
                     alt="Upload"
                     className="add-image-placeholder"
                   />
@@ -930,60 +986,90 @@ export default function PetRecords() {
               {/* Right Side: Inputs */}
               <div className="add-pet-form-fields">
                 <div className="add-form-group">
-                  <input name="ownerName" type="text" placeholder="Owner Name" required />
-                  <input name="userName" type="text" placeholder="Username" required />
+                  <input
+                    name="ownerName"
+                    type="text"
+                    placeholder="Click to select Owner and Pet"
+                    value={
+                      autoFill.ownerName
+                        ? `${autoFill.ownerName}`
+                        : ""
+                    }
+                    readOnly
+                    onClick={() => setShowOwnerSearchModal(true)}
+                    className="clickable-owner-field"
+                    title='Owner Name(Selection Owner And Pet)'
+                  />
+
+                  <input
+                    name="userName"
+                    type="text"
+                    placeholder="Username"
+                    value={autoFill.userName}
+                    readOnly
+                    title='Username'
+                  />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="name" type="text" placeholder="Pet Name" required />
-                  <input name="age" type="number" placeholder="Age" required />
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Pet Name"
+                    value={autoFill.name}
+                    readOnly
+                    title="Pet's Name"
+                  />
+                  <input
+                    name="age"
+                    type="number"
+                    placeholder="Age"
+                    value={autoFill.age}
+                    readOnly
+                    title="Pet's Age"
+                  />
                 </div>
 
                 <div className="add-form-group">
-                  <select
+                  <input
                     name="type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Dog">Dog</option>
-                    <option value="Cat">Cat</option>
-                  </select>
-                  <select
+                    type="text"
+                    placeholder="Pet Type"
+                    value={autoFill.type}
+                    readOnly
+                    title="Pet's Type"
+                  />
+                  <input
                     name="species"
-                    value={species}
-                    onChange={(e) => setSpecies(e.target.value)}
-                    required
-                    disabled={!type || loading}
-                  >
-                    <option value="">
-                      {loading ? "Loading species..." : "Select species"}
-                    </option>
-                    {speciesOptions.map((opt) => (
-                      <option key={opt.id} value={opt.name}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select name="gender" required defaultValue="">
-                    <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                    type="text"
+                    placeholder="Species"
+                    value={autoFill.species}
+                    readOnly
+                    title="Pet's Species"
+                  />
+                  <input
+                    name="gender"
+                    type="text"
+                    placeholder="Gender"
+                    value={autoFill.gender}
+                    readOnly
+                    title="Pet's Gender"
+                  />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="condition" type="text" placeholder="Condition" required />
-                  <input name="lastVisit" type="date" placeholder="Last Visit" required />
+                  <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition"/>
+                  <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit'/>
                 </div>
 
                 <div className="add-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" required />
+                  <input name="diagnosis" type="text" placeholder="Diagnosis" required title="Pet's Diagnosis"/>
                 </div>
 
                 <div className="add-button-row">
-                  <button type="submit" className="add-add-btn">Add Pet</button>
+                  <button type="submit" className="add-add-btn" disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : "Add Pet"}
+                  </button>
                   <button
                     type="button"
                     className="cancel-btn"
@@ -1000,94 +1086,128 @@ export default function PetRecords() {
           </div>
         </div>
       )}
+
       {showEditModal && (
         <div className="pet-modal-overlay">
-          <div className="pet-modal-edit">
+          <div className="admin-pet-modal-edit">
             <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
             <h3 className="edit-modal-title">Edit Pet Record</h3>
+
             <form onSubmit={handleEditSubmit} className="edit-pet-form-grid">
               {/* Left Side: Image */}
               <div className="edit-pet-image-upload">
                 <label htmlFor="petImage" className="edit-image-upload-box">
-                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden />
-                  {editData?.photo ? (
-                    <img
-                      src={`${APIENDPOINT}/uploads/${editData.photo}`}
-                      alt="Current Pet"
-                      className="edit-image-placeholder"
-                    />
-                  ) : (
-                    <img
-                      src="/images/upload-placeholder.png"
-                      alt="Upload"
-                      className="edit-image-placeholder"
-                    />
-                  )}
+                  <img
+                    src={editData?.photo || "/images/upload-placeholder.png"}
+                    alt="Pet"
+                    className="edit-image-placeholder"
+                  />
                 </label>
               </div>
+
               {/* Right Side: Inputs */}
               <div className="edit-pet-form-fields">
+
                 <div className="edit-form-group">
-                  <input name="ownerName" type="text" placeholder="Owner Name" defaultValue={editData?.ownerName} required />
-                  <input name="userName" type="text" placeholder="Username" defaultValue={editData?.userName} required />
+                  <input
+                    name="ownerName"
+                    type="text"
+                    placeholder="Owner Name"
+                    value={editData?.ownerName || ""}
+                    readOnly
+                    title='Owner Name'
+                  />
+                  <input
+                    name="userName"
+                    type="text"
+                    placeholder="Username"
+                    value={editData?.userName || ""}
+                    readOnly
+                    title='Username'
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <input name="name" type="text" placeholder="Pet Name" defaultValue={editData?.name} required />
-                  <input name="age" type="number" placeholder="Age" defaultValue={editData?.age} required />
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Pet Name"
+                    value={editData?.name || ""}
+                    readOnly
+                    title="Pet's Name"
+                  />
+                  <input
+                    name="age"
+                    type="number"
+                    placeholder="Age"
+                    value={editData?.age || ""}
+                    readOnly
+                    title="Pet's Age"
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <select
+                  <input
                     name="type"
-                    required
-                    value={editType}
-                    onChange={(e) => {
-                      setEditType(e.target.value);
-                      setEditSpecies(""); // reset species when changing type
-                    }}
-                  >
-                    <option value="" disabled>Select Type</option>
-                    <option value="Dog">Dog</option>
-                    <option value="Cat">Cat</option>
-                  </select>
-
-                  <select
+                    type="text"
+                    placeholder="Pet Type"
+                    value={editData?.petType || ""}
+                    readOnly
+                    title="Pet's Type"
+                  />
+                  <input
                     name="species"
+                    type="text"
+                    placeholder="Species"
+                    value={editData?.species || ""}
+                    readOnly
+                    title="Pet's Species"
+                  />
+                  <input
+                    name="gender"
+                    type="text"
+                    placeholder="Gender"
+                    value={editData?.gender || ""}
+                    readOnly
+                    title="Pet's Gender"
+                  />
+                </div>
+
+                {/* Editable Fields Only */}
+                <div className="edit-form-group">
+                  <input
+                    name="condition"
+                    type="text"
+                    placeholder="Condition"
+                    defaultValue={editData?.condition || ""}
                     required
-                    value={editSpecies}
-                    onChange={(e) => setEditSpecies(e.target.value)}
-                    disabled={!editType || editLoading}
-                  >
-                    <option value="">
-                      {editLoading ? "Loading species..." : "Select species"}
-                    </option>
-                    {editSpeciesOptions.map((opt) => (
-                      <option key={opt.id} value={opt.name}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select name="gender" required defaultValue={editData?.gender || ""}>
-                    <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-
-
-                <div className="edit-form-group">
-                  <input name="condition" type="text" placeholder="Condition" defaultValue={editData?.condition} required />
-                  <input name="lastVisit" type="date" placeholder="Last Visit" defaultValue={editData?.lastVisit} required />
+                    title="Pet's Condition"
+                  />
+                  <input
+                    name="lastVisit"
+                    type="date"
+                    placeholder="Last Visit"
+                    defaultValue={editData?.lastVisit || ""}
+                    required
+                    title="Last Visit"
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" defaultValue={editData?.diagnosis} required />
+                  <input
+                    name="diagnosis"
+                    type="text"
+                    placeholder="Diagnosis"
+                    defaultValue={editData?.diagnosis || ""}
+                    required
+                    title="Pet's Diagnosis"
+                  />
                 </div>
 
                 <div className="edit-button-row">
-                  <button type="submit" className="edit-add-btn">Update Pet</button>
+                  <button type="submit" className="edit-add-btn" disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : "Update Pet"}
+                  </button>
                   <button
                     type="button"
                     className="cancel-btn"
@@ -1101,6 +1221,134 @@ export default function PetRecords() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showOwnerSearchModal && (
+        <div className="admin-ownersearch-overlay" onClick={() => setShowOwnerSearchModal(false)}>
+          <div className="admin-ownersearch-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-ownersearch-title">Select Owner and Pet</h3>
+
+            <input
+              type="text"
+              placeholder="Search owner or pet..."
+              className="admin-ownersearch-input"
+              onChange={(e) => {
+                const val = e.target.value.toLowerCase();
+                setOwners((prev) =>
+                  prev.map((o) => ({
+                    ...o,
+                    hidden:
+                      !o.owner_name.toLowerCase().includes(val) &&
+                      !o.pet_name.toLowerCase().includes(val),
+                  }))
+                );
+              }}
+            />
+
+            <div className="admin-ownersearch-table-wrapper">
+              <table className="admin-ownersearch-table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Owner Name</th>
+                    <th>Pet Name</th>
+                    <th>Type</th>
+                    <th>Species</th>
+                    <th>Gender</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {owners.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="admin-ownersearch-loading">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : (
+                    owners
+                      .filter((o) => !o.hidden)
+                      .map((owner, index) => (
+                        <tr
+                          key={index}
+                          className="admin-ownersearch-row"
+                          onClick={() => {
+                            setAutoFill({
+                              photo_pet: owner.photo_pet || owner.photo,
+                              ownerName: owner.owner_name,
+                              userName: owner.owner_username,
+                              name: owner.pet_name,
+                              age: owner.pet_age,
+                              type: owner.petType,
+                              species: owner.species,
+                              gender: owner.pet_gender,
+                            });
+                            setShowOwnerSearchModal(false);
+                          }}
+                        >
+                          <td>
+                            <img
+                              src={owner.photo_pet || "/images/upload_placehold.jpg"}
+                              alt="pet"
+                              className="admin-ownersearch-photo"
+                            />
+                          </td>
+                          <td>{owner.owner_name}</td>
+                          <td>{owner.pet_name}</td>
+                          <td>{owner.petType}</td>
+                          <td>{owner.species}</td>
+                          <td>{owner.pet_gender}</td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              className="admin-ownersearch-close-btn"
+              onClick={() => setShowOwnerSearchModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="All-deleteconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
+            <p className="All-deleteconfirm-message">
+              {messageModal}
+            </p>
+            <div className="All-deleteconfirm-actions">
+              <button
+                className="All-deleteconfirm-btn confirm"
+                onClick={() => confirmDelete(petID)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    Processing... <Loader2 size={16} className="feature-spinner" />
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </button>
+              <button
+                className="All-deleteconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+            </div>
+
           </div>
         </div>
       )}

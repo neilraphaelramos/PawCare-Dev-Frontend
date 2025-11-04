@@ -24,6 +24,7 @@ const VetSidebar = () => {
         <Link to="appointments">Appointments</Link>
         <Link to="medical-records">Medical Records</Link>
         <Link to="inventory">Inventory</Link>
+        <Link to="reports">Manage Reports</Link>
         <Link to="notifications">Notifications</Link>
         <Link to="profile">Profile</Link>
         <Link to="online-consultation">Online Consultations</Link>

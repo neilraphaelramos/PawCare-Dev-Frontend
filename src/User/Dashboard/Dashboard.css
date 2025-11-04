@@ -8,7 +8,8 @@
   font-family: 'Poppins';
 }
 
-html, body {
+html,
+body {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -17,9 +18,10 @@ html, body {
 ::-webkit-scrollbar {
   display: none;
 }
+
 /* ───────────────────────────  Layout grid  ─────────────────────────────── */
 .user-dashboard {
-    display: flex;
+  display: flex;
   height: 100vh;
   background-color: #f9f9f9;
   font-family: 'Poppins';
@@ -38,7 +40,7 @@ html, body {
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .user-dashboard-logo {
@@ -348,6 +350,7 @@ html, body {
   padding: 0.4rem 0;
   background: #edf2f7;
   border-radius: 6px;
+  text-align: center;
 }
 
 .user-dashboard-calendar-grid .user-dashboard-active-day {
@@ -440,4 +443,3 @@ html, body {
   font-size: 0.75rem;
   color: #1f2937;
 }
-

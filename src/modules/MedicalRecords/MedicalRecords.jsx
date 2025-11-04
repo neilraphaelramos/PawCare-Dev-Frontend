@@ -30,7 +30,6 @@ export default function PetRecords() {
 
   const [showOwnerSearchModal, setShowOwnerSearchModal] = useState(false);
   const [owners, setOwners] = useState([]);
-  const [selectedOwner, setSelectedOwner] = useState(null);
   const [autoFill, setAutoFill] = useState({
     photo_pet: "",
     ownerName: "",
@@ -59,6 +58,7 @@ export default function PetRecords() {
 
   const [petID, setPetID] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
 
   const formRef = useRef(null);
@@ -114,6 +114,11 @@ export default function PetRecords() {
     });
     setSwitchBtn(false);
   };
+
+  const handleCloseModalMessage = () => {
+    setShowMessageModal(false);
+    fetchPets();
+  }
 
   const handleUserInfo = async (ownerUsername) => {
     try {
@@ -237,24 +242,32 @@ export default function PetRecords() {
     setShowConfirmModal(true);
   }
 
-  const confirmDelete = (id) => {
-    
+  const confirmDelete = async (id) => {
+    try {
+      const res = await axios.delete(`${APIENDPOINT}/pet_medical_records/delete/${id}`);
+      setMessageModal(res.data.message);
+    } catch (error) {
+      console.error("Error deleting record:", err);
+    } finally {
+      setShowConfirmModal(false);
+      setShowMessageModal(true);
+    }
   }
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        setIsLoading(true);
-        const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
-        setPets(res.data);
-        console.table(res.data);
-      } catch (err) {
-        console.error("Error fetching pets:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchPets = async () => {
+    try {
+      setIsLoading(true);
+      const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
+      setPets(res.data);
+      console.table(res.data);
+    } catch (err) {
+      console.error("Error fetching pets:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPets();
   }, []);
 
@@ -998,6 +1011,7 @@ export default function PetRecords() {
                     readOnly
                     onClick={() => setShowOwnerSearchModal(true)}
                     className="clickable-owner-field"
+                    title='Owner Name(Selection Owner And Pet)'
                   />
 
                   <input
@@ -1006,6 +1020,7 @@ export default function PetRecords() {
                     placeholder="Username"
                     value={autoFill.userName}
                     readOnly
+                    title='Username'
                   />
                 </div>
 
@@ -1016,6 +1031,7 @@ export default function PetRecords() {
                     placeholder="Pet Name"
                     value={autoFill.name}
                     readOnly
+                    title="Pet's Name"
                   />
                   <input
                     name="age"
@@ -1023,6 +1039,7 @@ export default function PetRecords() {
                     placeholder="Age"
                     value={autoFill.age}
                     readOnly
+                    title="Pet's Age"
                   />
                 </div>
 
@@ -1033,6 +1050,7 @@ export default function PetRecords() {
                     placeholder="Pet Type"
                     value={autoFill.type}
                     readOnly
+                    title="Pet's Type"
                   />
                   <input
                     name="species"
@@ -1040,6 +1058,7 @@ export default function PetRecords() {
                     placeholder="Species"
                     value={autoFill.species}
                     readOnly
+                    title="Pet's Species"
                   />
                   <input
                     name="gender"
@@ -1047,16 +1066,17 @@ export default function PetRecords() {
                     placeholder="Gender"
                     value={autoFill.gender}
                     readOnly
+                    title="Pet's Gender"
                   />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="condition" type="text" placeholder="Condition" required />
-                  <input name="lastVisit" type="date" placeholder="Last Visit" required />
+                  <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition" />
+                  <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit' />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" required />
+                  <input name="diagnosis" type="text" placeholder="Diagnosis" required title="Pet's Diagnosis" />
                 </div>
 
                 <div className="add-button-row">
@@ -1085,85 +1105,116 @@ export default function PetRecords() {
           <div className="admin-pet-modal-edit">
             <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
             <h3 className="edit-modal-title">Edit Pet Record</h3>
+
             <form onSubmit={handleEditSubmit} className="edit-pet-form-grid">
               {/* Left Side: Image */}
               <div className="edit-pet-image-upload">
                 <label htmlFor="petImage" className="edit-image-upload-box">
-                  <input type="file" id="petImage" name="petImage" accept="image/*" hidden />
-                  {editData?.photo ? (
-                    <img
-                      src={editData.photo}
-                      alt="Current Pet"
-                      className="edit-image-placeholder"
-                    />
-                  ) : (
-                    <img
-                      src="/images/upload-placeholder.png"
-                      alt="Upload"
-                      className="edit-image-placeholder"
-                    />
-                  )}
+                  <img
+                    src={editData?.photo || "/images/upload-placeholder.png"}
+                    alt="Pet"
+                    className="edit-image-placeholder"
+                  />
                 </label>
               </div>
+
               {/* Right Side: Inputs */}
               <div className="edit-pet-form-fields">
+
                 <div className="edit-form-group">
-                  <input name="ownerName" type="text" placeholder="Owner Name" defaultValue={editData?.ownerName} required />
-                  <input name="userName" type="text" placeholder="Username" defaultValue={editData?.userName} required />
+                  <input
+                    name="ownerName"
+                    type="text"
+                    placeholder="Owner Name"
+                    value={editData?.ownerName || ""}
+                    readOnly
+                    title='Owner Name'
+                  />
+                  <input
+                    name="userName"
+                    type="text"
+                    placeholder="Username"
+                    value={editData?.userName || ""}
+                    readOnly
+                    title='Username'
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <input name="name" type="text" placeholder="Pet Name" defaultValue={editData?.name} required />
-                  <input name="age" type="number" placeholder="Age" defaultValue={editData?.age} required />
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Pet Name"
+                    value={editData?.name || ""}
+                    readOnly
+                    title="Pet's Name"
+                  />
+                  <input
+                    name="age"
+                    type="number"
+                    placeholder="Age"
+                    value={editData?.age || ""}
+                    readOnly
+                    title="Pet's Age"
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <select
+                  <input
                     name="type"
-                    required
-                    value={editType}
-                    onChange={(e) => {
-                      setEditType(e.target.value);
-                      setEditSpecies(""); // reset species when changing type
-                    }}
-                  >
-                    <option value="" disabled>Select Type</option>
-                    <option value="Dog">Dog</option>
-                    <option value="Cat">Cat</option>
-                  </select>
-
-                  <select
+                    type="text"
+                    placeholder="Pet Type"
+                    value={editData?.petType || ""}
+                    readOnly
+                    title="Pet's Type"
+                  />
+                  <input
                     name="species"
+                    type="text"
+                    placeholder="Species"
+                    value={editData?.species || ""}
+                    readOnly
+                    title="Pet's Species"
+                  />
+                  <input
+                    name="gender"
+                    type="text"
+                    placeholder="Gender"
+                    value={editData?.gender || ""}
+                    readOnly
+                    title="Pet's Gender"
+                  />
+                </div>
+
+                {/* Editable Fields Only */}
+                <div className="edit-form-group">
+                  <input
+                    name="condition"
+                    type="text"
+                    placeholder="Condition"
+                    defaultValue={editData?.condition || ""}
                     required
-                    value={editSpecies}
-                    onChange={(e) => setEditSpecies(e.target.value)}
-                    disabled={!editType || editLoading}
-                  >
-                    <option value="">
-                      {editLoading ? "Loading species..." : "Select species"}
-                    </option>
-                    {editSpeciesOptions.map((opt) => (
-                      <option key={opt.id} value={opt.name}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select name="gender" required defaultValue={editData?.gender || ""}>
-                    <option value="" disabled>Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-
-
-                <div className="edit-form-group">
-                  <input name="condition" type="text" placeholder="Condition" defaultValue={editData?.condition} required />
-                  <input name="lastVisit" type="date" placeholder="Last Visit" defaultValue={editData?.lastVisit} required />
+                    title="Pet's Condition"
+                  />
+                  <input
+                    name="lastVisit"
+                    type="date"
+                    placeholder="Last Visit"
+                    defaultValue={editData?.lastVisit || ""}
+                    required
+                    title="Last Visit"
+                  />
                 </div>
 
                 <div className="edit-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" defaultValue={editData?.diagnosis} required />
+                  <input
+                    name="diagnosis"
+                    type="text"
+                    placeholder="Diagnosis"
+                    defaultValue={editData?.diagnosis || ""}
+                    required
+                    title="Pet's Diagnosis"
+                  />
                 </div>
 
                 <div className="edit-button-row">
@@ -1311,6 +1362,29 @@ export default function PetRecords() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={handleCloseModalMessage}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

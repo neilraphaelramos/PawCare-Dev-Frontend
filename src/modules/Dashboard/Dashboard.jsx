@@ -1,5 +1,6 @@
 // src/modules/Dashboard/Dashboard.jsx
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   FaStethoscope,
   FaDog,
@@ -179,6 +180,16 @@ export default function Dashboard() {
   const [medLow, setMedLow] = useState(0);
   const [unMess, setUnMess] = useState(0);
 
+  const handleMetricStatus = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/admin`);
+      setTodApp(res.data.total_appointments);
+      setTodPat(res.data.total_pets);
+    } catch (err) {
+      console.error('Error fetching Metric:', err);
+    }
+  }
+
   useEffect(() => {
     setAppointments([
       {
@@ -258,6 +269,8 @@ export default function Dashboard() {
         status: "Done",
       },
     ]);
+
+    handleMetricStatus();
   }, []);
 
   const handleStatusUpdate = (id, newStatus, type = "appointments") => {

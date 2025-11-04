@@ -1,0 +1,181 @@
+.vet-report-container {
+    padding: 2rem;
+    background-color: #f9fafc;
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+}
+
+.vet-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.vet-report-header h2 {
+    color: #32b2b2;
+    font-size: 1.8rem;
+}
+
+.vet-report-filters select,
+.vet-report-filters input {
+    margin-left: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.vet-report-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding-bottom: 20px;
+}
+
+.vet-report-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.vet-report-card:hover {
+    transform: translateY(-3px);
+}
+
+.vet-report-card h3 {
+    color: #00796b;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #32b2b2;
+    padding-left: 0.4rem;
+}
+
+.vet-report-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.vet-report-card th,
+.vet-report-card td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.vet-report-card th {
+    background: #eaf7f6;
+    font-weight: 600;
+    color: #333;
+}
+
+.vet-report-card tr:hover {
+    background: #f9f9f9;
+}
+
+.empty-row {
+    text-align: center;
+    color: #888;
+    padding: 1rem 0;
+}
+
+.vet-report-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.vet-export-btn {
+    height: 40px;
+    /* ✅ Match the height of inputs */
+    background-color: #32b2b2;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: background 0.3s ease;
+}
+
+.vet-export-btn:hover {
+    background-color: #279999;
+}
+
+/* === Appointment Summary Section === */
+.vet-appoint-summary {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 10px;
+  background-color: #f9fafb;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.vet-appoint-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.vet-appoint-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appoint-top,
+.appoint-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.vet-appoint-item {
+  background: #f9fafb;
+  padding: 10px 16px;
+  border-radius: 8px;
+  flex: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vet-appoint-item strong {
+  color: #374151;
+}
+
+.vet-appoint-item span {
+  font-weight: bold;
+}
+
+/* Colors */
+.vet-appoint-item.approved span {
+  color: #16a34a;
+}
+
+.vet-appoint-item.pending span {
+  color: #eab308;
+}
+
+.vet-appoint-item.declined span {
+  color: #dc2626;
+}
+
+.vet-appoint-item.total span {
+  color: #0ea5e9;
+  font-weight: 700;
+}

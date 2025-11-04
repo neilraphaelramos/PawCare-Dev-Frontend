@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import "./Inventory.css";
 import jsPDF from "jspdf";
@@ -14,7 +14,7 @@ const generateItemCode = (group = 'X') => {
 // CSV export helper (unchanged)
 function exportToCSV(data) {
   const headers = ['Item Code', 'Item Name', 'Item Group', 'Last Purchase', 'Expiration', 'Price', 'Stocks'];
-  
+
   const rows = data.map(item => {
     // Remove any currency symbols or commas from price
     const cleanPrice = item.price ? String(item.price).replace(/[₱,\s]/g, '') : '';
@@ -80,7 +80,7 @@ function exportToPDF(data) {
       item.group,
       item.date,
       item.expiration,
-      cleanPrice,                 // ✅ always plain number
+      cleanPrice,
       String(item.stock ?? ""),
     ];
 
@@ -106,6 +106,7 @@ const API_BASE = "/server-api";
 
 export default function InventoryTable() {
   const [inventoryData, setInventoryData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -115,6 +116,7 @@ export default function InventoryTable() {
   const [filterDate, setFilterDate] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [newItem, setNewItem] = useState({
     id: undefined,      // for edits
     code: '',
@@ -127,11 +129,16 @@ export default function InventoryTable() {
     price: '',
     unit: '',
   });
+  const [messageModal, setMessageModal] = useState('');
+  const [selectedInventoryId, setSelectedInventoryId] = useState(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
 
   const getPhotoUrl = (photo) => {
     if (!photo) return "";
     if (photo.startsWith("http") || photo.startsWith("data:")) return photo;
-    return `${API_BASE}/uploads/${photo}`;
+    return `${process.env.REACT_APP_API_URL}/uploads/${photo}`;
   };
 
   const mapRowToUIItem = (row) => {
@@ -150,23 +157,27 @@ export default function InventoryTable() {
     };
   };
 
-
   const fetchInventory = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/fetch_inventory`);
+      setIsLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/inventory/fetch`);
       if (res.data?.success && Array.isArray(res.data.data)) {
-        const mapped = res.data.data.map(mapRowToUIItem);
-        setInventoryData(mapped);
-        console.table(mapped);
+        setInventoryData(res.data.data.map(mapRowToUIItem));
+      } else {
+        setInventoryData([]);
       }
     } catch (err) {
       console.error("Error fetching inventory:", err);
+      setInventoryData([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInventory();
   }, []);
+
 
   // ---- UI handlers (keep your design/UX) ----
   const handleEdit = (index) => {
@@ -192,17 +203,23 @@ export default function InventoryTable() {
     setShowAddModal(true);
   };
 
+  const handleDelete = (index) => {
+    setSelectedInventoryId(index);
+    setMessageModal('Are you sure you want to delete this item?');
+    setShowConfirmModal(true);
+  }
 
-  const handleDelete = async (index) => {
-    const item = inventoryData[index];
-    const confirmed = window.confirm("Are you sure you want to delete this item?");
-    if (!confirmed) return;
+
+  const confirmDelete = async () => {
+    const item = inventoryData[selectedInventoryId];
 
     try {
-      await axios.delete(`${API_BASE}/delete_inventory/${item.id}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${item.id}`);
       setInventoryData(prev => prev.filter((_, i) => i !== index));
     } catch (err) {
       console.error("Error deleting inventory:", err);
+    } finally {
+      setShowConfirmModal(false);
     }
   };
 
@@ -235,7 +252,6 @@ export default function InventoryTable() {
       (item.code || '').toLowerCase().includes(term) ||
       (item.group || '').toLowerCase().includes(term);
 
-    // Filter by exact date for table
     const matchesDate = filterDate
       ? item.date === filterDate
       : true;
@@ -246,11 +262,9 @@ export default function InventoryTable() {
   const totalEntries = filteredData.length;
   const totalPages = Math.ceil(totalEntries / rowsPerPage);
 
-  // Compute start & end index
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalEntries);
 
-  // Slice data for the current page
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const goToPage = (page) => {
@@ -261,11 +275,9 @@ export default function InventoryTable() {
 
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1); // reset to page 1
+    setCurrentPage(1);
   };
 
-
-  // Handle form input change for Add Item modal
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -288,17 +300,15 @@ export default function InventoryTable() {
     return Number.isFinite(n) ? n : '';
   };
 
-  // Add/Update item to DB (preserve your validation + UX)
   const handleAddItem = async () => {
-    console.table(newItem);
     if (
       newItem.code && newItem.name && newItem.group &&
       newItem.date && newItem.stock && newItem.price
     ) {
+      setIsProcessing(true);
       const quantity = sanitizeNumber(newItem.stock);
       const price = sanitizeNumber(newItem.price);
 
-      // Build FormData instead of JSON
       const formData = new FormData();
       formData.append('item_code', newItem.code);
       formData.append('name', newItem.name);
@@ -309,7 +319,6 @@ export default function InventoryTable() {
       formData.append('price', price === '' ? 0 : price);
       formData.append('unit', newItem.unit);
 
-      // Only append photo if new file is chosen
       if (!editingIndex || newItem.photoFile instanceof File) {
         formData.append('photo', newItem.photoFile);
       }
@@ -317,18 +326,17 @@ export default function InventoryTable() {
       try {
         if (editingIndex !== null) {
           const editingItem = inventoryData[editingIndex];
-          await axios.put(`${API_BASE}/update_inventory/${editingItem.id}`, formData, {
+          await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingItem.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setSuccessMessage("Item updated successfully!");
         } else {
-          await axios.post(`${API_BASE}/add_inventory`, formData, {
+          await axios.post(`${API_BASE}/inventory/add`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setSuccessMessage("Item added successfully!");
         }
 
-        // Refresh & reset
         await fetchInventory();
         setNewItem({
           id: undefined,
@@ -347,15 +355,16 @@ export default function InventoryTable() {
         setTimeout(() => setSuccessMessage(''), 3000);
       } catch (err) {
         console.error("Error saving inventory:", err);
-        alert("There was an error saving the item. Please try again.");
+        setMessageModal("There was an error saving the item. Please try again.");
+      } finally {
+        setIsProcessing(false);
       }
     } else {
-      alert('Please fill all fields');
+      setShowMessageModal(true);
+      setMessageModal("Please fill all fields");
     }
   };
 
-
-  // simple export handler to keep your dropdown working
   const handleExport = (type) => {
     let exportData = [...inventoryData];
 
@@ -484,51 +493,65 @@ export default function InventoryTable() {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((item, index) => (
-            <tr key={item.id ?? index}>
-              <td>{item.code}</td>
-              <td>
-                <img
-                  src={getPhotoUrl(item.photo)}
-                  alt={item.name}
-                  style={{
-                    width: '50px',
-                    height: '50px',
-                    objectFit: 'cover',
-                    borderRadius: '0',
-                  }}
-                />
-              </td>
-              <td>{item.name}</td>
-              <td>{item.group}</td>
-              <td>{item.date}</td>
-              <td>{item.expiration}</td>
-              <td>{item.price}</td>
-              <td>
-                {item.stock}
-                {item.low && <span className="status-down"> ↓</span>}
-              </td>
-              <td>{item.unit}</td>
-              <td>
-                <button className="admin-inventory-edit-icon-btn" onClick={() => handleEdit(index)}>
-                  <Edit size={16} />
-                </button>
-
-                <button className="admin-inventory-delete-icon-btn" onClick={() => handleDelete(index)}>
-                  <Trash2 size={16} />
-                </button>
-
-              </td>
-            </tr>
-          ))}
-          {filteredData.length === 0 && (
+          {isLoading ? (
             <tr>
-              <td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>
-                No items found.
+              <td colSpan="10" style={{ textAlign: "center", padding: "20px" }}>
+                <div className="loading-spinner" />
+                <p>Loading inventory...</p>
               </td>
             </tr>
+          ) : filteredData.length === 0 ? (
+            <tr>
+              <td colSpan="10" style={{ textAlign: "center", padding: "20px" }}>
+                No inventory found.
+              </td>
+            </tr>
+          ) : (
+            paginatedData.map((item, index) => (
+              <tr key={item.id ?? index}>
+                <td>{item.code}</td>
+                <td>
+                  <img
+                    src={item.photo}
+                    alt={item.name}
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      objectFit: 'cover',
+                      borderRadius: '0',
+                    }}
+                  />
+                </td>
+                <td>{item.name}</td>
+                <td>{item.group}</td>
+                <td>{item.date}</td>
+                <td>{item.expiration}</td>
+                <td>{item.price}</td>
+                <td>
+                  {item.stock}
+                  {item.low && <span className="status-down"> ↓</span>}
+                </td>
+                <td>{item.unit}</td>
+                <td>
+                  <button
+                    className="admin-inventory-edit-icon-btn"
+                    onClick={() => handleEdit(index)}
+                  >
+                    <Edit size={16} />
+                  </button>
+
+                  <button
+                    className="admin-inventory-delete-icon-btn"
+                    onClick={() => handleDelete(index)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))
           )}
         </tbody>
+
       </table>
 
       {showAddModal && (
@@ -644,7 +667,21 @@ export default function InventoryTable() {
               </div>
 
               <div className="admin-inventory-modal-actions">
-                <button onClick={handleAddItem} className="admin-inventory-btn primary">{editingIndex !== null ? 'Update Item' : 'Add Item'}</button>
+                <button
+                  onClick={handleAddItem}
+                  className="admin-inventory-btn primary"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <span className="invent-loader"></span>
+                      &nbsp;Processing...
+                    </>
+                  ) : (
+                    editingIndex !== null ? "Update Item" : "Add Item"
+                  )}
+                </button>
+
                 <button onClick={() => setShowAddModal(false)} className="admin-inventory-btn secondary">Cancel</button>
               </div>
             </div>
@@ -683,6 +720,68 @@ export default function InventoryTable() {
           <span>entries</span>
         </div>
       </div>
+
+
+      {showConfirmModal && (
+        <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="All-deleteconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
+            <p className="All-deleteconfirm-message">
+              {messageModal}
+            </p>
+            <div className="All-deleteconfirm-actions">
+              <button
+                className="All-deleteconfirm-btn confirm"
+                onClick={() => confirmDelete(selectedFeatureId)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    Processing... <Loader2 size={16} className="feature-spinner" />
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </button>
+              <button
+                className="All-deleteconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

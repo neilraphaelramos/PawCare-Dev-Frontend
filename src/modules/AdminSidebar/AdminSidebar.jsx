@@ -21,6 +21,7 @@ const AdminSidebar = () => {
         <Link to="appointments">Appointment</Link>
         <Link to="online-consultation">Online Consultation</Link>
         <Link to="notifications">Notifications</Link>
+        <Link to="reports">Manage Reports</Link>
         <Link to="view-orders">Manage Orders</Link>   
         <Link to="inventory">Manage Inventory</Link>
         <Link to="services">Manage Services</Link>

@@ -32,6 +32,7 @@ import AdminAppointments from "./modules/Appointments/Appointments";
 import AdminNotifications from "./modules/Notifications/Notifications";
 import ViewOrders from "./modules/ViewOrders/ViewOrders";
 import VetConsultationAdmin from "./modules/OnlineConsultation/OnlineConsultation";
+import AdminReports from "./modules/Reports/AdminReports";
 
 
 // User panel components
@@ -61,6 +62,7 @@ import VetNotifications from "./Veterinarian/Notifications/Notifications";
 import VetSecurity from "./Veterinarian/Security/Security";
 import VetConsultation from "./Veterinarian/OnlineConsultation/OnlineConsultation";
 import VetProfile from "./Veterinarian/Profile/Profile";
+import VetReports from "./Veterinarian/Reports/VetReports";
 
 
 // Verified Account
@@ -105,6 +107,7 @@ export default function App() {
           <Route path="accounts" element={<Accounts />} />
           <Route path="view-orders" element={<ViewOrders />} />
           <Route path="online-consultation" element={<VetConsultationAdmin />} />
+          <Route path="reports" element={<AdminReports />} />
         </Route>
 
         <Route
@@ -152,6 +155,7 @@ export default function App() {
           <Route path="appointments" element={<VetAppointments />} />
           <Route path="medical-records" element={<VetMedicalRecords />} />
           <Route path="inventory" element={<VetInventory />} />
+          <Route path="reports" element={<VetReports />} /> 
           <Route path="notifications" element={<VetNotifications />} />
           <Route path="security" element={<VetSecurity />} />
           <Route path="online-consultation" element={<VetConsultation />} />

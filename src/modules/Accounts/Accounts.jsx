@@ -26,6 +26,10 @@ const Accounts = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+
   // 🔹 Fetch all accounts
   const handleAccounts = async () => {
     try {
@@ -48,8 +52,11 @@ const Accounts = () => {
     }
   };
 
-  const handleUpdate = async (id) => {
-    if (!window.confirm("Are you sure you want to update this account?")) return;
+  const handleUpdate = () => {
+    setShowConfirmModal(true);
+  };
+
+  const confirmUpdate = async (id) => {
     setIsSubmitting(true);
 
     try {
@@ -363,6 +370,34 @@ const Accounts = () => {
                 {isSubmitting ? "Processing..." : editingIndex !== null ? "Update" : "Add"}
               </button>
               <button className="accounts-cancel-btn" onClick={closeModal}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <div className="profileupdateconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="profileupdateconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="profileupdateconfirm-title">Confirm Update</h3>
+            <p className="profileupdateconfirm-message">
+              Are you sure you want to update the Account information?
+            </p>
+            <div className="profileupdateconfirm-actions">
+              <button
+                className="profileupdateconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="profileupdateconfirm-btn confirm"
+                onClick={confirmUpdate}
+              >
+                Yes, Update
+              </button>
             </div>
           </div>
         </div>

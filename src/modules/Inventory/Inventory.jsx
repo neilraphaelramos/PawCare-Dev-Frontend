@@ -252,7 +252,6 @@ export default function InventoryTable() {
       (item.code || '').toLowerCase().includes(term) ||
       (item.group || '').toLowerCase().includes(term);
 
-    // Filter by exact date for table
     const matchesDate = filterDate
       ? item.date === filterDate
       : true;
@@ -263,11 +262,9 @@ export default function InventoryTable() {
   const totalEntries = filteredData.length;
   const totalPages = Math.ceil(totalEntries / rowsPerPage);
 
-  // Compute start & end index
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalEntries);
 
-  // Slice data for the current page
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const goToPage = (page) => {
@@ -278,11 +275,9 @@ export default function InventoryTable() {
 
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1); // reset to page 1
+    setCurrentPage(1); 
   };
 
-
-  // Handle form input change for Add Item modal
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
