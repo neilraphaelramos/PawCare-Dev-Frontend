@@ -160,230 +160,242 @@ function VetReports() {
             <div className="vet-report-grid">
                 <div className="vet-report-card">
                     <h3>Order Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Client</th>
-                                <th>Status</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.orders.details?.length ? (
-                                reports.orders.details.map((o) => (
-                                    <tr key={o.id_order}>
-                                        <td>{o.id_order}</td>
-                                        <td>{o.customer_name}</td>
-                                        <td>{o.order_status}</td>
-                                        <td>{o.items_purchased}</td>
-                                        <td>₱{o.total}</td>
-                                        <td>{new Date(o.order_date).toLocaleDateString()}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="6" className="empty-row">
-                                        No orders this month
-                                    </td>
+                                    <th>Order ID</th>
+                                    <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.orders.details?.length ? (
+                                    reports.orders.details.map((o) => (
+                                        <tr key={o.id_order}>
+                                            <td>{o.id_order}</td>
+                                            <td>{o.customer_name}</td>
+                                            <td>{o.order_status}</td>
+                                            <td>{o.items_purchased}</td>
+                                            <td>₱{o.total}</td>
+                                            <td>{new Date(o.order_date).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="6" className="empty-row">
+                                            No orders this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div className="vet-report-card">
                     <h3>Item Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item ID</th>
-                                <th>Name Product</th>
-                                <th>Total Sold</th>
-
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.product_solds?.length ? (
-                                reports.product_solds.map((item) => (
-                                    <tr key={item.product_id}>
-                                        <td>{item.product_id}</td>
-                                        <td>{item.product_name}</td>
-                                        <td>{item.total_sold}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="3" className="empty-row">
-                                        No orders this month
-                                    </td>
+                                    <th>Item ID</th>
+                                    <th>Name Product</th>
+                                    <th>Total Sold</th>
+
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.product_solds?.length ? (
+                                    reports.product_solds.map((item) => (
+                                        <tr key={item.product_id}>
+                                            <td>{item.product_id}</td>
+                                            <td>{item.product_name}</td>
+                                            <td>{item.total_sold}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="empty-row">
+                                            No orders this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div className="vet-report-card">
                     <h3>Total Order Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Total Orders</th>
-                                <th>Total Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.orders.summary ? (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>{reports.orders.summary.total_orders || 0}</td>
-                                    <td>₱{reports.orders.summary.total_revenue?.toLocaleString() || 0}</td>
+                                    <th>Total Orders</th>
+                                    <th>Total Revenue</th>
                                 </tr>
-                            ) : (
-                                <tr>
-                                    <td colSpan="2" className="empty-row">No orders this month</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.orders.summary ? (
+                                    <tr>
+                                        <td>{reports.orders.summary.total_orders || 0}</td>
+                                        <td>₱{reports.orders.summary.total_revenue?.toLocaleString() || 0}</td>
+                                    </tr>
+                                ) : (
+                                    <tr>
+                                        <td colSpan="2" className="empty-row">No orders this month</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div className="vet-report-card">
                     <h3>Registered Pet Reports</h3>
                     <p><strong>Total Pets:</strong> {reports.pets.summary?.total_pets || 0}</p>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Pet Name</th>
-                                <th>Owner</th>
-                                <th>Species</th>
-                                <th>Date Added</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.pets.details?.length ? (
-                                reports.pets.details.map((p) => (
-                                    <tr key={p.pinfo}>
-                                        <td>{p.pet_name}</td>
-                                        <td>{p.owner_name}</td>
-                                        <td>{p.species}</td>
-                                        <td>{new Date(p.created_At).toLocaleDateString()}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="4" className="empty-row">
-                                        No pets added this month
-                                    </td>
+                                    <th>Pet Name</th>
+                                    <th>Owner</th>
+                                    <th>Species</th>
+                                    <th>Date Added</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.pets.details?.length ? (
+                                    reports.pets.details.map((p) => (
+                                        <tr key={p.pinfo}>
+                                            <td>{p.pet_name}</td>
+                                            <td>{p.owner_name}</td>
+                                            <td>{p.species}</td>
+                                            <td>{new Date(p.created_At).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="empty-row">
+                                            No pets added this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div className="vet-report-card">
                     <h3>Pet Types & Species Report</h3>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Species</th>
-                                <th>Pet Type</th>
-                                <th>Total Species</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.totalSpecies.details?.length ? (
-                                reports.totalSpecies.details.map((p, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>{p.species}</td>
-                                        <td>{p.petType}</td>
-                                        <td>{p.total_species}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="5" className="empty-row">
-                                        No pets added this month
-                                    </td>
+                                    <th>#</th>
+                                    <th>Species</th>
+                                    <th>Pet Type</th>
+                                    <th>Total Species</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.totalSpecies.details?.length ? (
+                                    reports.totalSpecies.details.map((p, index) => (
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>{p.species}</td>
+                                            <td>{p.petType}</td>
+                                            <td>{p.total_species}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="empty-row">
+                                            No pets added this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Visits */}
                 <div className="vet-report-card">
                     <h3>Clinic Visit Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Visit ID</th>
-                                <th>Owner</th>
-                                <th>Pet</th>
-                                <th>Veterinarian</th>
-                                <th>Visit Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.visits?.length ? (
-                                reports.visits.map((v) => (
-                                    <tr key={v.id_pet_history}>
-                                        <td>{v.id_pet_history}</td>
-                                        <td>{v.owner_name}</td>
-                                        <td>{v.pet_name}</td>
-                                        <td>Dr. {v.veterinarian_name}</td>
-                                        <td>{new Date(v.date_visit).toLocaleDateString()}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="5" className="empty-row">
-                                        No visits this month
-                                    </td>
+                                    <th>Visit ID</th>
+                                    <th>Owner</th>
+                                    <th>Pet</th>
+                                    <th>Veterinarian</th>
+                                    <th>Visit Date</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.visits?.length ? (
+                                    reports.visits.map((v) => (
+                                        <tr key={v.id_pet_history}>
+                                            <td>{v.id_pet_history}</td>
+                                            <td>{v.owner_name}</td>
+                                            <td>{v.pet_name}</td>
+                                            <td>Dr. {v.veterinarian_name}</td>
+                                            <td>{new Date(v.date_visit).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="empty-row">
+                                            No visits this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Inventory */}
                 <div className="vet-report-card">
                     <h3>Inventory Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Stock In</th>
-                                <th>Stock Out</th>
-                                <th>Current Stock</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.stock.summary?.length ? (
-                                reports.stock.summary.map((i, index) => (
-                                    <tr key={index}>
-                                        <td>{i.product_name}</td>
-                                        <td>{i.total_stock_in}</td>
-                                        <td>{i.total_stock_out}</td>
-                                        <td>{i.current_stock}</td>
-                                        <td>{new Date(i.last_movement_date).toLocaleDateString()}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="5" className="empty-row">
-                                        No inventory updates this month
-                                    </td>
+                                    <th>Item Name</th>
+                                    <th>Stock In</th>
+                                    <th>Stock Out</th>
+                                    <th>Current Stock</th>
+                                    <th>Date</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.stock.summary?.length ? (
+                                    reports.stock.summary.map((i, index) => (
+                                        <tr key={index}>
+                                            <td>{i.product_name}</td>
+                                            <td>{i.total_stock_in}</td>
+                                            <td>{i.total_stock_out}</td>
+                                            <td>{i.current_stock}</td>
+                                            <td>{new Date(i.last_movement_date).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="empty-row">
+                                            No inventory updates this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Appointments */}
@@ -414,63 +426,67 @@ function VetReports() {
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Owner</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.appointments.details?.length ? (
-                                reports.appointments.details.map((a) => (
-                                    <tr key={a.id_appoint}>
-                                        <td>{a.id_appoint}</td>
-                                        <td>{a.owner_name}</td>
-                                        <td>{new Date(a.set_date).toLocaleDateString()}</td>
-                                        <td>{a.status}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="4" className="empty-row">
-                                        No appointments this month
-                                    </td>
+                                    <th>ID</th>
+                                    <th>Owner</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.appointments.details?.length ? (
+                                    reports.appointments.details.map((a) => (
+                                        <tr key={a.id_appoint}>
+                                            <td>{a.id_appoint}</td>
+                                            <td>{a.owner_name}</td>
+                                            <td>{new Date(a.set_date).toLocaleDateString()}</td>
+                                            <td>{a.status}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="empty-row">
+                                            No appointments this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Pet Services */}
                 <div className="vet-report-card">
                     <h3>Pet Service Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Service</th>
-                                <th>Used Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reports.servicesUsage?.length ? (
-                                reports.servicesUsage.map((s) => (
-                                    <tr key={s.service_id}>
-                                        <td>{s.service_title}</td>
-                                        <td>{s.usage_count || 0}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan="3" className="empty-row">
-                                        No service usage this month
-                                    </td>
+                                    <th>Service</th>
+                                    <th>Used Count</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {reports.servicesUsage?.length ? (
+                                    reports.servicesUsage.map((s) => (
+                                        <tr key={s.service_id}>
+                                            <td>{s.service_title}</td>
+                                            <td>{s.usage_count || 0}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="empty-row">
+                                            No service usage this month
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -35,6 +35,38 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [purchasedProducts, setPurchasedProducts] = useState([]);
 
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+
+  const pages = [
+    { name: "Appointment", keyword: "appointment", path: "/users/appointments" },
+    { name: "Pet Records", keyword: "pet", path: "/users/pet-records" },
+    { name: "My Pets", keyword: "pet", path: "/users/pet-infos" },
+    { name: "Notification", keyword: "notification", path: "/users/notification" },
+    { name: "Pet Products", keyword: "product", path: "/users/pet-products" },
+    { name: "Online Consultation", keyword: "consultation", path: "/users/online-consultation" },
+    { name: "Profile", keyword: "profile", path: "/users/profile" },
+  ];
+
+  const handleChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setQuery(value);
+    if (value.trim() === "") {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = pages.filter((p) =>
+      p.keyword.includes(value) || p.name.toLowerCase().includes(value)
+    );
+    setSuggestions(filtered);
+  };
+
+  const handleSelect = (path) => {
+    setQuery("");
+    setSuggestions([]);
+    navigate(path);
+  };
 
   const getWeekDates = (refDate) => {
     const start = new Date(refDate);
@@ -151,8 +183,29 @@ const Dashboard = () => {
     <div className="user-dashboard">
       <main className="user-dashboard-main">
         <header className="user-dashboard-header">
-          <input type="text" placeholder="Search task, appointment, or doctor" />
-          <img className="user-dashboard-profile" src={user.pic || "/images/Default_Pic.jpg"}/>
+          <div className="search-wrapper">
+            <input
+              type="text"
+              value={query}
+              placeholder="Search task, appointment, or consult"
+              onChange={handleChange}
+            />
+            {suggestions.length > 0 && (
+              <ul className="search-suggestions">
+                {suggestions.map((item, i) => (
+                  <li key={i} onClick={() => handleSelect(item.path)}>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <img
+            className="user-dashboard-profile"
+            src={user.pic || "/images/Default_Pic.jpg"}
+            alt="profile"
+          />
         </header>
 
         <section className="user-dashboard-metrics">

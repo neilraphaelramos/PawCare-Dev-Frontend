@@ -14,7 +14,6 @@ export default function PetRecords() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [addingRecord, setAddingRecord] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
   const [newRecord, setNewRecord] = useState({
     ownerEmail: '',
     ownerAddress: '',
@@ -41,15 +40,6 @@ export default function PetRecords() {
     gender: ""
   });
 
-  const [type, setType] = useState("");
-  const [species, setSpecies] = useState("");
-  const [speciesOptions, setSpeciesOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const [editType, setEditType] = useState("");
-  const [editSpecies, setEditSpecies] = useState("");
-  const [editSpeciesOptions, setEditSpeciesOptions] = useState([]);
-  const [editLoading, setEditLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -91,9 +81,6 @@ export default function PetRecords() {
 
   const resetEditForm = () => {
     setEditData(null);
-    setEditType("");
-    setEditSpecies("");
-    setEditSpeciesOptions([]);
   };
 
   const handleCloseModal = () => {
@@ -200,21 +187,9 @@ export default function PetRecords() {
     const form = e.target;
     const formData = new FormData();
 
-    formData.append("owner_name", form.ownerName.value);
-    formData.append("user_name", form.userName.value);
-    formData.append("pet_name", form.name.value);
-    formData.append("type", editType);
-    formData.append("species", editSpecies);
-    formData.append("pet_age", form.age.value);
-    formData.append("pet_gender", form.gender.value);
     formData.append("pet_condition", form.condition.value);
     formData.append("last_visit", form.lastVisit.value);
     formData.append("diagnosis", form.diagnosis.value);
-
-    // ✅ Only update photo if user selected one
-    if (form.petImage.files[0]) {
-      formData.append("photo", form.petImage.files[0]);
-    }
 
     try {
       setIsProcessing(true);
@@ -270,84 +245,6 @@ export default function PetRecords() {
   useEffect(() => {
     fetchPets();
   }, []);
-
-
-  useEffect(() => {
-    async function fetchBreeds() {
-      if (!type) {
-        setSpeciesOptions([]);
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const url =
-          type === "Dog"
-            ? "https://api.thedogapi.com/v1/breeds"
-            : "https://api.thecatapi.com/v1/breeds";
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const formatted = data.map((b) => ({
-          id: b.id,
-          name: b.name,
-        }));
-
-        setSpeciesOptions(formatted);
-      } catch (err) {
-        console.error("Failed to load breeds", err);
-        setSpeciesOptions([]);
-      } finally {
-        setLoading(false);
-        setSpecies("");
-      }
-    }
-
-    fetchBreeds();
-  }, [type]);
-
-  useEffect(() => {
-    if (editData) {
-      setEditType(editData.petType || "");
-      setEditSpecies(editData.species || "");
-    }
-  }, [editData]);
-
-  useEffect(() => {
-    async function fetchEditSpecies() {
-      if (!editType) {
-        setEditSpeciesOptions([]);
-        return;
-      }
-
-      setEditLoading(true);
-
-      try {
-        const url =
-          editType === "Dog"
-            ? "https://api.thedogapi.com/v1/breeds"
-            : "https://api.thecatapi.com/v1/breeds";
-
-        const res = await fetch(url);
-        const data = await res.json();
-        const formatted = data.map((b) => ({
-          id: b.id,
-          name: b.name,
-        }));
-
-        setEditSpeciesOptions(formatted);
-      } catch (err) {
-        console.error("Failed to fetch species for edit", err);
-        setEditSpeciesOptions([]);
-      } finally {
-        setEditLoading(false);
-      }
-    }
-
-    fetchEditSpecies();
-  }, [editType]);
 
   const filteredPets = pets.filter((pet) => {
     const term = searchTerm.toLowerCase();

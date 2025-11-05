@@ -39,6 +39,28 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     padding: 1rem;
     transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+}
+
+.vet-report-card .table-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+}
+
+.vet-report-card .table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.vet-report-card .table-container::-webkit-scrollbar-thumb {
+    background-color: #c5d2d9;
+    border-radius: 4px;
+}
+
+.vet-report-card .table-container::-webkit-scrollbar-thumb:hover {
+    background-color: #aab7bf;
 }
 
 .vet-report-card:hover {

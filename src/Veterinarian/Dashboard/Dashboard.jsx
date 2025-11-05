@@ -1,5 +1,5 @@
 // src/modules/Dashboard/Dashboard.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
   FaStethoscope,
@@ -30,6 +30,7 @@ import {
   Legend,
   Title,
 } from "chart.js";
+import { UserContext } from "../../hook/authContext";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
 
@@ -179,14 +180,23 @@ export default function Dashboard() {
   const [todPat, setTodPat] = useState(0);
   const [medLow, setMedLow] = useState(0);
   const [unMess, setUnMess] = useState(0);
-
+  const { user } = useContext(UserContext);
+ 
   const handleMetricStatus = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/admin`);
       setTodApp(res.data.total_appointments);
       setTodPat(res.data.total_pets);
+      setMedLow(res.data.low_stock_count);
     } catch (err) {
       console.error('Error fetching Metric:', err);
+    }
+
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/unreadcount/${user.id}`);
+      setUnMess(res.data.unreadCount);
+    } catch (err) {
+      console.error("Error fetching unread count:", err);
     }
   }
 

@@ -1,80 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import axios from 'axios';
 import { FaHeartbeat, FaThermometerHalf, FaClipboardList, FaFlask, FaBell } from 'react-icons/fa';
 import './Notifications.css';
-
-const systemAlertsData = [
-  {
-    id: 1,
-    type: 'Inventory',
-    message: 'Amoxicillin stock is low. Only 5 bottles left.',
-    timestamp: 'Just now',
-    unread: true,
-    priority: true,
-    category: 'Stock Alerts',
-  },
-  {
-    id: 2,
-    type: 'Heart Rate',
-    message: 'Elevated heart rate detected for Bella.',
-    timestamp: '3 minutes ago',
-    unread: true,
-    priority: false,
-    category: 'Stock Alerts',
-  },
-];
-
-const remindersData = [
-  {
-    id: 101,
-    type: 'Follow-up',
-    message: 'Follow-up check for Max on June 3, 2025 at 10:00 AM.',
-    timestamp: 'Tomorrow',
-    unread: false,
-    priority: false,
-    category: 'Appointments',
-  },
-  {
-    id: 102,
-    type: 'Lab Results',
-    message: 'Review lab results for Bella’s blood test.',
-    timestamp: 'Today',
-    unread: true,
-    priority: false,
-    category: 'Online Consultations',
-  },
-];
+import { UserContext } from '../../hook/authContext';
 
 const typeIcons = {
-  Temperature: <FaThermometerHalf className="notif-icon" aria-hidden="true" />,
-  'Heart Rate': <FaHeartbeat className="notif-icon" aria-hidden="true" />,
-  'Follow-up': <FaClipboardList className="notif-icon" aria-hidden="true" />,
-  'Lab Results': <FaFlask className="notif-icon" aria-hidden="true" />,
-  default: <FaBell className="notif-icon" aria-hidden="true" />,
+  Temperature: <FaThermometerHalf className="notif-icon" />,
+  'Heart Rate': <FaHeartbeat className="notif-icon" />,
+  'Follow-up': <FaClipboardList className="notif-icon" />,
+  'Lab Results': <FaFlask className="notif-icon" />,
+  default: <FaBell className="notif-icon" />,
 };
 
-function NotificationCard({ notification, onDismiss }) {
+function NotificationCard({ notification, onMarkRead, onDismiss }) {
   return (
     <div
-      className={`notification-card ${notification.priority ? 'priority' : ''} ${
-        notification.unread ? 'unread' : ''
-      }`}
+      className={`notification-card ${notification.isRead === 0 ? 'unread' : ''}`}
       role="listitem"
-      aria-label={`${notification.type} notification: ${notification.message}`}
+      onClick={() => onMarkRead(notification.notify_id)}
     >
       <div className="notification-content">
         <span className="type-label">
-          {typeIcons[notification.type] || typeIcons.default}
-          {notification.type}
+          {typeIcons[notification.type_notify] || typeIcons.default}
+          {notification.type_notify}
         </span>
-        <p>{notification.message}</p>
-        <span className="timestamp" title={`Received: ${notification.timestamp}`}>
-          {notification.timestamp}
+        <p>{notification.details}</p>
+        <span className="timestamp">
+          {new Date(notification.notify_date).toLocaleString()}
         </span>
       </div>
       <button
         className="dismiss-btn"
-        onClick={() => onDismiss(notification.id)}
-        aria-label={`Dismiss ${notification.type} notification`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDismiss(notification.notify_id);
+        }}
       >
         ✕
       </button>
@@ -85,106 +45,121 @@ function NotificationCard({ notification, onDismiss }) {
 const TABS = ['All', 'Appointments', 'Online Consultations', 'Stock Alerts'];
 
 export default function Notifications() {
-  const [systemAlerts, setSystemAlerts] = useState(systemAlertsData);
-  const [reminders, setReminders] = useState(remindersData);
+  const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
-
   const tabsRef = useRef(null);
   const underlineRef = useRef(null);
+  const { user } = useContext(UserContext);
+
+  const UID = user.id;
 
   useEffect(() => {
-    const tabs = tabsRef.current.querySelectorAll('.tab-button');
-    const activeIndex = Array.from(tabs).findIndex((tab) => tab.classList.contains('active'));
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_URL}/notifications/vetadminapi/${UID}`
+        );
+        setNotifications(data);
+      } catch (err) {
+        console.error('❌ Error fetching notifications:', err);
+      }
+    };
 
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [UID]);
+
+  const markAsRead = async (notify_id) => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/setread`, {
+        notify_id,
+        UID,
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n.notify_id === notify_id ? { ...n, isRead: 1 } : n))
+      );
+    } catch (err) {
+      console.error('❌ Error marking as read:', err);
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/setallread`, { UID });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: 1 })));
+    } catch (err) {
+      console.error('❌ Error marking all read:', err);
+    }
+  };
+
+  const dismissNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.notify_id !== id));
+  };
+
+  const categorize = (n) => {
+    if (n.type_notify.includes('Stock')) return 'Stock Alerts';
+    if (n.type_notify.includes('Appointment')) return 'Appointments';
+    if (n.type_notify.includes('Consultation')) return 'Online Consultations';
+    return 'Other';
+  };
+
+  const categorized = notifications.map((n) => ({ ...n, category: categorize(n) }));
+  const filtered =
+    activeTab === 'All'
+      ? categorized
+      : categorized.filter((n) => n.category === activeTab);
+  const hasUnread = filtered.some((n) => n.isRead === 0);
+
+  useEffect(() => {
+    const tabs = tabsRef.current?.querySelectorAll('.tab-button') || [];
+    const activeIndex = Array.from(tabs).findIndex((tab) =>
+      tab.classList.contains('active')
+    );
     if (activeIndex === -1) return;
-
     const activeTabEl = tabs[activeIndex];
     const underlineEl = underlineRef.current;
-
     if (underlineEl && activeTabEl) {
       underlineEl.style.width = `${activeTabEl.offsetWidth}px`;
       underlineEl.style.left = `${activeTabEl.offsetLeft}px`;
     }
   }, [activeTab]);
 
-  const dismissSystemAlert = (id) => {
-    setSystemAlerts((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const dismissReminder = (id) => {
-    setReminders((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const markAllAlertsRead = () => {
-    setSystemAlerts((prev) => prev.map((n) => ({ ...n, unread: false })));
-  };
-
-  const markAllRemindersRead = () => {
-    setReminders((prev) => prev.map((n) => ({ ...n, unread: false })));
-  };
-
-  const allNotifications = [...systemAlerts, ...reminders];
-
-  const filteredNotifications =
-    activeTab === 'All' ? allNotifications : allNotifications.filter((n) => n.category === activeTab);
-
-  const handleDismiss = (id) => {
-    if (systemAlerts.find((n) => n.id === id)) {
-      dismissSystemAlert(id);
-    } else {
-      dismissReminder(id);
-    }
-  };
-
-  const markAllReadForTab = () => {
-    if (activeTab === 'Stock Alerts') markAllAlertsRead();
-    else if (activeTab === 'Appointments' || activeTab === 'Online Consultations') markAllRemindersRead();
-    else {
-      markAllAlertsRead();
-      markAllRemindersRead();
-    }
-  };
-
-  const hasUnread = filteredNotifications.some((n) => n.unread);
-
   return (
-    <div className="notifications-container" role="region" aria-label="User notifications">
+    <div className="notifications-container">
       <h2 className="notifications-title">Notifications</h2>
 
       {/* Tabs */}
-      <div className="tabs" role="tablist" aria-label="Notification categories" ref={tabsRef}>
+      <div className="tabs" ref={tabsRef}>
         {TABS.map((tab) => (
           <button
             key={tab}
             className={`tab-button ${activeTab === tab ? 'active' : ''}`}
             onClick={() => setActiveTab(tab)}
-            aria-selected={activeTab === tab}
-            role="tab"
-            tabIndex={activeTab === tab ? 0 : -1}
           >
             {tab}
           </button>
         ))}
-        {/* Underline bar */}
         <div className="tabs-underline" ref={underlineRef} />
       </div>
 
-      {filteredNotifications.length > 0 && hasUnread && (
-        <button
-          className="mark-all-btn"
-          onClick={markAllReadForTab}
-          aria-label={`Mark all ${activeTab.toLowerCase()} notifications as read`}
-        >
+      {filtered.length > 0 && hasUnread && (
+        <button className="mark-all-btn" onClick={markAllRead}>
           Mark all as read
         </button>
       )}
 
-      {filteredNotifications.length === 0 ? (
+      {filtered.length === 0 ? (
         <p className="empty-text">No notifications in this category.</p>
       ) : (
-        <div className="notification-list" role="list" aria-live="polite" aria-relevant="additions removals">
-          {filteredNotifications.map((n) => (
-            <NotificationCard key={n.id} notification={n} onDismiss={handleDismiss} />
+        <div className="notification-list" role="list">
+          {filtered.map((n, index) => (
+            <NotificationCard
+              key={`${n.notify_id}-${index}`}
+              notification={n}
+              onMarkRead={markAsRead}
+              onDismiss={dismissNotification}
+            />
           ))}
         </div>
       )}

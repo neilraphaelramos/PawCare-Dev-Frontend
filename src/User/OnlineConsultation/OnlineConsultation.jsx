@@ -100,6 +100,17 @@ const OnlineConsultation = () => {
         console.error("Notification error:", notifyErr);
       }
 
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/post`, {
+          UID: user.id,
+          title_notify: "Requested Online Consultation",
+          type_notify: "Online Consultation",
+          details: `${fillUp.owner_name} has requested an online consultation.`,
+        });
+      } catch (NErr) {
+        console.error("Notification error:", NErr);
+      }
+
       if (!res.data.success) {
         setShowModal(true);
         setMessageModal('Your Request Error. Please try again!')
@@ -176,6 +187,7 @@ const OnlineConsultation = () => {
       { from: 'bot', text: 'Please wait while one of our licensed veterinarians reviews your concern.' },
     ]);
     setMessage('');
+    setFillUp({});
   };
 
   const handleSendMessage = () => {

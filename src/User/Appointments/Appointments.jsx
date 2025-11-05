@@ -137,8 +137,20 @@ const Appointment = () => {
           type_notify: "Appointment",
           details: `You have successfully reserved an appointment on ${readableDate} at ${selectedTime}. Please wait for confirmation.`,
         });
+
       } catch (notifyErr) {
         console.error("Notification error:", notifyErr);
+      }
+
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/post`, {
+          UID: user.id,
+          title_notify: "Appointment Reserved",
+          type_notify: "Appointment",
+          details: `${owner_name} has reserved an appointment on ${readableDate} at ${selectedTime}.`,
+        });
+      } catch (NErr) {
+        console.error("Notification error:", NErr);
       }
 
       setShowModal(true);
