@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import "./VerifyPage.css";
 
 export default function VerifyPage() {
   const [searchParams] = useSearchParams();
@@ -10,14 +11,12 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (token) {
-      fetch(`server-api/verify?token=${token}`)
+      fetch(`${process.env.REACT_APP_API_URL}/verify?token=${token}`)
         .then(async (res) => {
           const text = await res.text();
           if (res.ok) {
             setStatus(`✅ ${text}`);
             setIsVerified(true);
-
-            // ⏰ Auto-redirect after 3 seconds
             setTimeout(() => {
               navigate("/login");
             }, 3000);
@@ -35,44 +34,17 @@ export default function VerifyPage() {
   }, [token, navigate]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          padding: "30px",
-          borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          maxWidth: "400px",
-          textAlign: "center",
-        }}
-      >
-        <h2>Email Verification</h2>
-        <p>{status}</p>
+    <div className="verify-container">
+      <div className="verify-card">
+        <h2 className="verify-title">Email Verification</h2>
+        <p className="verify-status">{status}</p>
 
         {isVerified && (
-          <p style={{ marginTop: "10px", fontSize: "14px", color: "#555" }}>
+          <p className="verify-redirect">
             Redirecting to login... or{" "}
             <button
               onClick={() => navigate("/login")}
-              style={{
-                background: "#4caf50",
-                color: "#fff",
-                border: "none",
-                padding: "5px 10px",
-                borderRadius: "5px",
-                cursor: "pointer",
-                marginLeft: "5px",
-              }}
+              className="verify-button"
             >
               Go Now
             </button>
