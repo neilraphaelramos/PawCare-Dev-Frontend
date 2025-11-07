@@ -116,7 +116,7 @@ export default function Login() {
             />
 
             <div className="forgot-password">
-              <a href="#">Forgot password?</a>
+              <a href="/reset-password-request">Forgot password?</a>
             </div>
             <button type="submit" disabled={isLoggingIn}>
               {isLoggingIn ? 'Logging In...' : 'Log In'}

@@ -43,6 +43,9 @@ import UserNotifications from "./User/Notifications/Notifications";
 import Profile from "./User/Profile/Profile";
 import Login from "./User/Auth/Login";
 import Register from "./User/Auth/Register";
+import ResetRequestForm from "./User/Auth/forgotPassword/ResetRequestForm";
+import ResetPasswordForm from "./User/Auth/forgotPassword/ResetForm";
+import VerifyReset from "./User/Auth/forgotPassword/VerifyResetPage/VerifyReset";
 import LandingPage from "./User/Homepage/LandingPage";
 import PetProducts from "./User/PetProducts/PetProducts";
 import UserSettings from "./User/Settings/Settings";
@@ -81,6 +84,9 @@ export default function App() {
         <Route path="/signup" element={<Register />} />
         {/* ✅ Email verification route */}
         <Route path="/verify" element={<VerifyPage />} />
+        <Route path="/reset-password-request" element={<ResetRequestForm />} />
+        <Route path="/reset-password" element={<ResetPasswordForm />} />
+        <Route path="/reset-password-verify" element={<VerifyReset />} />
 
         {/* Admin Panel Routes */}
         <Route
