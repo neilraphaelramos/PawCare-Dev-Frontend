@@ -235,3 +235,34 @@
   padding: 20px;
   color: #888;
 }
+
+.cancel-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.approve-btn {
+  background: #2ecc71;
+  border: none;
+  color: #fff;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.approve-btn:hover {
+  background: #27ae60;
+}
+
+.reject-btn:hover {
+  background: #c0392b;
+}

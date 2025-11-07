@@ -27,7 +27,14 @@ const UserInventory = () => {
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [orders, setOrders] = useState([]);
 
+  const [qrImageUrl, setQrImageUrl] = useState('');
+  const [paymentIntentId, setPaymentIntentId] = useState('');
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
   const userId = user?.id;
+
+  const fullName = `${user.firstName} ${user.lastName}`;
 
   const handleMessageModal = () => {
     setPaymentSuccess(false);
@@ -38,86 +45,217 @@ const UserInventory = () => {
   const handleConfirmOrder = async () => {
     if (cart.length === 0) {
       setShowMessageModal(true);
-      setMessageModal('Your order is empty. Please add at least one item before confirming.');
+      setMessageModal("Your order is empty. Please add items.");
       return;
     }
 
-    if (!paymentMethod) {
-      setShowMessageModal(true);
-      setMessageModal('Please select a payment method');
-      return;
-    }
+    // ✅ If Cash on Delivery, skip PayMongo and upload order directly
+    if (paymentMethod === "cod") {
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_cod_order`, {
+          uid: user.id,
+          customer_name: fullName,
+          customer_address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
+          total: totalAmount,
+          methodPayments: "cod",
+          landmark: deliveryInfo.landmark,
+          cart,
+        });
 
-    for (const item of cart) {
-      const currentStock = items.find(i => i.id === item.id)?.quantity || 0;
-      if (item.qty > currentStock) {
+        setShowModal(false);
         setShowMessageModal(true);
-        setMessageModal(`"${item.name}" only has ${currentStock} left in stock.`);
+        setMessageModal("✅ Order placed successfully with Cash on Delivery!");
+        setCart([]);
+      } catch (err) {
+        console.error("❌ Error placing COD order:", err);
+        setShowMessageModal(true);
+        setMessageModal("Server error while placing order. Please try again.");
+      }
+      return; // 🚫 stop further PayMongo logic
+    }
+
+    // 💳 Otherwise continue with QRPH / PayMongo flow below
+    try {
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API_URL}/orders/create_payment_intent`,
+        {
+          amount: totalAmount,
+          name: fullName,
+          email: user.email,
+          phone: user.phone,
+        }
+      );
+
+      if (!data.success) {
+        setShowMessageModal(true);
+        setMessageModal("Failed to create payment. Please try again.");
         return;
       }
+
+      // Show QR modal
+      setQrImageUrl(data.qrImageBase64);
+      setPaymentIntentId(data.payment_intent_id);
+      setShowQrModal(true);
+      setShowModal(false);
+
+      // Flag to prevent multiple DB inserts
+      let orderSubmitted = false;
+
+      const checkPayment = async () => {
+        try {
+          const statusRes = await axios.get(
+            `${process.env.REACT_APP_API_URL}/orders/check_payment_status/${data.payment_intent_id}`
+          );
+
+          const status = statusRes.data.status;
+          console.log(`🔍 Payment Status: ${status}`);
+
+          if (status === "succeeded" && !orderSubmitted) {
+            console.log("✅ Payment successful! Saving order...");
+            orderSubmitted = true;
+
+            await axios.post(`${process.env.REACT_APP_API_URL}/orders`, {
+              uid: user.id,
+              customer_name: fullName,
+              customer_address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
+              total: totalAmount,
+              methodPayments: "qrph",
+              landmark: deliveryInfo.landmark,
+              cart,
+            });
+
+            setShowQrModal(false);
+            setShowMessageModal(true);
+            setMessageModal("✅ Payment successful! Your order has been placed.");
+            setCart([]);
+          } else if (
+            status === "awaiting_payment_method" ||
+            status === "awaiting_next_action"
+          ) {
+            console.log("⏳ Waiting for payment...");
+            setTimeout(checkPayment, 5000);
+          } else if (status === "cancelled") {
+            console.log("🛑 Payment was cancelled.");
+            setShowQrModal(false);
+          } else {
+            console.log("⚠️ Payment not completed yet:", status);
+            setTimeout(checkPayment, 5000);
+          }
+        } catch (err) {
+          console.error("Error checking payment status:", err);
+          setTimeout(checkPayment, 7000);
+        }
+      };
+
+      checkPayment();
+    } catch (err) {
+      console.error("Error creating payment intent:", err);
+      setShowMessageModal(true);
+      setMessageModal("Server error while creating payment intent.");
+    }
+  };
+
+  const handleCancelPayment = async () => {
+    setIsConfirming(true);
+    if (!paymentIntentId) {
+      console.warn("⚠️ No payment intent to cancel.");
+      setShowQrModal(false);
+      return;
     }
 
-    const fullAddress = `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}${deliveryInfo.landmark ? ` (${deliveryInfo.landmark})` : ''}`;
-
-    const fullName = `${user.firstName} ${user.middleName ? user.middleName + ' ' : ''}${user.lastName}${user.suffix ? ', ' + user.suffix : ''}`;
-
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-
-    const payload = {
-      amount: totalAmount,
-      methods: paymentMethod.toLowerCase() === 'maya' ? 'paymaya' :
-        paymentMethod.toLowerCase() === 'gcash' ? 'gcash' : 'cod',
-      name: fullName,
-      address: fullAddress,
-      date: formattedDate,
-      items: cart.map(item => ({
-        product_ID: item.id,
-        name: item.name,
-        qty: item.qty
-      })),
-      uid: user.id,
-      email: user.email,
-      phone: user.phone
-    };
-
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/payment_setorder`, payload);
+      console.log("🟡 Cancelling payment intent:", paymentIntentId);
 
-      try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
-          UID: user.id,
-          title_notify: 'Order Placed Successfully',
-          type_notify: 'order',
-          details: `Your order totaling ₱${totalAmount} has been placed successfully.`,
-        });
-      } catch (notifyErr) {
-        console.error("Notification error:", notifyErr);
-      }
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/cancel_payment_intent`, {
+        payment_intent_id: paymentIntentId,
+      });
 
       if (res.data.success) {
-        if (paymentMethod.toLowerCase() === 'cod') {
-          setShowMessageModal(true);
-          setMessageModal('Order placed successfully with Cash on Delivery!');
-          setCart([]);         // 🧹 clear cart
-          setShowModal(false); // close modal
-          setPaymentMethod('');
-        } else {
-          // Redirect to PayMongo payment page
-          setCart([]);         // 🧹 clear cart before redirect
-          setShowModal(false);
-          setPaymentMethod('');
-          window.location.href = res.data.redirectUrl;
-        }
-
+        console.log("🛑 Payment intent canceled successfully.");
+        setMessageModal("Payment canceled successfully.");
       } else {
-        setMessageModal(res.data.message || 'Failed to place order')
+        console.warn("⚠️ Payment cancel request failed:", res.data.message);
+        setMessageModal("Failed to cancel payment. Please try again.");
+      }
+    } catch (err) {
+      console.error("❌ Error canceling payment intent:", err);
+      setMessageModal("Server error while canceling payment.");
+    } finally {
+      setShowQrModal(false);
+      setQrImageUrl("");
+      setPaymentIntentId("");
+      setShowMessageModal(true);
+      setIsConfirming(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    try {
+      // 1️⃣ Check PayMongo payment status
+      const statusRes = await axios.get(
+        `${process.env.REACT_APP_API_URL}/orders/check_payment_status/${paymentIntentId}`
+      );
+
+      if (statusRes.data.status === "succeeded") {
+        console.log("✅ Payment succeeded! Confirming order in backend...");
+
+        // 2️⃣ Confirm order (this route verifies with PayMongo and saves to DB)
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/confirm_order`, {
+          payment_intent_id: paymentIntentId,
+          amount: totalAmount,
+          name: fullName,
+          address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
+          date: new Date().toISOString().slice(0, 10),
+          items: cart.map(item => ({
+            product_ID: item.id,
+            name: item.name,
+            qty: item.qty,
+          })),
+          uid: user.id,
+        });
+
+        if (res.data.success) {
+          console.log("✅ Order confirmed and saved!");
+          setShowQrModal(false);
+          setCart([]);
+          setMessageModal("✅ Payment verified and order confirmed!");
+        } else {
+          console.warn("⚠️ Backend did not confirm payment:", res.data.message);
+          setMessageModal(res.data.message || "Payment not yet confirmed. Please wait or try again.");
+        }
+      } else if (statusRes.data.status === "cancelled") {
+        setMessageModal("❌ Payment was cancelled.");
+      } else {
+        console.log("⏳ Payment still pending:", statusRes.data.status);
+        setMessageModal("Payment not yet confirmed. Please wait or try again.");
       }
 
-    } catch (err) {
-      console.error('Order error:', err);
       setShowMessageModal(true);
-      setMessageModal('Something went wrong while placing your order.');
+    } catch (err) {
+      console.error("❌ Error confirming payment:", err);
+      setMessageModal("Server error confirming payment. Please try again later.");
+      setShowMessageModal(true);
+    }
+  };
+
+  const handleCancelRequest = async (orderId) => {
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/request_cancel`, {
+        id_order: orderId,
+        uid: user.id,
+      });
+
+      if (res.data.success) {
+        setMessageModal("✅ Cancel request submitted. Waiting for admin approval.");
+        fetchInventory();
+      } else {
+        setMessageModal(res.data.message || "Failed to request cancel.");
+      }
+    } catch (err) {
+      console.error("Error requesting cancel:", err);
+      setMessageModal("Server error requesting cancellation.");
+    } finally {
+      setShowMessageModal(true);
     }
   };
 
@@ -184,7 +322,6 @@ const UserInventory = () => {
       console.error('Error fetching orders:', err);
     }
   };
-
 
   useEffect(() => {
     if (user) {
@@ -454,19 +591,26 @@ const UserInventory = () => {
                   </div>
                 </div>
 
+                {/* 🆕 Payment Method */}
                 <div className="modal-payment">
                   <h4>Payment Method</h4>
                   <div className="payment-options">
                     <label>
-                      <input type="radio" name="payment" value="GCash" onChange={(e) => setPaymentMethod(e.target.value)} />
-                      <FaWallet /> GCash
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="qrph"
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
+                      <FaWallet /> QR Ph Payment
                     </label>
                     <label>
-                      <input type="radio" name="payment" value="Maya" onChange={(e) => setPaymentMethod(e.target.value)} />
-                      <FaWallet /> Maya
-                    </label>
-                    <label>
-                      <input type="radio" name="payment" value="COD" onChange={(e) => setPaymentMethod(e.target.value)} />
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cod"
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
                       <FaMoneyBillAlt /> Cash on Delivery
                     </label>
                   </div>
@@ -474,12 +618,15 @@ const UserInventory = () => {
 
                 <div className="modal-footer">
                   <button onClick={() => setShowModal(false)}>Back</button>
-                  <button className="checkout-confirm" onClick={handleConfirmOrder} disabled={!paymentMethod}>
+                  <button
+                    className="checkout-confirm"
+                    onClick={handleConfirmOrder}
+                    disabled={!paymentMethod}
+                  >
                     Confirm Order
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -488,48 +635,56 @@ const UserInventory = () => {
       {showOrdersModal && (
         <div className="vo-modal-overlay">
           <div className="vo-modal">
-            <h2>My Orders</h2>
-            <div className="vo-modal-orders-list">
+            {/* HEADER */}
+            <div className="vo-modal-header">
+              <h2>My Orders</h2>
+            </div>
+
+            {/* SCROLLABLE BODY */}
+            <div className="vo-modal-body">
               {orders.length === 0 ? (
-                <p>You have no orders yet.</p>
+                <p className="vo-no-orders">You have no orders yet.</p>
               ) : (
-                orders.map(order => (
-                  <div key={order.id_order} className="vo-modal-order-card">
-                    <div className="vo-modal-order-header">
-                      <h4>Order #{order.id_order}</h4>
-                      <span className={`vo-modal-order-status ${order.order_status.toLowerCase()}`}>
-                        {order.order_status}
-                      </span>
-                    </div>
+                <div className="vo-modal-orders-list">
+                  {orders.map(order => (
+                    <div key={order.id_order} className="vo-modal-order-card">
+                      <div className="vo-modal-order-header">
+                        <h4>Order #{order.id_order}</h4>
+                        <span className={`vo-modal-order-status ${order.order_status.toLowerCase()}`}>
+                          {order.order_status}
+                        </span>
+                      </div>
 
-                    <p><strong>Date:</strong> {new Date(order.order_date).toLocaleString()}</p>
-                    <p><strong>Address:</strong> {order.customer_address}</p>
+                      <p><strong>Date:</strong> {new Date(order.order_date).toLocaleString()}</p>
+                      <p><strong>Address:</strong> {order.customer_address}</p>
 
-                    <table className="vo-modal-items-table">
-                      <thead>
-                        <tr>
-                          <th>Item</th>
-                          <th>Qty</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.items.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.product_name}</td>
-                            <td>{item.quantity}</td>
+                      <table className="vo-modal-items-table">
+                        <thead>
+                          <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {order.items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td>{item.product_name}</td>
+                              <td>{item.quantity}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
 
-                    <div className="vo-modal-order-footer">
-                      Total: ₱{order.total.toFixed(2)}
+                      <div className="vo-modal-order-footer">
+                        Total: ₱{order.total.toFixed(2)}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
 
+            {/* FOOTER */}
             <div className="vo-modal-footer">
               <button onClick={() => setShowOrdersModal(false)}>Close</button>
             </div>
@@ -586,6 +741,36 @@ const UserInventory = () => {
           </div>
         </div>
       )}
+
+      {showQrModal && (
+        <div className="messOrd-modal-overlay">
+          <div className="messOrd-modal">
+            <div className="messOrd-modal-header align-center-adjust">
+              <h2>Scan to Pay (QR Ph)</h2>
+            </div>
+
+            <div className="messOrd-modal-body-qrph">
+              <img
+                src={qrImageUrl}
+                alt="QR Payment"
+                className='messOrd-qr-image'
+              />
+            </div>
+
+            <div className="messOrd-modal-footer">
+              <button className='messOrd-close-btn' onClick={handleCancelPayment}>Cancel</button>
+              <button
+                className='messOrd-confirm-btn'
+                onClick={handleConfirmPayment}
+                disabled={isConfirming}
+              >
+                {isConfirming ? 'Checking...' : 'I’ve Paid'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -275,7 +275,7 @@ export default function InventoryTable() {
 
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   const handleInputChange = (e) => {
@@ -723,64 +723,64 @@ export default function InventoryTable() {
 
 
       {showConfirmModal && (
-              <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
-                <div
-                  className="All-deleteconfirm-modal"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
-                  <p className="All-deleteconfirm-message">
-                    {messageModal}
-                  </p>
-                  <div className="All-deleteconfirm-actions">
-                    <button
-                      className="All-deleteconfirm-btn confirm"
-                      onClick={() => confirmDelete(selectedFeatureId)}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <>
-                          Processing... <Loader2 size={16} className="feature-spinner" />
-                        </>
-                      ) : (
-                        "Confirm"
-                      )}
-                    </button>
-                    <button
-                      className="All-deleteconfirm-btn cancel"
-                      onClick={() => setShowConfirmModal(false)}
-                      disabled={isProcessing}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-      
-                </div>
-              </div>
-            )}
-      
-            {showMessageModal && (
-              <div className="All-Message-modal-overlay">
-                <div className="All-Message-modal">
-                  <div className="All-Message-modal-header">
-                    <h2>Alert Message</h2>
-                  </div>
-      
-                  <div className="All-Message-modal-body">
-                    <p>{messageModal}</p>
-                  </div>
-      
-                  <div className="All-Message-modal-footer">
-                    <button
-                      className="All-Message-close-btn"
-                      onClick={() => setShowMessageModal(false)}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+        <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="All-deleteconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
+            <p className="All-deleteconfirm-message">
+              {messageModal}
+            </p>
+            <div className="All-deleteconfirm-actions">
+              <button
+                className="All-deleteconfirm-btn confirm"
+                onClick={() => confirmDelete(selectedFeatureId)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    Processing... <Loader2 size={16} className="feature-spinner" />
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </button>
+              <button
+                className="All-deleteconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

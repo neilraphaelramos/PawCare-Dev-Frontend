@@ -3,11 +3,12 @@ import './ViewOrders.css';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
+import { set } from 'date-fns';
 
 
 export function exportToXLSX(data, filename = "orders.xlsx") {
   if (!data) {
-    alert("No data to export");
+    setMessageModal("No data to export");
     return;
   }
 
@@ -15,7 +16,8 @@ export function exportToXLSX(data, filename = "orders.xlsx") {
   const rows = Array.isArray(data) ? data : [data];
 
   if (rows.length === 0) {
-    alert("No data to export");
+    setMessageModal("No data to export");
+    setShowMessageModal(true);
     return;
   }
 
@@ -62,7 +64,8 @@ export function exportToXLSX(data, filename = "orders.xlsx") {
 
 export function exportToPDF(data, filename = "orders.pdf") {
   if (!data || data.length === 0) {
-    alert("No data to export");
+    setMessageModal("No data to export");
+    setShowMessageModal(true);
     return;
   }
 
@@ -164,6 +167,11 @@ const ViewOrders = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [messageModal, setMessageModal] = useState('');
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // ✅ Format date from yyyy-mm-dd → dd/mm/yyyy
   const formatDate = (dateStr) => {
@@ -184,47 +192,104 @@ const ViewOrders = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/fetch`);
+      if (res.data.success) {
+        const grouped = {};
+        res.data.data.forEach(row => {
+          if (!grouped[row.id_order]) {
+            grouped[row.id_order] = {
+              id: row.id_order,
+              customer: row.customer_name,
+              address: row.customer_address,
+              date: row.order_date,
+              total: row.total,
+              status: row.order_status,
+              items: [],
+              cancel_requested: row.cancel_requested,
+              methodPayments: row.methodPayments,
+              paymentIntentId: row.payment_intent_id, 
+            };
+          }
+          if (row.product_name) {
+            grouped[row.id_order].items.push({
+              name: row.product_name,
+              quantity: row.quantity
+            });
+          }
+        });
+
+        setOrders(Object.values(grouped));
+      } else {
+        console.error("Failed to fetch orders:", res.data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ✅ Fetch & process orders
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setIsLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/fetch`);
-        if (res.data.success) {
-          const grouped = {};
-          res.data.data.forEach(row => {
-            if (!grouped[row.id_order]) {
-              grouped[row.id_order] = {
-                id: row.id_order,
-                customer: row.customer_name,
-                address: row.customer_address,
-                date: row.order_date,
-                total: row.total,
-                status: row.order_status,
-                items: []
-              };
-            }
-            if (row.product_name) {
-              grouped[row.id_order].items.push({
-                name: row.product_name,
-                quantity: row.quantity
-              });
-            }
-          });
-
-          setOrders(Object.values(grouped));
-        } else {
-          console.error("Failed to fetch orders:", res.data.message);
-        }
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  const handleApproveCancel = (orderId, refund, methodPayments) => {
+    setSelectedOrder({ orderId, refund, methodPayments });
+    setShowConfirmModal(true);
+    setMessageModal("Are you sure you want to approve this cancel request?");
+  }
+
+  const confirmApproved = async (orderId, refund, methodPayments) => {
+    console.log("🟨 [Frontend] Approve cancel clicked:", {
+      orderId,
+      refund,
+      methodPayments,
+    });
+
+    try {
+      const payload = {
+        id_order: orderId,
+        refund,
+        methodPayments,
+      };
+
+      console.log("📦 [Frontend] Sending payload to backend:", payload);
+
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/orders/approve_cancel`,
+        payload
+      );
+
+      console.log("✅ [Frontend] Response from backend:", res.data);
+
+      setMessageModal(res.data.message);
+      setShowMessageModal(true);
+      fetchOrders();
+    } catch (err) {
+      console.error("❌ [Frontend] Error approving cancel:", err);
+      setMessageModal("Error approving cancellation.");
+      setShowMessageModal(true);
+    }
+  };
+
+
+  const handleRejectCancel = async (orderId) => {
+    if (!window.confirm("Reject cancel request?")) return;
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/update_status/${orderId}`, {
+        status: "Pending",
+      });
+      setMessageModal("Cancel request rejected.");
+      setShowMessageModal(true);
+      fetchOrders();
+    } catch (err) {
+      console.error("Error rejecting cancel:", err);
+    }
+  };
 
   // ✅ Apply filters
   const filteredOrders = orders.filter(order => {
@@ -244,7 +309,7 @@ const ViewOrders = () => {
 
   const handleExport = (format) => {
     if (filteredOrders.length === 0) {
-      alert("No data to export");
+      setMessageModal("No data to export");
       return;
     }
 
@@ -382,31 +447,21 @@ const ViewOrders = () => {
                   </td>
                   <td>
                     <select
-                      value={order.status}
-                      onChange={async e => {
-                        const newStatus = e.target.value;
-                        try {
+                        value={order.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
                           await axios.put(
                             `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
                             { status: newStatus }
                           );
-
-                          setOrders(prevOrders =>
-                            prevOrders.map(o =>
-                              o.id === order.id ? { ...o, status: newStatus } : o
-                            )
-                          );
-                        } catch (err) {
-                          console.error("Error updating order status:", err);
-                        }
-                      }}
-                      className="status-select"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Delivery">Out for Delivery</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                          fetchOrders();
+                        }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
                   </td>
                 </tr>
               ))
@@ -420,6 +475,69 @@ const ViewOrders = () => {
           </tbody>
         </table>
       </div>
+      {showConfirmModal && (
+        <div className="All-deleteconfirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div
+            className="All-deleteconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="All-deleteconfirm-title">Confirm Delete</h3>
+            <p className="All-deleteconfirm-message">
+              {messageModal}
+            </p>
+            <div className="All-deleteconfirm-actions">
+              <button
+                className="All-deleteconfirm-btn confirm"
+                onClick={async () => {
+                  if (!selectedOrder) return;
+                  setIsProcessing(true);
+                  await confirmApproved(
+                    selectedOrder.orderId,
+                    selectedOrder.refund,
+                    selectedOrder.methodPayments
+                  );
+                  setIsProcessing(false);
+                  setShowConfirmModal(false);
+                }}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Processing..." : "Confirm"}
+              </button>
+              <button
+                className="All-deleteconfirm-btn cancel"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>setMessageModal Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
