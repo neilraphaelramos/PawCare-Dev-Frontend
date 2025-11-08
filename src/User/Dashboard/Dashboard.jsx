@@ -6,10 +6,9 @@ import {
   FaPaw,
   FaCalendarAlt,
   FaBell,
-  FaUserMd,
   FaChevronLeft,
   FaChevronRight,
-  FaStar,
+  FaCalendarCheck,
 } from "react-icons/fa";
 
 import "./Dashboard.css";
@@ -26,6 +25,7 @@ const Dashboard = () => {
   const [totalPets, setTotalPets] = useState(0);
   const [totalAppointment, setTotalAppointment] = useState(0);
   const [totalNotify, setTotalNotify] = useState(0);
+  const [totalVisit, setTotalVisit] = useState(0);
   const navigate = useNavigate();
   const handleAddAppointment = () => {
     navigate("/users/appointments");
@@ -155,7 +155,8 @@ const Dashboard = () => {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/users/${user.id}/${user.username}`);
       setTotalPets(res.data.totalPets);
       setTotalAppointment(res.data.totalAppointments);
-      setTotalNotify(res.data.totalNotify)
+      setTotalNotify(res.data.totalNotify);
+      setTotalVisit(res.data.totalVisit);
     } catch (err) {
       console.error('Error fetching Metric:', err);
     }
@@ -222,8 +223,8 @@ const Dashboard = () => {
             <span>{totalNotify}</span>
           </div>
           <div className="user-dashboard-metric">
-            <div><FaUserMd /> Active Vets</div>
-            <span>{0}</span>
+            <div><FaCalendarCheck /> Total Visit</div>
+            <span>{totalVisit}</span>
           </div>
         </section>
 
@@ -312,24 +313,6 @@ const Dashboard = () => {
             )}
           </div>
         </section>
-
-        <section className="user-dashboard-tips user-dashboard-card">
-          <h3>Latest Pet Care Tips</h3>
-          <div className="user-dashboard-tips-list">
-            <div>
-              <p>How to Keep Your Pet’s Coat Shiny and Healthy</p>
-              <span>By Dr. Maria Santos, Veterinarian</span>
-            </div>
-            <div>
-              <p>Tips for Managing Your Pet’s Anxiety and Stress</p>
-              <span>By Dr. James Lee, Animal Behaviorist</span>
-            </div>
-            <div>
-              <p>Nutrition Advice for Optimal Pet Health</p>
-              <span>By Dr. Emily Cruz, Veterinary Nutritionist</span>
-            </div>
-          </div>
-        </section>
       </main>
 
       <aside className="user-dashboard-right-panel">
@@ -363,25 +346,6 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="user-dashboard-popular-doctors user-dashboard-card">
-          <h4>Popular Veterinarians</h4>
-          <ul>
-            <li>
-              <strong>Dr. Nielsen Donato</strong>
-              <div className="user-dashboard-doctor-meta">
-                Veterinary • <FaStar /> 5.0 (4. K)
-              </div>
-            </li>
-            <li>
-              <strong>Dr. Theresa Webb</strong>
-              <div className="user-dashboard-doctor-meta">
-                Veterinary • <FaStar /> 4.9 (5.1 K)
-              </div>
-            </li>
-          </ul>
-          <button className="user-dashboard-secondary-btn">Explore More</button>
-        </div>
-
         <div className="user-dashboard-ai-chat user-dashboard-card">
           <button
             className="user-dashboard-chat-btn"
@@ -393,7 +357,6 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      { }
       {showChat && <AiAssistant onClose={() => setShowChat(false)} />}
     </div>
   );

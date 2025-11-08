@@ -99,6 +99,12 @@ body {
   border: 1px solid #cbd5e0;
   border-radius: 8px;
   transition: border-color 0.2s;
+  width: 100%;
+}
+
+.admin-search-wrapper {
+  position: relative;
+  flex: 1;
 }
 
 .admin-dashboard-header input:focus {

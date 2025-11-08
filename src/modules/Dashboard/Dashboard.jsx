@@ -20,7 +20,7 @@ import "react-calendar/dist/Calendar.css";
 // Rename Recharts' Bar to BarRecharts
 import { BarChart, Bar as BarRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import "./Dashboard.css";
-
+import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
   BarElement,
@@ -181,6 +181,43 @@ export default function Dashboard() {
   const [medLow, setMedLow] = useState(0);
   const [unMess, setUnMess] = useState(0);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+
+  const pages = [
+    { name: "Appointment", keyword: "appointment", path: "/admin/appointments" },
+    { name: "Pet Medical Records", keyword: "medical", path: "/admin/medical-records" },
+    { name: "Notification", keyword: "notification", path: "/admin/notification" },
+    { name: "Online Consultation", keyword: "consultation", path: "/admin/online-consultation" },
+    { name: "Manage Orders", keyword: "orders", path: "/admin/view-orders" },
+    { name: "Manage Inventory", keyword: "inventory", path: "/admin/inventory" },
+    { name: "Manage Services", keyword: "service", path: "/admin/services" },
+    { name: "Manage Features", keyword: "feature", path: "/admin/features" },
+    { name: "Manage Announcements", keyword: "announcements", path: "/admin/announcements" },
+    { name: "Manage Accounts", keyword: "accounts", path: "/admin/accounts" },
+  ];
+
+  const handleChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setQuery(value);
+    if (value.trim() === "") {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = pages.filter((p) =>
+      p.keyword.includes(value) || p.name.toLowerCase().includes(value)
+    );
+    setSuggestions(filtered);
+  };
+
+  const handleSelect = (path) => {
+    setQuery("");
+    setSuggestions([]);
+    navigate(path);
+  };
 
   const handleMetricStatus = async () => {
     try {
@@ -328,12 +365,23 @@ export default function Dashboard() {
       <main className="admin-dashboard-main">
         <header className="admin-dashboard-header">
           <h2>Admin Dashboard</h2>
-          <input
-            type="text"
-            placeholder="Search pet, owner, or reason..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="admin-search-wrapper">
+            <input
+              type="text"
+              value={query}
+              placeholder="Search pet, owner, or reason..."
+              onChange={handleChange}
+            />
+            {suggestions.length > 0 && (
+              <ul className="search-suggestions">
+                {suggestions.map((item, i) => (
+                  <li key={i} onClick={() => handleSelect(item.path)}>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </header>
 
         <div className="admin-dashboard-main-content">

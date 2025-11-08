@@ -20,7 +20,7 @@ import "react-calendar/dist/Calendar.css";
 // Rename Recharts' Bar to BarRecharts
 import { BarChart, Bar as BarRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import "./Dashboard.css";
-
+import { useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
   BarElement,
@@ -168,7 +168,6 @@ function OrdersByCategoryChart() {
 
 
 export default function Dashboard() {
-  const [search, setSearch] = useState("");
   const [date, setDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -181,7 +180,41 @@ export default function Dashboard() {
   const [medLow, setMedLow] = useState(0);
   const [unMess, setUnMess] = useState(0);
   const { user } = useContext(UserContext);
- 
+  const navigate = useNavigate();
+
+  const pages = [
+    { name: "Appointments", keyword: "appointment", path: "/veterinarian/appointments" },
+    { name: "Medical Records", keyword: "medical", path: "/veterinarian/medical-records" },
+    { name: "Inventory", keyword: "inventory", path: "/veterinarian/inventory" },
+    { name: "Notification", keyword: "notification", path: "/veterinarian/notification" },
+    { name: "Reports", keyword: "reports", path: "/veterinarian/reports" },
+    { name: "Online Consultation", keyword: "consultation", path: "/veterinarian/online-consultation" },
+    { name: "Profile", keyword: "profile", path: "/veterinarian/profile" },
+  ];
+
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+
+  const handleChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setQuery(value);
+    if (value.trim() === "") {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = pages.filter((p) =>
+      p.keyword.includes(value) || p.name.toLowerCase().includes(value)
+    );
+    setSuggestions(filtered);
+  };
+
+  const handleSelect = (path) => {
+    setQuery("");
+    setSuggestions([]);
+    navigate(path);
+  };
+
   const handleMetricStatus = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/admin`);
@@ -327,13 +360,25 @@ export default function Dashboard() {
       { }
       <main className="vet-dashboard-main">
         <header className="vet-dashboard-header">
-          <h2>Admin Dashboard</h2>
-          <input
-            type="text"
-            placeholder="Search pet, owner, or reason..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <h2>Vet Dashboard</h2>
+          <div className="vet-search-wrapper">
+            <input
+              type="text"
+              value={query}
+              placeholder="Search pet, owner, or reason..."
+              onChange={handleChange}
+            />
+            {suggestions.length > 0 && (
+              <ul className="search-suggestions">
+                {suggestions.map((item, i) => (
+                  <li key={i} onClick={() => handleSelect(item.path)}>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
         </header>
 
         <div className="vet-dashboard-main-content">
