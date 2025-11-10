@@ -1,0 +1,96 @@
+.datetime-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.datetime-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 420px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.datetime-title {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.datetime-section {
+  margin: 15px 0;
+}
+
+.datetime-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.datetime-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+.datetime-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.datetime-time-btn {
+  flex: 1 1 45%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #f8f8f8;
+  transition: all 0.2s ease;
+}
+
+.datetime-time-btn:hover {
+  background: #e0e0e0;
+}
+
+.datetime-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.datetime-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.datetime-btn.cancel {
+  background: #ccc;
+  color: #333;
+}
+
+.datetime-btn.cancel:hover {
+  background: #bbb;
+} 
+
+.datetime-btn.confirm {
+  background: #32b2b2;
+  color: #fff;
+}
+
+.datetime-btn.confirm:hover {
+  background: #258383;
+}

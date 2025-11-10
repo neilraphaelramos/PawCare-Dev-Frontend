@@ -292,8 +292,9 @@ const Appointment = () => {
       </div>
       {isModalOpen && (
         <div className="appoint-modal-overlay" onClick={handleCloseModal}>
-          <div className="appoint-modal-content">
+          <div className="appoint-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>My Appointments</h3>
+
             {userAppointments.length > 0 ? (
               <div className="appoint-appointment-list">
                 {userAppointments.map((appt, idx) => {
@@ -307,13 +308,9 @@ const Appointment = () => {
                   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
                   let relativeText = '';
-                  if (diffDays === 0) {
-                    relativeText = 'Today';
-                  } else if (diffDays === 1) {
-                    relativeText = 'Yesterday';
-                  } else if (diffDays > 1) {
-                    relativeText = `${diffDays} days ago`;
-                  }
+                  if (diffDays === 0) relativeText = 'Today';
+                  else if (diffDays === 1) relativeText = 'Yesterday';
+                  else if (diffDays > 1) relativeText = `${diffDays} days ago`;
 
                   let bookedText = '';
                   if (appt.created_at) {
@@ -322,14 +319,10 @@ const Appointment = () => {
                       (today - new Date(createdDate.setHours(0, 0, 0, 0))) /
                       (1000 * 60 * 60 * 24)
                     );
-
-                    if (createdDiffDays === 0) {
-                      bookedText = 'Booked Today';
-                    } else if (createdDiffDays === 1) {
-                      bookedText = 'Booked Yesterday';
-                    } else if (createdDiffDays > 1) {
+                    if (createdDiffDays === 0) bookedText = 'Booked Today';
+                    else if (createdDiffDays === 1) bookedText = 'Booked Yesterday';
+                    else if (createdDiffDays > 1)
                       bookedText = `Booked ${createdDiffDays} days ago`;
-                    }
                   }
 
                   return (
@@ -370,12 +363,16 @@ const Appointment = () => {
               <p>No appointments found.</p>
             )}
 
-            <button className="appoint-close-modal" onClick={handleCloseModal}>
-              Close
-            </button>
+            {/* Footer buttons */}
+            <div className="appoint-modal-footer">
+              <button className="appoint-view-btn" onClick={handleCloseModal}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
+
 
       {showModal && (
         <div className="AppointMessage-overlay" onClick={handleCloseMessageModal}>

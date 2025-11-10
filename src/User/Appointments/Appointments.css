@@ -209,17 +209,17 @@ body {
 }
 
 .appoint-modal-content {
+  display: flex;
+  flex-direction: column;
   background: #fff;
   padding: 20px;
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
+  /* prevent modal from growing too tall */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
 .appoint-modal-content::-webkit-scrollbar {
@@ -227,10 +227,15 @@ body {
 }
 
 .appoint-appointment-list {
+  flex: 1;
+  overflow-y: auto;
+  /* scrollable list */
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin-top: 15px;
+  padding-right: 5px;
+  /* for scrollbar spacing */
 }
 
 .appoint-appointment-card {
@@ -241,6 +246,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.appoint-modal-footer {
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 10px;
 }
 
 .appoint-appointment-row {

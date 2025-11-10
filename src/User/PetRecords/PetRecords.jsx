@@ -180,8 +180,11 @@ export default function PetRecords() {
                   <div key={i} className="checkup-card-wide">
                     <div className="checkup-col">
                       <p className="checkup-label">Date</p>
-                      <strong>{visit.day}</strong>
-                      <span>{visit.date}</span>
+                      <p>
+                        <strong className='label-admin-date'>{visit.day}</strong>
+                        <br />
+                        <span className='label-admin-date'>{visit.date}</span>
+                      </p>
                     </div>
                     <div className="checkup-col">
                       <p className="checkup-label">Service Type</p>

@@ -128,17 +128,25 @@ const UserInventory = () => {
             setShowMessageModal(true);
             setMessageModal("✅ Payment successful! Your order has been placed.");
             setCart([]);
+
+            try {
+              await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+                UID: user.id,
+                title_notify: 'Order Placed Successfully',
+                type_notify: 'order',
+                details: `Your order totaling ₱${totalAmount} has been placed successfully.`,
+              });
+            } catch (notifyErr) {
+              console.error("Notification error:", notifyErr);
+            }
           } else if (
             status === "awaiting_payment_method" ||
             status === "awaiting_next_action"
           ) {
-            console.log("⏳ Waiting for payment...");
             setTimeout(checkPayment, 5000);
           } else if (status === "cancelled") {
-            console.log("🛑 Payment was cancelled.");
             setShowQrModal(false);
           } else {
-            console.log("⚠️ Payment not completed yet:", status);
             setTimeout(checkPayment, 5000);
           }
         } catch (err) {

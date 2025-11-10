@@ -5,6 +5,33 @@ import { UserContext } from '../../hook/authContext';
 import axios from 'axios';
 import JitsiWrapper from './component/jitsiApi';
 import { io } from 'socket.io-client';
+import DateTimeModal from './component/DateTimeModal';
+
+const generateTimeSlots = () => {
+  const start = new Date();
+  start.setHours(8, 0, 0, 0);
+  const end = new Date();
+  end.setHours(18, 0, 0, 0);
+
+  const am = [], pm = [];
+
+  while (start < end) {
+    const slotStart = new Date(start);
+    const slotEnd = new Date(start.getTime() + 60 * 60000); // 1 hour
+
+    if (slotEnd > end) break;
+
+    const format = (d) =>
+      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const slot = `${format(slotStart)} - ${format(slotEnd)}`;
+    (slotStart.getHours() < 12 ? am : pm).push(slot);
+
+    start.setTime(slotEnd.getTime());
+  }
+
+  return { am, pm };
+};
 
 const OnlineConsultation = () => {
   const { user } = useContext(UserContext);
@@ -28,7 +55,6 @@ const OnlineConsultation = () => {
     file_payment: '',
   });
 
-
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [startCall, setStartCall] = useState(false);
   const [channelConsultID, setChannelConsultID] = useState(null);
@@ -45,6 +71,13 @@ const OnlineConsultation = () => {
   const [messageModal, setMessageModal] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [petList, setPetList] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDateTime, setSelectedDateTime] = useState(null);
+
+  const handleConfirm = (data) => {
+    setSelectedDateTime(data);
+    console.log("Selected:", data);
+  };
 
   const handleInputChange = (e) => {
     setFillUp({ ...fillUp, [e.target.name]: e.target.value });
@@ -83,6 +116,8 @@ const OnlineConsultation = () => {
       formData.append("concern_description", fillUp.concern_description);
       formData.append("consult_type", fillUp.consult_type);
       formData.append("photo", fillUp.file_payment);
+      formData.append("set_date", selectedDateTime?.date.toLocaleDateString('en-CA'));
+      formData.append("set_time", selectedDateTime?.time);
 
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/online_consult/submit`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -105,7 +140,7 @@ const OnlineConsultation = () => {
           UID: user.id,
           title_notify: "Requested Online Consultation",
           type_notify: "Online Consultation",
-          details: `${fillUp.owner_name} has requested an online consultation.`,
+          details: `${fillUp.owner_name} has requested an online consultation. On date of ${selectedDateTime?.date.toLocaleDateString('en-CA')} at ${selectedDateTime?.time}.`,
         });
       } catch (NErr) {
         console.error("Notification error:", NErr);
@@ -336,6 +371,24 @@ const OnlineConsultation = () => {
           </div>
 
           <div className="form-group">
+            <label>Set Schedule</label>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="select-date-btn"
+            >
+              {selectedDateTime
+                ? `${selectedDateTime.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} @ ${selectedDateTime.time}`
+                : "Select Consultation Date & Time"}
+            </button>
+            <DateTimeModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onConfirm={handleConfirm}
+            />
+          </div>
+
+          <div className="form-group">
             <label>Payment Proof (Screenshot or Receipt)</label>
             <input type="file" accept="image/*,application/pdf" onChange={handleFileUpload} required />
           </div>
@@ -393,7 +446,6 @@ const OnlineConsultation = () => {
                 })}
                 <div ref={chatEndRef} />
               </div>
-
 
               <div className="chat-input-row">
                 <input
