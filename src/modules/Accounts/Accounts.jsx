@@ -61,18 +61,27 @@ const Accounts = () => {
 
     try {
       const formData = new FormData();
+
+      // Append all user fields except imageFile
       Object.entries(newUser).forEach(([key, value]) => {
-        if (key !== "imageFile") formData.append(key, value);
+        if (key !== "imageFile") formData.append(key, value || "");
       });
+
+      // Must include user id
       formData.append("id", id);
 
+      // Append image file if exists
       if (newUser.imageFile) {
-        formData.append("image", newUser.imageFile);
+        formData.append("photo", newUser.imageFile); // <-- Must match backend multer
       }
 
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/update_account_admin`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/update_account_admin`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       alert(res.data.message || "Account updated successfully!");
       closeModal();
@@ -82,6 +91,7 @@ const Accounts = () => {
       alert("Failed to update account.");
     } finally {
       setIsSubmitting(false);
+      setShowConfirmModal(false);
     }
   };
 
@@ -89,12 +99,14 @@ const Accounts = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
+
       Object.entries(newUser).forEach(([key, value]) => {
         if (key !== "imageFile") formData.append(key, value);
       });
 
+      // ✅ Must match `upload.single('photo')`
       if (newUser.imageFile) {
-        formData.append("image", newUser.imageFile);
+        formData.append("photo", newUser.imageFile);
       }
 
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/add_account`, formData, {
