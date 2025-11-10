@@ -144,3 +144,70 @@
   background: #32b2b2;
   color: #fff;
 }
+
+.All-logoutconfirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.All-logoutconfirm-modal {
+  background: #fff;
+  max-width: 400px;
+  width: 90%;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.All-logoutconfirm-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.All-logoutconfirm-message {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.All-logoutconfirm-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.All-logoutconfirm-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px; 
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.All-logoutconfirm-btn.cancel {
+  background: #ccc;
+}
+
+.All-logoutconfirm-btn.confirm {
+  background: #32b2b2;
+  color: #fff;
+}
