@@ -331,7 +331,7 @@ export default function InventoryTable() {
           });
           setSuccessMessage("Item updated successfully!");
         } else {
-          await axios.post(`${API_BASE}/inventory/add`, formData, {
+          await axios.post(`${process.env.REACT_APP_API_URL}/inventory/add`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setSuccessMessage("Item added successfully!");

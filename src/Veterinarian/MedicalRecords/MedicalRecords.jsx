@@ -4,6 +4,89 @@ import { Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios'
 import './MedicalRecords.css';
 
+const ServiceSelector = ({ value, onChange, options }) => {
+  const [inputValue, setInputValue] = useState(value || "");
+  const [filteredOptions, setFilteredOptions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    setInputValue(value || "");
+  }, [value]);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    onChange(val);
+    setFilteredOptions(
+      options.filter(opt => opt.toLowerCase().includes(val.toLowerCase()))
+    );
+    setShowDropdown(true);
+  };
+
+  const handleSelect = (opt) => {
+    setInputValue(opt);
+    onChange(opt);
+    setFilteredOptions([]);
+    setShowDropdown(false);
+  };
+
+  const handleBlur = () => {
+    // Close dropdown after a short delay to allow clicks
+    setTimeout(() => setShowDropdown(false), 100);
+  };
+
+  const handleFocus = () => {
+    // Show all options when input is focused
+    setFilteredOptions(options);
+    setShowDropdown(true);
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        placeholder="Service Type"
+        className="addvisit-input"
+        autoComplete="off"
+      />
+      {showDropdown && filteredOptions.length > 0 && (
+        <ul
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "#fff",
+            border: "1px solid #ccc",
+            maxHeight: 150,
+            overflowY: "auto",
+            zIndex: 10,
+            listStyle: "none",
+            margin: 0,
+            padding: 0,
+            marginTop: -24,
+          }}
+        >
+          {filteredOptions.map((opt, idx) => (
+            <li
+              key={idx}
+              style={{ padding: "5px 10px", cursor: "pointer" }}
+              onMouseDown={(e) => e.preventDefault()} // prevent blur
+              onClick={() => handleSelect(opt)}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 export default function PetRecords() {
   const [pets, setPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
@@ -39,7 +122,7 @@ export default function PetRecords() {
     species: "",
     gender: ""
   });
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -49,6 +132,7 @@ export default function PetRecords() {
   const [petID, setPetID] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
+  const [services, setServices] = useState([]);
 
   const formRef = useRef(null);
 
@@ -64,6 +148,18 @@ export default function PetRecords() {
         setSelectedPet({ ...pet, checkups: [] }); // fallback
       });
   };
+
+  useEffect(() => {
+    if (addingRecord) {
+      axios.get(`${APIENDPOINT}/pet_medical_records/fetch/services`)
+        .then(res => {
+          // Assuming res.data = [{title: "Vaccination"}, {title: "Grooming"}]
+          const serviceTitles = res.data.map(s => s.title);
+          setServices(serviceTitles);
+        })
+        .catch(err => console.error("Error fetching services:", err));
+    }
+  }, [addingRecord]);
 
   const resetAddForm = () => {
     setAutoFill({
@@ -531,14 +627,10 @@ export default function PetRecords() {
                     Date Visit
                   </label>
                 </div>
-                <input
-                  type="text"
-                  name="service"
-                  placeholder="Service Type"
+                <ServiceSelector
                   value={newRecord.service}
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
+                  onChange={(val) => setNewRecord({ ...newRecord, service: val })}
+                  options={services}
                 />
                 <input
                   type="text"
@@ -954,12 +1046,12 @@ export default function PetRecords() {
                 </div>
 
                 <div className="add-form-group">
-                  <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition"/>
-                  <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit'/>
+                  <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition" />
+                  <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit' />
                 </div>
 
                 <div className="add-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" required title="Pet's Diagnosis"/>
+                  <input name="diagnosis" type="text" placeholder="Diagnosis" required title="Pet's Diagnosis" />
                 </div>
 
                 <div className="add-button-row">

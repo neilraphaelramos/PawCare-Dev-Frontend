@@ -27,8 +27,9 @@ const Accounts = () => {
   const [error, setError] = useState('');
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showResultModal, setShowResultModal] = useState(false);
-  const [resultMessage, setResultMessage] = useState("");
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageModal, setMessageModal] = useState("");
+  
 
   // 🔹 Fetch all accounts
   const handleAccounts = async () => {
@@ -83,12 +84,14 @@ const Accounts = () => {
         }
       );
 
-      alert(res.data.message || "Account updated successfully!");
+      setMessageModal(res.data.message || "Account updated successfully!");
       closeModal();
       handleAccounts();
+      setShowMessageModal(true);
     } catch (err) {
       console.error("Update error:", err);
-      alert("Failed to update account.");
+      setMessageModal("Failed to update account.");
+      setShowMessageModal(true);
     } finally {
       setIsSubmitting(false);
       setShowConfirmModal(false);
@@ -113,14 +116,16 @@ const Accounts = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert(res.data.message || "Account added successfully!");
+      setShowConfirmModal(true);
+      setMessageModal(res.data.message || "Account added successfully!");
       closeModal();
       handleAccounts();
     } catch (err) {
       console.error("Error adding account:", err);
-      alert("Failed to add account.");
+      setMessageModal("Failed to add account.");
     } finally {
       setIsSubmitting(false);
+      setShowMessageModal(true);
     }
   };
 
@@ -137,14 +142,17 @@ const Accounts = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message || "Account deleted successfully");
+        setMessageModal(data.message || "Account deleted successfully");
         handleAccounts();
+        setShowMessageModal(true);
       } else {
-        alert(data.error || "Failed to delete account");
+        setMessageModal(data.error || "Failed to delete account");
+        setShowMessageModal(true);
       }
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Server error");
+      setMessageModal("Server error");
+      setShowMessageModal(true);
     }
   };
 
@@ -409,6 +417,29 @@ const Accounts = () => {
                 onClick={confirmUpdate}
               >
                 Yes, Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
               </button>
             </div>
           </div>
