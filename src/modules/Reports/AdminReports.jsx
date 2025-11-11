@@ -164,6 +164,7 @@ function AdminReports() {
                                     <th>Order ID</th>
                                     <th>Client</th>
                                     <th>Status</th>
+                                    <th>Payment Status</th>
                                     <th>Items</th>
                                     <th>Total</th>
                                     <th>Date</th>
@@ -176,6 +177,7 @@ function AdminReports() {
                                             <td>{o.id_order}</td>
                                             <td>{o.customer_name}</td>
                                             <td>{o.order_status}</td>
+                                            <td>{o.paymentStatus}</td>
                                             <td>{o.items_purchased}</td>
                                             <td>₱{o.total}</td>
                                             <td>{new Date(o.order_date).toLocaleDateString()}</td>
@@ -183,7 +185,7 @@ function AdminReports() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="6" className="empty-row">
+                                        <td colSpan="7" className="empty-row">
                                             No orders this month
                                         </td>
                                     </tr>

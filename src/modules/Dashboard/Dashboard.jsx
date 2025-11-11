@@ -55,120 +55,7 @@ const buttonStyles = {
   },
 };
 
-
-
-const initialAppointments = [
-  { pet: "Max", owner: "Jane Doe", date: "May 23, 2025", time: "10:00 AM", reason: "Check-up" },
-  { pet: "Bella", owner: "John Smith", date: "May 23, 2025", time: "1:30 PM", reason: "Vaccination" },
-  { pet: "Luna", owner: "Emily Cruz", date: "May 23, 2025", time: "3:15 PM", reason: "Grooming" },
-];
-
-const appointmentSummaryData = {
-  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-  datasets: [
-    {
-      label: "Appointments",
-      data: [15, 22, 18, 30, 25, 28],
-      backgroundColor: "#32b2b2",
-    },
-  ],
-};
-
-const categoryData = [
-  { category: 'Grooming', orders: 24 },
-  { category: 'Food', orders: 37 },
-  { category: 'Toys', orders: 18 },
-  { category: 'Supplements', orders: 12 },
-  { category: 'Medicine', orders: 9 },
-  { category: 'Vitamins', orders: 9 },
-];
-
-const servicesData = [
-  { service: 'Grooming', orders: 18 },
-  { service: 'Vaccination', orders: 12 },
-  { service: 'Consultation', orders: 9 },
-  { service: 'Deworming', orders: 6 },
-  { service: 'Surgery', orders: 4 },
-  { service: 'Confinement', orders: 10 },
-  { service: 'Laboratories', orders: 5 },
-  { service: 'Home Service', orders: 3 },
-];
-
-const servicesChartData = {
-  labels: servicesData.map(d => d.service),
-  datasets: [
-    {
-      label: 'Service Demand',
-      data: servicesData.map(d => d.orders),
-      backgroundColor: '#32b2b2',
-    },
-  ],
-};
-
-const servicesChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: {
-      display: true,
-      text: 'Service Demand Overview',
-      font: { size: 18 },
-    },
-  },
-  scales: {
-    x: { ticks: { maxRotation: 0, minRotation: 0 } },
-    y: { beginAtZero: true },
-  },
-};
-
-
-const categoryChartData = {
-  labels: categoryData.map(d => d.category),
-  datasets: [
-    {
-      label: 'Orders',
-      data: categoryData.map(d => d.orders),
-      backgroundColor: '#32b2b2',
-    },
-  ],
-};
-
-const categoryChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: {
-      display: true,
-      text: 'Orders by Category',
-      font: { size: 18 },
-    },
-  },
-  scales: {
-    x: { ticks: { maxRotation: 0, minRotation: 0 } },
-    y: { beginAtZero: true },
-  },
-};
-
-
-
-function ServicesChart() {
-  return (
-
-    <Bar data={servicesChartData} options={servicesChartOptions} />
-  );
-}
-
-function OrdersByCategoryChart() {
-  return (
-
-    <Bar data={categoryChartData} options={categoryChartOptions} />
-  );
-}
-
-
-
 export default function Dashboard() {
-  const [search, setSearch] = useState("");
   const [date, setDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -198,6 +85,29 @@ export default function Dashboard() {
     { name: "Manage Announcements", keyword: "announcements", path: "/admin/announcements" },
     { name: "Manage Accounts", keyword: "accounts", path: "/admin/accounts" },
   ];
+  const [categoryData, setCategoryData] = useState([]);
+  const allCategories = [
+    "Grooming",
+    "Food",
+    "Toys",
+    "Supplement",
+    "Medicine",
+    "Vaccine",
+    "Supplies"
+  ];
+  const allServices = [
+    "Grooming",
+    "Vaccination",
+    "Consultation",
+    "Deworming",
+    "Surgery",
+    "Confinement",
+    "Laboratories",
+    "Home Service",
+  ];
+  const [servicesData, setServicesData] = useState(
+    allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
+  );
 
   const handleChange = (e) => {
     const value = e.target.value.toLowerCase();
@@ -219,6 +129,153 @@ export default function Dashboard() {
     navigate(path);
   };
 
+  const [appointmentSummaryData, setAppointmentSummaryData] = useState({
+    labels: [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ],
+    datasets: [
+      {
+        label: "Appointments",
+        data: Array(12).fill(0), // default
+        backgroundColor: "#32b2b2",
+      },
+    ],
+  });
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/appointments/summary-appointment/monthly`);
+        if (res.data.success) {
+          setAppointmentSummaryData(prev => ({
+            ...prev,
+            datasets: [
+              {
+                ...prev.datasets[0],
+                data: res.data.data, // use backend counts
+              },
+            ],
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching monthly summary:", err);
+      }
+    };
+
+    const fetchCategorySummary = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/summary-orders/categories`);
+        if (res.data.success) {
+          setCategoryData(res.data.data);
+
+        }
+      } catch (err) {
+        console.error("Error fetching category summary:", err);
+      }
+    };
+
+    const fetchServicesSummary = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/pet_medical_records/summary-service-demand/services`);
+        if (res.data.results) {
+          const normalized = allServices.map(srv => {
+            const found = res.data.results.find(r => r.service_type === srv);
+            return { service_type: srv, demand_count: found ? found.demand_count : 0 };
+          });
+
+          setServicesData(normalized);
+        }
+      } catch (err) {
+        console.error("Error fetching service demand:", err);
+      }
+    };
+
+    fetchServicesSummary();
+    fetchCategorySummary();
+    fetchSummary();
+  }, []);
+
+  const categoryChartData = {
+    labels: allCategories,
+    datasets: [
+      {
+        label: "Orders",
+        data: allCategories.map((cat) => {
+          const match = categoryData.find((d) => d.category === cat);
+          return match ? match.orders : 0;
+        }),
+        backgroundColor: "#32b2b2",
+      },
+    ],
+  };
+
+  const categoryChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: {
+        display: true,
+        text: 'Orders by Category',
+        font: { size: 18 },
+      },
+    },
+    scales: {
+      x: { ticks: { maxRotation: 0, minRotation: 0 } },
+      y: { beginAtZero: true },
+    },
+  };
+
+  function OrdersByCategoryChart() {
+    return <Bar data={categoryChartData} options={categoryChartOptions} />;
+  }
+
+  const servicesChartData = {
+    labels: servicesData.map(d => d.service_type),
+    datasets: [
+      {
+        label: 'Service Demand',
+        data: servicesData.map(d => d.demand_count),
+        backgroundColor: '#32b2b2',
+      },
+    ],
+  };
+
+  const servicesChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Service Demand (Current Month)', font: { size: 18 } },
+    },
+    scales: { y: { beginAtZero: true } },
+  };
+
+  function ServicesChart() {
+    return (
+      <Bar data={servicesChartData} options={servicesChartOptions} />
+    );
+  }
+
+  const handleUpcomingAppointmentsFetch = async () => {
+    try {
+      const today = new Date().toLocaleDateString('en-CA'); // "2025-11-11"
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/appointments/upcoming-appointment/${today}`);
+      setAppointments(res.data.fetchData);
+    } catch (err) {
+      console.error("Error fetching upcoming appointments:", err);
+    }
+  };
+
+  const handleOnlineConsultationsFetch = async () => {
+    try {
+      const today = new Date().toLocaleDateString('en-CA'); // "2025-11-11"
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/online_consult/details/consultation/${today}`);
+      setConsultations(res.data.fetchData);
+    } catch (err) {
+      console.error("Error fetching online consultations:", err);
+    }
+  };
+
   const handleMetricStatus = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/metric_dashboard/fetch/admin`);
@@ -237,126 +294,93 @@ export default function Dashboard() {
     }
   }
 
-  useEffect(() => {
-    setAppointments([
-      {
-        id: 1,
-        petName: "Buddy",
-        owner: "John Doe",
-        time: "09:00 AM",
-        reason: "Vaccination",
-        avatar: "https://placedog.net/64/64?id=1",
-        date: new Date().toDateString(),
-        status: "Scheduled",
-      },
-      {
-        id: 2,
-        petName: "Mittens",
-        owner: "Jane Smith",
-        time: "11:30 AM",
-        reason: "Skin Allergy",
-        avatar: "https://placedog.net/64/64?id=2",
-        date: new Date().toDateString(),
-        status: "Scheduled",
-      },
-      {
-        id: 3,
-        petName: "Max",
-        owner: "Sarah Lee",
-        time: "02:00 PM",
-        reason: "Dental Check",
-        avatar: "https://placedog.net/64/64?id=3",
-        date: new Date().toDateString(),
-        status: "Done",
-      },
-    ]);
-
-    setReservations([
-      {
-        id: 101,
-        petName: "Luna",
-        owner: "Carlos Mendoza",
-        reason: "Ear Check",
-        preferredDate: "2025-06-05",
-        time: "10:00 AM",
-        avatar: "https://placedog.net/64/64?id=5",
-        status: "Pending",
-      },
-      {
-        id: 102,
-        petName: "Tiger",
-        owner: "Mika Reyes",
-        reason: "Vaccination",
-        preferredDate: "2025-06-06",
-        time: "01:30 PM",
-        avatar: "https://placedog.net/64/64?id=6",
-        status: "Pending",
-      },
-    ]);
-
-    setConsultations([
-      {
-        id: 201,
-        petName: "Charlie",
-        owner: "Anna Brown",
-        time: "03:00 PM",
-        reason: "Online Follow-up",
-        avatar: "https://placedog.net/64/64?id=7",
-        date: new Date().toDateString(),
-        status: "Scheduled",
-      },
-      {
-        id: 202,
-        petName: "Bella",
-        owner: "David Kim",
-        time: "04:30 PM",
-        reason: "Skin Rash Consultation",
-        avatar: "https://placedog.net/64/64?id=8",
-        date: new Date().toDateString(),
-        status: "Done",
-      },
-    ]);
-
-    handleMetricStatus();
-  }, []);
-
-  const handleStatusUpdate = (id, newStatus, type = "appointments") => {
-    if (type === "appointments") {
-      setAppointments((prev) =>
-        prev.map((appt) =>
-          appt.id === id ? { ...appt, status: newStatus } : appt
-        )
-      );
-    } else if (type === "consultations") {
-      setConsultations((prev) =>
-        prev.map((consult) =>
-          consult.id === id ? { ...consult, status: newStatus } : consult
-        )
-      );
+  const handleAdvanceReservationFetch = async () => {
+    try {
+      const date = new Date().toLocaleDateString('en-CA');
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/appointments/future/${date}`);
+      setReservations(res.data.fetchData);
+    } catch (err) {
+      console.error("Error fetching advance reservations:", err);
     }
   };
 
-  const handleReservationAction = (id, action) => {
-    setReservations((prev) =>
-      prev.map((res) => (res.id === id ? { ...res, status: action } : res))
-    );
+  useEffect(() => {
+    handleUpcomingAppointmentsFetch();
+    handleOnlineConsultationsFetch();
+    handleAdvanceReservationFetch();
+    handleMetricStatus();
+  }, []);
+
+  const handleStatusUpdate = async (id, newStatus, type = "appointments") => {
+    try {
+      if (type === "appointments") {
+        const res = await axios.put(
+          `${process.env.REACT_APP_API_URL}/appointments/status-update-appointment/${id}`,
+          { status: newStatus }
+        );
+
+        if (res.data.success) {
+          setAppointments((prev) =>
+            prev.map((appt) =>
+              appt.id === id ? { ...appt, isDone: newStatus } : appt
+            )
+          );
+        } else {
+          console.error("Failed to update appointment status:", res.data.error);
+        }
+      } else if (type === "consultations") {
+        const res = await axios.put(
+          `${process.env.REACT_APP_API_URL}/online_consult/status-update-consultation/${id}`,
+          { status: newStatus }
+        );
+
+        if (res.data.success) {
+          setConsultations((prev) =>
+            prev.map((consult) =>
+              consult.id === id ? { ...consult, isDone: newStatus } : consult
+            )
+          );
+        } else {
+          console.error("Failed to update consultation status:", res.data.error);
+        }
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
   };
 
-  const chartData = [
-    { day: "Mon", patients: 5 },
-    { day: "Tue", patients: 8 },
-    { day: "Wed", patients: 6 },
-    { day: "Thu", patients: 9 },
-    { day: "Fri", patients: 4 },
-  ];
+
+  const handleReservationAction = async (id, action) => {
+    try {
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_URL}/appointments/${id}/status`,
+        { status: action }
+      );
+
+      if (res.data.message) {
+        setReservations((prev) =>
+          prev.map((reservation) =>
+            reservation.id === id ? { ...reservation, status: action } : reservation
+          )
+        );
+      } else {
+        console.error("Failed to update reservation status:", res.data);
+      }
+    } catch (err) {
+      console.error("Error updating reservation status:", err);
+    }
+  };
 
   const todayAppointments = appointments.filter(
-    (appt) => appt.date === selectedDate.toDateString() && appt.status !== "Done"
+    (appt) =>
+      appt.setDate === selectedDate.toLocaleDateString('en-CA') &&
+      appt.isDone === "Scheduled"
   );
 
   const todayConsultations = consultations.filter(
     (consult) =>
-      consult.date === selectedDate.toDateString() && consult.status !== "Done"
+      consult.setDate === selectedDate.toLocaleDateString('en-CA') &&
+      consult.isDone === "Scheduled"
   );
 
   return (
@@ -471,6 +495,7 @@ export default function Dashboard() {
 
 
               {/* Conditional Display */}
+              {/* Conditional Display */}
               {selectedTab === "appointments" && (
                 <>
                   <h3 style={{ marginBottom: "1rem" }}>
@@ -486,32 +511,40 @@ export default function Dashboard() {
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "1rem",
+                            justifyContent: "space-between",
                             background: "#edf2f7",
-                            borderRadius: "8px",
-                            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-                            padding: "1rem",
-                            marginBottom: "1rem",
+                            borderRadius: "10px",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                            padding: "0.8rem 1rem",
+                            marginBottom: "0.8rem",
                           }}
                         >
-                          <img
-                            src={appt.avatar}
-                            alt={appt.petName}
-                            style={{ borderRadius: "50%", width: 50, height: 50 }}
-                          />
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: "1rem" }}>{appt.petName}</strong> – {appt.reason}
-                            <br />
-                            <small style={{ color: "#666" }}>
-                              {appt.owner} • {appt.time}
-                            </small>
-                            <br />
-                            <small>Status: {appt.status}</small>
+                            <strong style={{ fontSize: "1rem", color: "#333" }}>
+                              {appt.ownerName}
+                            </strong>
+                            <div style={{ color: "#666", fontSize: "0.9rem" }}>
+                              {appt.setDate} • {appt.setTime}
+                            </div>
+                            <div style={{ color: "#777", fontSize: "0.85rem" }}>
+                              Status: <b>{appt.isDone}</b>
+                            </div>
                           </div>
-                          {appt.status === "Scheduled" && (
+
+                          {appt.isDone === "Scheduled" && (
                             <div style={{ display: "flex", gap: "0.5rem" }}>
-                              <button style={buttonStyles.green} onClick={() => handleStatusUpdate(appt.id, "Done", "appointments")}>Mark as Done</button>
-                              <button style={buttonStyles.red} onClick={() => handleStatusUpdate(appt.id, "Cancelled", "appointments")}>Cancel</button>
+                              <button
+                                style={buttonStyles.green}
+                                onClick={() => handleStatusUpdate(appt.id, "Done", "appointments")}
+                              >
+                                Mark as Done
+                              </button>
+                              <button
+                                style={buttonStyles.red}
+                                onClick={() => handleStatusUpdate(appt.id, "Cancelled", "appointments")}
+                              >
+                                Cancel
+                              </button>
                             </div>
                           )}
                         </li>
@@ -531,34 +564,26 @@ export default function Dashboard() {
                   ) : (
                     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                       {todayConsultations.map((consult) => (
-                        <li
-                          key={consult.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "1rem",
-                            background: "#edf2f7",
-                            borderRadius: "8px",
-                            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-                            padding: "1rem",
-                            marginBottom: "1rem",
-                          }}
-                        >
-                          <img
-                            src={consult.avatar}
-                            alt={consult.petName}
-                            style={{ borderRadius: "50%", width: 50, height: 50 }}
-                          />
+                        <li key={consult.id} style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "1rem",
+                          background: "#edf2f7",
+                          borderRadius: "8px",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                          padding: "1rem",
+                          marginBottom: "1rem",
+                        }}>
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: "1rem" }}>{consult.petName}</strong> – {consult.reason}
-                            <br />
-                            <small style={{ color: "#666" }}>
-                              {consult.owner} • {consult.time}
-                            </small>
-                            <br />
-                            <small>Status: {consult.status}</small>
+                            <strong style={{ fontSize: "1rem" }}>{consult.petName}</strong> – {consult.concern}
+                            <div style={{ color: "#666", fontSize: "0.9rem" }}>
+                              {consult.ownerName} • {consult.setTime}
+                            </div>
+                            <div style={{ color: "#777", fontSize: "0.85rem" }}>
+                              Status: <b>{consult.isDone}</b>
+                            </div>
                           </div>
-                          {consult.status === "Scheduled" && (
+                          {consult.isDone === "Scheduled" && (
                             <div style={{ display: "flex", gap: "0.5rem" }}>
                               <button style={buttonStyles.green} onClick={() => handleStatusUpdate(consult.id, "Done", "consultations")}>Mark as Done</button>
                               <button style={buttonStyles.red} onClick={() => handleStatusUpdate(consult.id, "Cancelled", "consultations")}>Cancel</button>
@@ -577,7 +602,7 @@ export default function Dashboard() {
                   {reservations.length === 0 ? (
                     <p>No reservations at the moment.</p>
                   ) : (
-                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0, height: '500px', overflowY: 'auto' }}>
                       {reservations.map((res) => (
                         <li
                           key={res.id}
@@ -592,24 +617,20 @@ export default function Dashboard() {
                             marginBottom: "1rem",
                           }}
                         >
-                          <img
-                            src={res.avatar}
-                            alt={res.petName}
-                            style={{ borderRadius: "50%", width: 50, height: 50 }}
-                          />
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: "1rem" }}>{res.petName}</strong> – {res.reason}
+                            <strong style={{ fontSize: "1rem" }}>{res.ownerName}</strong>
                             <br />
-                            <small style={{ color: "#666" }}>
-                              {res.owner} • {res.preferredDate} • {res.time}
-                            </small>
-                            <br />
-                            <small>Status: {res.status}</small>
+                            <div style={{ color: "#666", fontSize: "0.9rem" }}>
+                              {res.setDate} • {res.setTime}
+                            </div>
+                            <div style={{ color: "#777", fontSize: "0.85rem" }}>
+                              Status: <b>{res.status}</b>
+                            </div>
                           </div>
                           {res.status === "Pending" && (
                             <div style={{ display: "flex", gap: "0.5rem" }}>
-                              <button style={buttonStyles.green} onClick={() => handleReservationAction(res.id, "Confirmed")}>Confirm</button>
-                              <button style={buttonStyles.red} onClick={() => handleReservationAction(res.id, "Cancelled")}>Cancel</button>
+                              <button style={buttonStyles.green} onClick={() => handleReservationAction(res.id, "Approved")}>Confirm</button>
+                              <button style={buttonStyles.red} onClick={() => handleReservationAction(res.id, "Declined")}>Cancel</button>
                             </div>
                           )}
                         </li>

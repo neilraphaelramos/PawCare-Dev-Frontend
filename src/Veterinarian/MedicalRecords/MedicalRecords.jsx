@@ -389,7 +389,7 @@ export default function PetRecords() {
 
       if (res.data.success) {
         // ✅ Refetch updated history
-        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
 
         setAddingRecord(false);

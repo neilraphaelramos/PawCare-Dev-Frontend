@@ -422,18 +422,18 @@
   border-radius: 8px;
 }
 
-.view-proof-btn {
-  background: #32b2b2;
-  color: white;
+.vet-view-proof-btn {
   border: none;
-  padding: 5px 12px;
-  border-radius: 6px;
+  padding: 5px 4px;
   cursor: pointer;
   transition: 0.2s;
+  text-decoration: underline;
+  color: #32b2b2;
 }
 
-.view-proof-btn:hover {
-  background: #1f6e6e;
+.vet-view-proof-btn:hover {
+  color: #289e9e;
+  text-decoration-thickness: 2px;
 }
 
 .admin-no-requests {
@@ -442,4 +442,96 @@
   color: #777;
   margin-top: 20px;
   font-weight: 500;
+}
+
+.btn-container-footer {
+  display: flex;
+  justify-content: center;  
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.accommodate-btn-vet {
+  background-color: #32b2b2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.accommodate-btn-vet:hover {
+  background-color: #289e9e;
+}
+
+.approve-btn-vet {
+  background-color: #32b258;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.decline-btn-vet {
+  background-color: #e57373;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.approve-btn-vet:hover {
+  background-color: #258f58;
+}
+
+.decline-btn-vet:hover {
+  background-color: #d45c5c;
+}
+
+.vet-consult-type.urgent {
+  color: #e53935;
+  font-weight: bold;
+  background: #fdecea;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.vet-consult-type.regular {
+  color: #2e7d32;
+  font-weight: bold;
+  background: #e8f5e9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-badge.approved {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status-badge.declined {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
 }

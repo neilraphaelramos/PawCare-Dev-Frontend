@@ -5,6 +5,7 @@ import axios from 'axios';
 import { UserContext } from '../../hook/authContext';
 import JitsiWrapper from './componentAdmin/jitsiApiAdmin';
 import { io } from 'socket.io-client';
+import { MessageSquare } from 'lucide-react';
 
 const VetConsultationAdmin = () => {
   const [filter, setFilter] = useState('all');
@@ -64,7 +65,7 @@ const VetConsultationAdmin = () => {
       const { consultID, from, text, name, photo } = message;
       setChats(prev => ({
         ...prev,
-        [consultID]: [...(prev[consultID] || []), { from, text, name, photo  }]
+        [consultID]: [...(prev[consultID] || []), { from, text, name, photo }]
       }));
     };
 
@@ -114,6 +115,18 @@ const VetConsultationAdmin = () => {
     localStorage.removeItem("vetChats");
     fetchOnlineConsult();
   };
+
+  const handleUpdateStatus = async (consultID, newStatus) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`, {
+        status: newStatus
+      });
+      fetchOnlineConsult();
+    } catch (err) {
+      console.error("Error updating status:", err);
+      setError("Failed to update status. Please try again.");
+    }
+  }
 
   const sendMessage = () => {
     if (!inputMessage.trim() || !activeChatId) return;
@@ -187,21 +200,48 @@ const VetConsultationAdmin = () => {
                     <p><strong>Owner:</strong> {req.ownerName}</p>
                     <p>
                       <strong>Payment Proof:</strong>{' '}
-                      <button
-                        className="view-proof-btn"
+                      <a
+                        className="admin-view-proof-btn"
                         onClick={() => openProofModal(req.paymentProof)}
                       >
                         View Proof
-                      </button>
+                      </a>
                     </p>
                     <p><strong>Concern:</strong> {req.concern}</p>
-                    <p><strong>Type:</strong> {req.consultationType}</p>
-                    <button
-                      className="accommodate-btn"
-                      onClick={() => startChat(req.channelConsult)}
-                    >
-                      Accommodate
-                    </button>
+                    <p>
+                      <strong>Type:</strong>{' '}
+                      <span className={`admin-consult-type ${req.consultationType}`}>
+                        {req.consultationType}
+                      </span>
+                    </p>
+                    <p><strong>Date:</strong> {req.setDate || "Null"}</p>
+                    <p><strong>Time:</strong> {req.setTime || "Null"}</p>
+                    <p><strong>Status:</strong>{' '}
+                      <span className={`status-badge ${req.status.toLowerCase()}`}>
+                        {req.status}
+                      </span>
+                    </p>
+                    <div className='btn-container-footer'>
+                      <button
+                        className='approve-btn-admin'
+                        onClick={() => handleUpdateStatus(req.channelConsult, 'Approved')}
+                      >
+                        Approved
+                      </button>
+                      <button
+                        className='decline-btn-admin'
+                        onClick={() => handleUpdateStatus(req.channelConsult, 'Declined')}
+                      >
+                        Declined
+                      </button>
+                      <button
+                        className={`accommodate-btn-admin`}
+                        onClick={() => startChat(req.channelConsult)}
+                      >
+                        <MessageSquare />
+                      </button>
+                    </div>
+
                   </div>
                 ))
             )}

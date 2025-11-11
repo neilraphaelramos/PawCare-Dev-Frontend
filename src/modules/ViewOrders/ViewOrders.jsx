@@ -210,7 +210,8 @@ const ViewOrders = () => {
               items: [],
               cancel_requested: row.cancel_requested,
               methodPayments: row.methodPayments,
-              paymentIntentId: row.payment_intent_id, 
+              paymentStatus: row.paymentStatus,
+              paymentIntentId: row.payment_intent_id,
             };
           }
           if (row.product_name) {
@@ -413,15 +414,16 @@ const ViewOrders = () => {
               <th>Pet Product</th>
               <th>Address</th>
               <th>Date</th>
+              <th>Method</th>
               <th>Total</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th>Order Status</th>
+              <th>Payment Status</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="8" className="loading-message">
+                <td colSpan="9" className="loading-message">
                   Loading orders...
                 </td>
               </tr>
@@ -439,35 +441,53 @@ const ViewOrders = () => {
                   </td>
                   <td>{order.address}</td>
                   <td>{formatDate(order.date)}</td>
+                  <td>{order.methodPayments}</td>
                   <td>₱{order.total.toFixed(2)}</td>
                   <td>
-                    <span className={`badge ${order.status.toLowerCase()}`}>
-                      {order.status}
-                    </span>
+                    {/* Status Dropdown */}
+                    <select
+                      value={order.status}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        await axios.put(
+                          `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
+                          { status: newStatus }
+                        );
+                        fetchOrders();
+                      }}
+                      className={`badge ${order.status.toLowerCase()}`} // maintains badge color
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Delivery">Delivery</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
                   </td>
                   <td>
+                    {/* Payment Status Dropdown */}
                     <select
-                        value={order.status}
-                        onChange={async (e) => {
-                          const newStatus = e.target.value;
-                          await axios.put(
-                            `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
-                            { status: newStatus }
-                          );
-                          fetchOrders();
-                        }}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Delivery">Delivery</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
+                      value={order.paymentStatus}
+                      onChange={async (e) => {
+                        const newPaymentStatus = e.target.value;
+                        await axios.put(
+                          `${process.env.REACT_APP_API_URL}/orders/update_payment_status/${order.id}`,
+                          { paymentStatus: newPaymentStatus }
+                        );
+                        fetchOrders();
+                      }}
+                      className={`payment-badge ${order.paymentStatus.toLowerCase()}`}
+                      style={{ marginTop: "0.5rem", display: "block", textAlign: "center" }} // spacing
+                    >
+                      <option value="Unpaid">Unpaid</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Refunded">Refunded</option>
+                    </select>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="empty-message">
+                <td colSpan="9" className="empty-message">
                   No orders found.
                 </td>
               </tr>

@@ -35,9 +35,9 @@ const VetSidebar = () => {
           <Link to="medical-records">Medical Records</Link>
           <Link to="inventory">Inventory</Link>
           <Link to="reports">Manage Reports</Link>
+          <Link to="online-consultation">Online Consultations</Link>
           <Link to="notifications">Notifications</Link>
           <Link to="profile">Profile</Link>
-          <Link to="online-consultation">Online Consultations</Link>
         </nav>
         <button className="vet-dashboard-sign-out" onClick={() => setShowLogoutModal(true)}>Sign Out</button>
       </aside>
