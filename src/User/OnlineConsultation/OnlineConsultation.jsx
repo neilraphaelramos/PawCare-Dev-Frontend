@@ -7,32 +7,6 @@ import JitsiWrapper from './component/jitsiApi';
 import { io } from 'socket.io-client';
 import DateTimeModal from './component/DateTimeModal';
 
-const generateTimeSlots = () => {
-  const start = new Date();
-  start.setHours(8, 0, 0, 0);
-  const end = new Date();
-  end.setHours(18, 0, 0, 0);
-
-  const am = [], pm = [];
-
-  while (start < end) {
-    const slotStart = new Date(start);
-    const slotEnd = new Date(start.getTime() + 60 * 60000); // 1 hour
-
-    if (slotEnd > end) break;
-
-    const format = (d) =>
-      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    const slot = `${format(slotStart)} - ${format(slotEnd)}`;
-    (slotStart.getHours() < 12 ? am : pm).push(slot);
-
-    start.setTime(slotEnd.getTime());
-  }
-
-  return { am, pm };
-};
-
 const OnlineConsultation = () => {
   const { user } = useContext(UserContext);
 
@@ -110,6 +84,7 @@ const OnlineConsultation = () => {
     try {
       const formData = new FormData();
       formData.append("owner_name", fillUp.owner_name);
+      formData.append("user_id", user.id);
       formData.append("pet_name", fillUp.pet_name);
       formData.append("pet_type", fillUp.pet_type);
       formData.append("pet_species", fillUp.pet_species);
@@ -153,14 +128,8 @@ const OnlineConsultation = () => {
       } else {
         setShowModal(true)
         setMessageModal('Your Request is ' + res.data.message);
-        const consultID = res.data.channel_consult_ID;
-        setChannelConsultID(consultID);
-        setFormSubmitted(true);
-
-        // store in session but DO NOT auto-start call
-        sessionStorage.setItem("channelConsultID", consultID);
-        sessionStorage.setItem("isSubmitted", JSON.stringify(true));
-        sessionStorage.setItem("startCall", JSON.stringify(false));
+        setFillUp({});
+        setSelectedDateTime(null);
       }
     } catch (err) {
       console.error("Error requesting consultation:", err);
@@ -191,7 +160,6 @@ const OnlineConsultation = () => {
     };
     fetchPets();
   }, [user.username]);
-
 
   const handlePetSelect = (e) => {
     const selectedPetName = e.target.value;

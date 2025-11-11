@@ -37,6 +37,7 @@ const Dashboard = () => {
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [upcomingOnlineConsults, setUpcomingOnlineConsults] = useState([]);
 
   const pages = [
     { name: "Appointment", keyword: "appointment", path: "/users/appointments" },
@@ -119,36 +120,29 @@ const Dashboard = () => {
     setCurrentDate(newDate);
   };
 
-  const doctorData = [
-    {
-      name: "Dra. Rosemarie Macabales",
-      dept: "Veterinarian",
-      time: "9:00 AM",
-      concern: "Dog annual check-up.",
-      avatar: "https://scontent.fmnl14-1.fna.fbcdn.net/v/t39.30808-6/486555215_1105672961576735_1414627574457475734_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGssxNJ2BGOMyrar5cDOV6AmHG1LQyL5iuYcbUtDIvmKxc-ebFQ2fraQP6pfVSMAyS3YHqhRgYVFUlFt3RsoByD&_nc_ohc=1skpN93S4tsQ7kNvwFL3uYl&_nc_oc=AdlFGu-n0R1Tb0t3HWgcBNZkSoQoE_O_k1ebXf5kFzVtRaxXhYLlw_SqBFhGAihRb6M&_nc_zt=23&_nc_ht=scontent.fmnl14-1.fna&_nc_gid=25W5KTkpKqp7oqVgt5RMiQ&oh=00_AfM0b21qhtEdm2hUFZZDNDpzefzDBwDcrubwCCnorHap0A&oe=684D283D",
-    },
-    {
-      name: "Dra. Crislyn Heria",
-      dept: "Veterinarian",
-      time: "1:30 PM",
-      concern: "Post-surgery follow-up.",
-      avatar: "https://scontent.fmnl14-1.fna.fbcdn.net/v/t39.30808-6/472656605_1148079893691783_3402392592901469692_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGdbi145H7WdNJbbnj650PXyCJqyF1Kcb3IImrIXUpxvcIuDFcwF7Sgn89nRPS8vd-1s_IawqEbQNFoWuQMUfk6&_nc_ohc=xXjwir9gpnkQ7kNvwHfBMTM&_nc_oc=Admvs3b4nd-dNBdErRgxmYVD9-3b-3X-9ru9hcRu7WmSK4YMNw3DEKPtyGAlvRmaOKU&_nc_zt=23&_nc_ht=scontent.fmnl14-1.fna&_nc_gid=sHEzubRTup9nBSNUSEuFzw&oh=00_AfO3JVjjJcJvzSt1qe_uDCL7QpXL_p7HLWW2N1CTtDxq8A&oe=684D1F24",
-    },
-    {
-      name: "Dr. Argie Rivera",
-      dept: "Veterinarian",
-      time: "4:15 PM",
-      concern: "Skin allergy treatment.",
-      avatar: "https://scontent.fmnl14-1.fna.fbcdn.net/v/t39.30808-6/486718620_1107164244760940_2055589638162477283_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeF35zLNet-7Qj5VbKlGBxhCaSjIK6Vyql5pKMgrpXKqXo6Qjd7ecPf1pykPfD6Sv-dEVBDRprex-MtSr85r_kFH&_nc_ohc=QAJpSEMMWPoQ7kNvwEmblpc&_nc_oc=AdkBXXeSsb7hhSkMm9IGvrWhU0oHpv2ymW8cS8uLJaqBTxbPVlcKjM2ZvHxU5aQZIhw&_nc_zt=23&_nc_ht=scontent.fmnl14-1.fna&_nc_gid=uqGU_zxIcOr8KVKYz9Twsg&oh=00_AfNArpseh9qw775RvEubjU9KnvIdKnbHHv5dY6Rhdo0rww&oe=684D1392",
-    },
-    {
-      name: "Dr. Frank Deluna",
-      dept: "Veterinarian",
-      time: "6:00 PM",
-      concern: "Vaccination update.",
-      avatar: "https://scontent.fmnl14-1.fna.fbcdn.net/v/t39.30808-6/472715029_1045319907612041_618486053572698467_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeFkDrdtuKKE0GfyR4USg5Z77jFeNC2Yr97uMV40LZiv3ph-e6VxCMVo616UVeJYgnY1FkKa7vmKRpfoeQVewqyy&_nc_ohc=7jXyvbVyaL4Q7kNvwGa-UZT&_nc_oc=Adlp7McF-lOtzWbFXlpxIODzW_FQ0XT_iO6967xctzHJmRxOsPgXyU_t3da3KxELcXY&_nc_zt=23&_nc_ht=scontent.fmnl14-1.fna&_nc_gid=sFnayoCzEQdJR8kXl6yaQQ&oh=00_AfO6um66c33iuQZyOg-s3uwqiZcEbvNGvH-d4QkPYSYBbQ&oe=684D1C8B",
-    },
-  ];
+  const handleUpcomingAppointments = async () => {
+    const ID = user.id;
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/online_consult/upcoming-online-consult/fetch/${ID}`);
+
+      let data = res.data.fetchData;
+
+      // Ensure data is always an array
+      if (!Array.isArray(data)) {
+        data = [];
+      }
+
+      setUpcomingOnlineConsults(data);
+      console.log("Upcoming Consultations:", data);
+    } catch (err) {
+      console.error("Error fetching upcoming appointments:", err);
+      setUpcomingOnlineConsults([]); // fallback
+    }
+  };
+
+  useEffect(() => {
+    handleUpcomingAppointments();
+  }, [user]);
 
   const handleMetricStatus = async (e) => {
     try {
@@ -255,10 +249,10 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Week date navigation */}
           <div className="user-dashboard-calendar-dates">
             {weekDates.map((dateObj, index) => {
-              const isWednesday = dateObj.getDay() === 3; // 0=Sun, 3=Wed
-
+              const isWednesday = dateObj.getDay() === 3; // skip Wednesdays
               return (
                 <div
                   className={`user-dashboard-day ${isWednesday ? "disabled" : ""}`}
@@ -268,7 +262,9 @@ const Dashboard = () => {
                     {dateObj.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
                   </div>
                   <div
-                    className={`user-dashboard-date ${dateObj.toDateString() === selectedDate.toDateString() ? "user-dashboard-active" : ""
+                    className={`user-dashboard-date ${dateObj.toDateString() === selectedDate.toDateString()
+                      ? "user-dashboard-active"
+                      : ""
                       }`}
                     onClick={() => {
                       if (!isWednesday) setSelectedDate(dateObj);
@@ -281,17 +277,51 @@ const Dashboard = () => {
             })}
           </div>
 
+          {/* Filtered consultations by selected date */}
           <div className="user-dashboard-doctor-cards">
-            {doctorData.map((doc) => (
-              <div className="user-dashboard-doctor-card" key={doc.name}>
-                <img src={doc.avatar} alt={doc.name} />
-                <h4>{doc.name}</h4>
-                <p className="user-dashboard-dept">{doc.dept}</p>
-                <p>Appointment: {doc.time}</p>
-                <p className="user-dashboard-concern">Primary Concern: {doc.concern}</p>
-                <a href="#">Google Meet Link</a>
-              </div>
-            ))}
+            {upcomingOnlineConsults && upcomingOnlineConsults.length > 0 ? (() => {
+              const filteredConsults = upcomingOnlineConsults.filter((consult) => {
+                if (!consult.setDate) return false;
+                const consultDate = new Date(consult.setDate);
+                return consultDate.toDateString() === selectedDate.toDateString();
+              });
+
+              return filteredConsults.length > 0 ? (
+                filteredConsults.map((doc, i) => (
+                  <div className="user-dashboard-doctor-card" key={i}>
+                    <h4>Online Consultation</h4>
+                    <hr />
+                    <p><strong>Pet Name:</strong> {doc.petName}</p>
+                    <p><strong>Appointment:</strong> {doc.setDate} @ {doc.setTime}</p>
+                    <p className="user-dashboard-concern">Primary Concern: {doc.concern}</p>
+                    <p><span className="status">Status: {doc.status}</span></p>
+                    <a onClick={() => {
+                      sessionStorage.setItem("channelConsultID", doc.channelConsult);
+                      sessionStorage.setItem("isSubmitted", JSON.stringify(true));
+                      sessionStorage.setItem("startCall", JSON.stringify(false));
+                      navigate('/users/online-consultation');
+                    }}
+                    style={{
+                      cursor: 'pointer',
+                    }}
+                    >
+                      Join Chat Session→
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <p className="no-appointment-msg">
+                  No appointment on{" "}
+                  {selectedDate.toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              );
+            })() : (
+              <p className="no-appointment-msg">No appointment today</p>
+            )}
           </div>
         </section>
 

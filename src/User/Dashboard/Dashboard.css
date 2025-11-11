@@ -88,6 +88,7 @@ body {
   flex-direction: column;
   gap: 1rem;
   height: 100vh;
+  width: 80%;
   background-color: #edf2f7;
 }
 
@@ -172,6 +173,15 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
+
+.no-appointment-msg {
+  text-align: center;
+  color: #777;
+  font-size: 15px;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
 
 /* ───────────────────────────  Metrics  ─────────────────────────────────── */
 .user-dashboard-metrics {
@@ -267,51 +277,86 @@ body {
 }
 
 .user-dashboard-doctor-cards {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: nowrap;
   overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
 }
 
 .user-dashboard-doctor-card {
-  min-width: 230px;
+  min-width: 260px;
   flex: none;
-  background: #edf2f7;
-  border-radius: 12px;
-  padding: 1rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  font-size: 0.75rem;
-  margin-bottom: 20px;
+  font-size: 0.85rem;
+  scroll-snap-align: start;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e5e7eb;
 }
 
-.user-dashboard-doctor-card img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+.user-dashboard-doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.12);
 }
 
 .user-dashboard-doctor-card h4 {
-  font-size: 0.9rem;
-  margin: 0.5rem 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.4rem;
 }
 
-.user-dashboard-doctor-card .user-dashboard-dept {
-  font-size: 0.75rem;
-  color: #32b2b2;
-  margin-bottom: 2px;
+.user-dashboard-doctor-card hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.user-dashboard-doctor-card p {
+  margin: 0.3rem 0;
+  color: #374151;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .user-dashboard-doctor-card .user-dashboard-concern {
-  color: #4b5563;
-  margin: 4px 0;
-  flex: 1;
+  font-weight: 500;
+  color: #1e40af;
+  background: #e0e7ff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 0.5rem 0;
+}
+
+.user-dashboard-doctor-card .status {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-top: 0.3rem;
 }
 
 .user-dashboard-doctor-card a {
-  font-size: 0.75rem;
+  margin-top: 0.8rem;
+  font-size: 0.8rem;
   color: #32b2b2;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.user-dashboard-doctor-card a:hover {
+  color: #289e9e;
   text-decoration: underline;
 }
 
