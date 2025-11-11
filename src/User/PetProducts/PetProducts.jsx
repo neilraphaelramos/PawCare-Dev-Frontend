@@ -49,7 +49,22 @@ const UserInventory = () => {
       return;
     }
 
-    // ✅ If Cash on Delivery, skip PayMongo and upload order directly
+    // 🧾 Function to create a notification safely
+    const sendNotification = async (title, details) => {
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+          UID: user.id,
+          title_notify: title,
+          type_notify: 'order',
+          details,
+        });
+        console.log("✅ Notification sent successfully.");
+      } catch (notifyErr) {
+        console.error("❌ Notification error:", notifyErr.response?.data || notifyErr);
+      }
+    };
+
+    // 💵 Cash on Delivery (skip PayMongo)
     if (paymentMethod === "cod") {
       try {
         await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_cod_order`, {
@@ -62,6 +77,11 @@ const UserInventory = () => {
           cart,
         });
 
+        await sendNotification(
+          "Order Placed Successfully (COD)",
+          `Your order totaling ₱${totalAmount} has been placed successfully with Cash on Delivery.`
+        );
+
         setShowModal(false);
         setShowMessageModal(true);
         setMessageModal("✅ Order placed successfully with Cash on Delivery!");
@@ -71,10 +91,10 @@ const UserInventory = () => {
         setShowMessageModal(true);
         setMessageModal("Server error while placing order. Please try again.");
       }
-      return; // 🚫 stop further PayMongo logic
+      return;
     }
 
-    // 💳 Otherwise continue with QRPH / PayMongo flow below
+    // 💳 QRPH / PayMongo Flow
     try {
       const { data } = await axios.post(
         `${process.env.REACT_APP_API_URL}/orders/create_payment_intent`,
@@ -92,13 +112,11 @@ const UserInventory = () => {
         return;
       }
 
-      // Show QR modal
       setQrImageUrl(data.qrImageBase64);
       setPaymentIntentId(data.payment_intent_id);
       setShowQrModal(true);
       setShowModal(false);
 
-      // Flag to prevent multiple DB inserts
       let orderSubmitted = false;
 
       const checkPayment = async () => {
@@ -106,12 +124,10 @@ const UserInventory = () => {
           const statusRes = await axios.get(
             `${process.env.REACT_APP_API_URL}/orders/check_payment_status/${data.payment_intent_id}`
           );
-
           const status = statusRes.data.status;
           console.log(`🔍 Payment Status: ${status}`);
 
           if (status === "succeeded" && !orderSubmitted) {
-            console.log("✅ Payment successful! Saving order...");
             orderSubmitted = true;
 
             await axios.post(`${process.env.REACT_APP_API_URL}/orders`, {
@@ -124,29 +140,26 @@ const UserInventory = () => {
               cart,
             });
 
+            await sendNotification(
+              "Order Placed Successfully (QRPH)",
+              `Your order totaling ₱${totalAmount} has been paid successfully via QRPH.`
+            );
+
             setShowQrModal(false);
             setShowMessageModal(true);
             setMessageModal("✅ Payment successful! Your order has been placed.");
             setCart([]);
-
-            try {
-              await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
-                UID: user.id,
-                title_notify: 'Order Placed Successfully',
-                type_notify: 'order',
-                details: `Your order totaling ₱${totalAmount} has been placed successfully.`,
-              });
-            } catch (notifyErr) {
-              console.error("Notification error:", notifyErr);
-            }
-          } else if (
+          }
+          else if (
             status === "awaiting_payment_method" ||
             status === "awaiting_next_action"
           ) {
             setTimeout(checkPayment, 5000);
-          } else if (status === "cancelled") {
+          }
+          else if (status === "cancelled") {
             setShowQrModal(false);
-          } else {
+          }
+          else {
             setTimeout(checkPayment, 5000);
           }
         } catch (err) {
@@ -504,14 +517,14 @@ const UserInventory = () => {
 
       {/* Checkout Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Checkout</h2>
-            <div className="modal-content">
+        <div className="user-modal-overlay">
+          <div className="user-modal">
+            <h2><strong>Checkout</strong></h2>
 
-              {/* Left: Cart Summary */}
-              <div className="modal-left">
-                <table className="modal-cart-table">
+            <div className="user-modal-content">
+              {/* 🛒 Left: Cart Summary */}
+              <div className="user-modal-left">
+                <table className="user-modal-cart-table">
                   <thead>
                     <tr>
                       <th>Product</th>
@@ -520,18 +533,19 @@ const UserInventory = () => {
                       <th></th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {cart.map(item => (
+                    {cart.map((item) => (
                       <tr key={item.id}>
-                        <td className="product-info">
+                        <td className="user-modal-product-info">
                           <img src={item.image} alt={item.name} />
                           <div>
                             <p><strong>{item.name}</strong></p>
-                            <p className="product-type">Type: {item.type}</p>
+                            <p className="user-modal-product-type">Type: {item.type}</p>
                           </div>
                         </td>
                         <td>
-                          <div className="qty-control">
+                          <div className="user-modal-qty-control">
                             <button onClick={() => decreaseQty(item.id)}>-</button>
                             <span>{item.qty}</span>
                             <button onClick={() => increaseQty(item.id)}>+</button>
@@ -539,70 +553,95 @@ const UserInventory = () => {
                         </td>
                         <td>₱{(item.qty * item.price).toFixed(2)}</td>
                         <td>
-                          <button className="remove-btn" onClick={() => removeFromCart(item.id)}>✕</button>
+                          <button
+                            className="user-modal-remove-btn"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            ✕
+                          </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
+
+                  {/* ✅ Table Footer with Total */}
+                  <tfoot>
+                    <tr>
+                      <td colSpan="2"></td>
+                      <td className="user-modal-total-label"><strong>Total:</strong></td>
+                      <td className="user-modal-total-value"><strong>₱{totalAmount}</strong></td>
+                    </tr>
+                  </tfoot>
                 </table>
-                <div className="modal-total">Total: ₱{totalAmount}</div>
               </div>
 
-              {/* Right: Delivery + Payment */}
-              <div className="modal-right">
-                <div className="modal-form">
-                  <div className="form-row">
-                    <div className="form-group">
+              {/* 🚚 Right: Delivery + Payment */}
+              <div className="user-modal-right">
+                <div className="user-modal-form">
+                  <div className="user-modal-form-row">
+                    <div className="user-modal-form-group">
                       <label>House No. / Street</label>
                       <input
                         type="text"
                         value={deliveryInfo.houseStreet}
-                        onChange={(e) => setDeliveryInfo({ ...deliveryInfo, houseStreet: e.target.value })}
+                        onChange={(e) =>
+                          setDeliveryInfo({ ...deliveryInfo, houseStreet: e.target.value })
+                        }
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="user-modal-form-group">
                       <label>Barangay</label>
                       <input
                         type="text"
                         value={deliveryInfo.barangay}
-                        onChange={(e) => setDeliveryInfo({ ...deliveryInfo, barangay: e.target.value })}
+                        onChange={(e) =>
+                          setDeliveryInfo({ ...deliveryInfo, barangay: e.target.value })
+                        }
                       />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
+
+                  <div className="user-modal-form-row">
+                    <div className="user-modal-form-group">
                       <label>Municipality</label>
                       <input
                         type="text"
                         value={deliveryInfo.municipality}
-                        onChange={(e) => setDeliveryInfo({ ...deliveryInfo, municipality: e.target.value })}
+                        onChange={(e) =>
+                          setDeliveryInfo({ ...deliveryInfo, municipality: e.target.value })
+                        }
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="user-modal-form-group">
                       <label>Province</label>
                       <input
                         type="text"
                         value={deliveryInfo.province}
-                        onChange={(e) => setDeliveryInfo({ ...deliveryInfo, province: e.target.value })}
+                        onChange={(e) =>
+                          setDeliveryInfo({ ...deliveryInfo, province: e.target.value })
+                        }
                       />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group" style={{ width: '100%' }}>
+
+                  <div className="user-modal-form-row">
+                    <div className="user-modal-form-group" style={{ width: "100%" }}>
                       <label>Landmark</label>
                       <input
                         type="text"
                         value={deliveryInfo.landmark}
-                        onChange={(e) => setDeliveryInfo({ ...deliveryInfo, landmark: e.target.value })}
+                        onChange={(e) =>
+                          setDeliveryInfo({ ...deliveryInfo, landmark: e.target.value })
+                        }
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* 🆕 Payment Method */}
-                <div className="modal-payment">
+                {/* 💳 Payment Method */}
+                <div className="user-modal-payment">
                   <h4>Payment Method</h4>
-                  <div className="payment-options">
+                  <div className="user-modal-payment-options">
                     <label>
                       <input
                         type="radio"
@@ -624,10 +663,11 @@ const UserInventory = () => {
                   </div>
                 </div>
 
-                <div className="modal-footer">
+                {/* ✅ Footer Buttons */}
+                <div className="user-modal-footer">
                   <button onClick={() => setShowModal(false)}>Back</button>
                   <button
-                    className="checkout-confirm"
+                    className="user-modal-confirm"
                     onClick={handleConfirmOrder}
                     disabled={!paymentMethod}
                   >
