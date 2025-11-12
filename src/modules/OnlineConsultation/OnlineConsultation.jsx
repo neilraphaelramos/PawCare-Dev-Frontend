@@ -183,7 +183,7 @@ const VetConsultationAdmin = () => {
 
   const handleUpdateStatus = async (consultID, newStatus) => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`, {
+      await axios.patch(`${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`, {
         status: newStatus
       });
       fetchOnlineConsult();
