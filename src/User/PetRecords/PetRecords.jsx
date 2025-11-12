@@ -3,6 +3,7 @@ import { FaPlus, FaRegEye } from 'react-icons/fa';
 import './PetRecords.css';
 import { UserContext } from '../../hook/authContext';
 import axios from 'axios';
+import VisitDetailModal from '../../components/printLogic/VisitDetailModal';
 
 export default function PetRecords() {
   const { user } = useContext(UserContext);
@@ -74,6 +75,10 @@ export default function PetRecords() {
       [visit.day, visit.date, visit.service, visit.complaint, visit.diagnosis, visit.status, visit.completed]
         .some((field) => field.toLowerCase().includes(term))
     );
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -228,129 +233,13 @@ export default function PetRecords() {
 
       {/* Full Visit Detail Modal (Printable) */}
       {selectedVisit && (
-        <div className="visit-detail-modal-overlay">
-          <div className="visit-detail-modal">
-            <button className="close-btn" onClick={() => setSelectedVisit(null)}>×</button>
-            <button className="print-btn" onClick={() => window.print()}>Print</button>
-
-            <div className="visit-detail-content scrollable-print">
-              {/* Printable Header */}
-              <div className="mr-header-section">
-                <img src="/images/LandingPage/rivera-logo.png" alt="Clinic Logo" className="mr-clinic-logo" />
-                <div className="mr-clinic-details">
-                  <h1>PetCare Animal Clinic</h1>
-                  <p>123 Veterinary Street, Bocaue, Bulacan</p>
-                  <p>Contact: (044) 123-4567 | Email: petcare@clinic.com</p>
-                  <p>Date: {new Date().toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              {/* Patient Medical Summary */}
-              <h2 className="section-title">Patient Medical Summary</h2>
-
-              <div className="detail-field">
-                <div className="detail-label">Pet Name:</div>
-                <div className="detail-value">{selectedPet.name}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Name:</div>
-                <div className="detail-value">{selectedPet.ownerName}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Species:</div>
-                <div className="detail-value">{selectedPet.species}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Address:</div>
-                <div className="detail-value">{selectedVisit.ownerAddress}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Age:</div>
-                <div className="detail-value">{selectedPet.age}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Phone Number:</div>
-                <div className="detail-value">{selectedVisit.ownerPhoneNum}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Diagnosis:</div>
-                <div className="detail-value">{selectedVisit.diagnosis}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Email:</div>
-                <div className="detail-value">{selectedVisit.ownerEmail}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Date Admitted:</div>
-                <div className="detail-value">{selectedVisit.date || 'N/A'}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Date Discharged:</div>
-                <div className="detail-value">{selectedVisit.completed}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Patient Status:</div>
-                <div className="detail-value">{selectedVisit.status}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Nursing Issues:</div>
-                <div className="detail-value">{selectedVisit.nursingIssues}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Care Plan:</div>
-                <div className="detail-value">{selectedVisit.carePlan}</div>
-              </div>
-
-              {/* Medical Assessment */}
-              <h2 className="section-title">Medical Assessment</h2>
-              <div className="detail-field">
-                <div className="detail-label">Main Complaint:</div>
-                <div className="detail-value">{selectedVisit.complaint}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Additional Complaints:</div>
-                <div className="detail-value">{selectedVisit.additionalComplaint}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Weight:</div>
-                <div className="detail-value">{selectedVisit.weight}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Height:</div>
-                <div className="detail-value">{selectedVisit.height}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">BMI:</div>
-                <div className="detail-value">{selectedVisit.bmi}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Blood Pressure:</div>
-                <div className="detail-value">{selectedVisit.bloodPressure}</div>
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Pulse:</div>
-                <div className="detail-value">{selectedVisit.pulse}</div>
-              </div>
-
-              {/* Prescriptions */}
-              <h2 className="section-title">Prescriptions</h2>
-              <div className="detail-field">
-                <div className="detail-label">Medications:</div>
-                <div className="detail-value">
-                  <ul style={{ paddingLeft: '1rem', margin: 0 }}>
-                    <li>{selectedVisit.medications}</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Signature */}
-              <div className="signature-block">
-                <div className="signature-line"></div>
-                <div className="signature-caption">Veterinarian: {selectedVisit.veterinarianName || 'Not Assigned'}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <VisitDetailModal
+          selectedVisit={selectedVisit}
+          selectedPet={selectedPet}
+          onClose={() => setSelectedVisit(null)}
+          role={user.role}
+          printName={""}
+        />
       )}
 
       {showMessageModal && (

@@ -26,7 +26,7 @@ body {
   background: #edf2f7;
   padding: 2rem;
   border-radius: 12px;
-   height: 100vh; 
+  height: 100vh;
 }
 
 .pet-records-title {
@@ -66,11 +66,11 @@ body {
 
 .search-input {
   flex: 1 1;
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background-color: white;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background-color: white;
 }
 
 .user-table-wrapper {
@@ -155,7 +155,7 @@ body {
 }
 
 .pet-records-toolbar {
-  
+
   align-items: center;
   margin-bottom: 1rem;
   flex-wrap: wrap;
@@ -193,7 +193,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -206,7 +206,7 @@ body {
   width: 100%;
   max-width: 1100px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
@@ -249,6 +249,7 @@ body {
   margin: 0.25rem 0;
   font-size: 0.875rem;
 }
+
 .checkup-history-row-style {
   display: flex;
   flex-direction: column;
@@ -290,6 +291,7 @@ body {
   justify-content: center;
   align-items: center;
 }
+
 .modal-search-input {
   width: 100%;
   padding: 8px 12px;
@@ -299,6 +301,7 @@ body {
   font-size: 14px;
   margin-top: 12px;
 }
+
 /* Visit Detail Modal Overlay */
 .visit-detail-modal-overlay {
   position: fixed;
@@ -327,23 +330,6 @@ body {
   flex-direction: column;
 }
 
-/* Print Button */
-.print-btn {
-  position: absolute;
-  top: 20px;
-  right: 50px;
-  background-color: #32b2b2;
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.print-btn:hover {
-  background-color: #299b9b;
-}
 
 /* Scrollable Content */
 .scrollable-print {
@@ -385,6 +371,7 @@ body {
   flex-direction: column;
 }
 
+
 .add-pet-overlay {
   position: fixed;
   inset: 0;
@@ -405,7 +392,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   position: relative;
-  scrollbar-width: none; 
+  scrollbar-width: none;
   animation: fadeIn 0.3s ease;
 }
 
@@ -418,7 +405,7 @@ body {
 }
 
 .modal::-webkit-scrollbar {
-  display: none;                
+  display: none;
 }
 
 /* Close button */
@@ -504,53 +491,19 @@ body {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
 
-/* Print Style */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .visit-detail-modal,
-  .visit-detail-modal * {
-    visibility: visible;
-  }
-
-  .visit-detail-modal {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    max-height: none;
-    height: auto;
-    box-shadow: none;
-    border: none;
-    padding: 0;
-  }
-
-  .scrollable-print {
-    overflow: visible;
-    max-height: none;
-    padding: 0;
-  }
-
-  .print-btn,
-  .close-btn {
-    display: none;
-  }
-}
 .mr-header-section {
   display: flex;
   align-items: center;
   margin-bottom: 2rem;
-    border-bottom: none;
+  border-bottom: none;
   padding-bottom: 1rem;
- 
 }
 
 .mr-clinic-logo {
@@ -584,8 +537,13 @@ body {
 }
 
 @keyframes recordMessageFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .recordMessage-modal {
@@ -606,6 +564,7 @@ body {
     transform: scale(0.85);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -647,3 +606,188 @@ body {
   background: #289797;
 }
 
+/* Updated Print Design */
+
+.user-view-visit-detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(30, 30, 30, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.user-view-visit-detail-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-family: "Poppins", sans-serif;
+}
+
+.user-view-user-print-button {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.user-view-close-btn,
+.user-view-print-btn {
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 15px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.user-view-close-btn {
+  background-color: #dc3545;
+}
+
+.user-view-close-btn:hover {
+  background-color: #b02a37;
+}
+
+.user-view-print-btn:hover {
+  background-color: #0056b3;
+}
+
+.user-view-visit-detail-content {
+  padding: 25px 35px;
+  overflow-y: auto;
+  flex: 1;
+  background-color: #ffffff;
+}
+
+.user-view-mr-header-section {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.user-view-mr-clinic-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-right: 20px;
+}
+
+.user-view-mr-clinic-details h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #007bff;
+}
+
+.user-view-mr-clinic-details p {
+  margin: 3px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.user-view-section-title {
+  font-size: 1.3rem;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #007bff;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.user-view-detail-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed #ccc;
+  font-size: 0.95rem;
+}
+
+.user-view-detail-label {
+  font-weight: 600;
+  color: #333;
+  width: 40%;
+}
+
+.user-view-detail-value {
+  color: #555;
+  text-align: left;
+  width: 60%;
+}
+
+.user-view-signature-block {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.user-view-signature-line {
+  border-bottom: 1px solid #333;
+  width: 200px;
+  margin: 0 auto 6px;
+}
+
+.user-view-signature-caption {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.user-view-print-footer {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 30px;
+  font-style: italic;
+}
+
+.user-view-page-break {
+  page-break-before: always;
+  height: 20px;
+}
+
+@media print {
+  .user-view-user-print-button {
+    display: none;
+  }
+
+  .user-view-visit-detail-modal-overlay {
+    background: none;
+    position: static;
+  }
+
+  .user-view-visit-detail-modal {
+    box-shadow: none;
+    width: 100%;
+    max-width: none;
+    border: none;
+  }
+
+  .user-view-visit-detail-content {
+    overflow: visible;
+  }
+
+  .user-view-section-title {
+    page-break-before: auto;
+    page-break-after: avoid;
+  }
+
+  .user-view-detail-field {
+    page-break-inside: avoid;
+  }
+}

@@ -1,0 +1,236 @@
+/* Overlay */
+.all-visit-detail-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Modal Box */
+.all-visit-detail-modal {
+    background: white;
+    width: 60%;
+    max-height: 90%;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 0 10px #00000040;
+    padding: 1.5rem 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.all-section-summary-page1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+    row-gap: 1rem;
+}
+
+.all-section-summary-page2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+    row-gap: 1rem;
+}
+
+.all-user-print-button {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Buttons */
+.all-print-btn {
+    background-color: #32b2b2;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.all-print-btn:hover {
+    background-color: #299b9b;
+}
+
+.all-close-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.all-close-btn:hover {
+    background-color: #b02a37;
+}
+
+.all-detail-actions {
+    display: block;
+    position: relative;
+    height: 60px;
+}
+
+.all-save-btn {
+  background-color: #32b2b2;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  position: absolute;
+  right: 0;
+}
+
+.all-save-btn:hover {
+  background-color: #32b2b285;
+}
+
+/* Scrollable Content */
+.all-scrollable-print {
+    overflow-y: auto;
+    margin-top: 2.5rem;
+    padding-right: 1rem;
+    max-height: 75vh;
+}
+
+.all-mr-header-section {
+    display: flex;
+    align-items: center;
+    border-bottom: none;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Section Titles */
+.all-section-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+    grid-column: span 2;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.3rem;
+}
+
+/* Detail Fields */
+.all-detail-label {
+    color: #000000;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+}
+
+.all-detail-value {
+    font-weight: 400;
+    margin-bottom: 1rem;
+}
+
+.all-detail-field {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Signature */
+.all-signature-block {
+    grid-column: span 2;
+    text-align: center;
+    margin-top: 6rem;
+}
+
+.all-signature-line {
+    border-bottom: 1px solid #000;
+    width: 200px;
+    margin: 0 auto 6px;
+}
+
+.all-signature-caption {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.all-print-footer {
+    grid-column: span 2;
+    text-align: right;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.all-editable-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.all-page-break {
+    display: block;
+    /* must be block */
+    break-before: page;
+    /* modern */
+    page-break-before: always;
+    /* legacy */
+    height: 0;
+    /* optional to not take space */
+}
+
+@page {
+    size: auto;
+    margin: 10mm;
+}
+
+/* Print Styles */
+@media print {
+
+    .all-visit-detail-modal,
+    .all-visit-detail-modal * {
+        visibility: visible;
+    }
+
+    .all-visit-detail-modal {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-height: none;
+        height: auto;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+    }
+
+    .all-scrollable-print {
+        display: block !important;
+        /* remove grid */
+        overflow: visible !important;
+        max-height: none;
+        padding: 0;
+    }
+
+    .all-print-footer {
+        margin-right: 10px;
+    }
+
+    .all-print-btn,
+    .all-close-btn {
+        display: none;
+    }
+
+    .all-detail-actions {
+        display: none!important;
+    }
+}

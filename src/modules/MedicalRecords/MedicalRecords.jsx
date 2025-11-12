@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { FaPlus, FaRegEye, FaEdit } from 'react-icons/fa';
 import { Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios'
 import './MedicalRecords.css';
+import VisitDetailModal from '../../components/printLogic/VisitDetailModal';
+import { UserContext } from '../../hook/authContext';
+
 
 const ServiceSelector = ({ value, onChange, options }) => {
   const [inputValue, setInputValue] = useState(value || "");
@@ -88,6 +91,7 @@ const ServiceSelector = ({ value, onChange, options }) => {
 };
 
 export default function PetRecords() {
+  const { user } = useContext(UserContext);
   const [pets, setPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -455,7 +459,7 @@ export default function PetRecords() {
       );
 
       if (res.data.success) {
-        const history = await axios.get(`${APIENDPOINT}/fetch/visit_history/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
       }
@@ -724,7 +728,10 @@ export default function PetRecords() {
                     </div>
                     <div className="checkup-col action-col">
                       <p className="checkup-label">Action</p>
-                      <button className="aksi-btn" onClick={() => setSelectedVisit(visit)}>
+                      <button className="aksi-btn" onClick={() => {
+                        console.log("Tap")
+                        setSelectedVisit(visit)
+                      }}>
                         <FaRegEye size={14} />
                       </button>
                     </div>
@@ -739,233 +746,16 @@ export default function PetRecords() {
       )}
 
       {selectedVisit && (
-        <div className="visit-detail-modal-overlay">
-          <div className="visit-detail-modal">
-            <button className="close-btn" onClick={() => setSelectedVisit(null)}>×</button>
-            <button className="print-btn" onClick={() => window.print()}>Print</button>
-            <div className="visit-detail-content scrollable-print">
-              <div className="mr-header-section">
-                <img src="/images/LandingPage/rivera-logo.png" alt="Clinic Logo" className="mr-clinic-logo" />
-                <div className="mr-clinic-details">
-                  <h1>PetCare Animal Clinic</h1>
-                  <p>123 Veterinary Street, Bocaue, Bulacan</p>
-                  <p>Contact: (044) 123-4567 | Email: petcare@clinic.com</p>
-                  <p>Date: {new Date().toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              <h2 className="section-title">Patient Medical Summary</h2>
-              <div className="detail-field">
-                <div className="detail-label">Pet Name:</div>
-                <input
-                  type="text"
-                  value={selectedPet.name}
-                  disabled
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Species:</div>
-                <input
-                  type="text"
-                  value={selectedPet.species}
-                  disabled
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Address:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.ownerAddress || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerAddress: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Age:</div>
-                <input
-                  type="number"
-                  value={selectedPet.age}
-                  disabled
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Phone Number:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.ownerPhoneNum || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerPhoneNum: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Diagnosis:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.diagnosis}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, diagnosis: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Owner Email:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.ownerEmail || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerEmail: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Date Admitted:</div>
-                <input
-                  type="date"
-                  value={selectedVisit.date || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, date: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Date Discharged:</div>
-                <input
-                  type="date"
-                  value={selectedVisit.completed}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, completed: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Patient Status:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.status}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, status: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Nursing Issues:</div>
-                <textarea
-                  value={selectedVisit.nursingIssues || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, nursingIssues: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Care Plan:</div>
-                <textarea
-                  value={selectedVisit.carePlan || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, carePlan: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Local Status Check:</div>
-                <textarea
-                  value={selectedVisit.localStatus || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, localStatus: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-
-              <h2 className="section-title">Medical Assessment</h2>
-              <div className="detail-field">
-                <div className="detail-label">Main Complaint:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.complaint}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, complaint: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Additional Complaints:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.additionalComplaint || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, additionalComplaint: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Weight:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.weight || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, weight: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Height:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.height || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, height: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">BMI:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.bmi || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, bmi: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Blood Pressure:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.bloodPressure || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, bloodPressure: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-              <div className="detail-field">
-                <div className="detail-label">Pulse:</div>
-                <input
-                  type="text"
-                  value={selectedVisit.pulse || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, pulse: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-
-              <h2 className="section-title">Prescriptions</h2>
-              <div className="detail-field">
-                <div className="detail-label">Medications:</div>
-                <textarea
-                  value={selectedVisit.medications || ''}
-                  onChange={(e) => setSelectedVisit({ ...selectedVisit, medications: e.target.value })}
-                  className="editable-input"
-                />
-              </div>
-
-              <div className="signature-block">
-                <div className="signature-line"></div>
-                <div className="signature-caption">
-                  {selectedVisit.veterinarianName || 'Not Assigned'}
-                </div>
-              </div>
-
-              <div className="detail-actions">
-                <button
-                  className="save-btn"
-                  onClick={() => {
-                    handleUpdateVisit()
-                  }}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <VisitDetailModal
+          selectedVisit={selectedVisit}
+          selectedPet={selectedPet}
+          onClose={() => setSelectedVisit(null)}
+          role={user.role}
+          printName={user.firstName}
+          setSelectedVisit={setSelectedVisit}  
+          Saving={handleUpdateVisit}            
+          processing={isProcessing}
+        />
       )}
 
       {showAddPetModal && (

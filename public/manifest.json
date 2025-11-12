@@ -1,0 +1,8 @@
+{
+  "short_name": "PawCare",
+  "name": "Rivera Clinic Web",
+  "icons": [
+  ],
+  "start_url": ".",
+  "display": "standalone"
+}

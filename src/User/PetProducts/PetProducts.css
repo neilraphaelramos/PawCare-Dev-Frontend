@@ -81,6 +81,8 @@
   align-items: center;
   margin-bottom: 0.75rem;
   overflow: hidden;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .inventory-cart {
@@ -123,11 +125,19 @@
   pointer-events: none;
 }
 
-.inventory-card h3 {
+.user-item-unit-container {
+  padding-bottom: 5px;
+}
+
+.user-unit-display {
+  font-size: 0.95rem;
+}
+
+.user-h3 {
   font-size: 1rem;
-  margin: 0.5rem 0;
-  min-height: 40px;
-  /* keeps text aligned */
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
 }
 
 .inventory-card p {

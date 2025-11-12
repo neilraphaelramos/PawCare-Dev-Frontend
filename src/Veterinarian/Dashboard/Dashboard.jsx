@@ -415,7 +415,7 @@ export default function Dashboard() {
                 <span>{todApp}</span>
               </div>
               <div className="vet-dashboard-metric">
-                <div><FaDog /> Total Patients</div>
+                <div><FaDog /> Total Pet Registered</div>
                 <span>{todPat}</span>
               </div>
               <div className="vet-dashboard-metric">

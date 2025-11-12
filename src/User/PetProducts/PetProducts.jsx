@@ -285,6 +285,7 @@ const UserInventory = () => {
     name: row.name,
     type: row.item_group,
     quantity: row.stock,
+    amount: row.amount,
     unit: row.unit,
     price: parseFloat(row.price),
     image: row.photo,
@@ -448,7 +449,11 @@ const UserInventory = () => {
                 )}
               </div>
 
-              <h3>{item.name}</h3>
+              <div className='user-item-unit-container'>
+                <h3 className='user-h3'>{item.name}</h3>
+                <div className='user-unit-display'>{item.amount || 0} - <strong>{item.unit}</strong></div>
+               </div> 
+              
               <p>₱{item.price.toFixed(2)}</p>
 
               <button

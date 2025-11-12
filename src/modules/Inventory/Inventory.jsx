@@ -125,6 +125,7 @@ export default function InventoryTable() {
     group: '',
     date: '',
     expiration: '',
+    amount: '',
     stock: '',
     price: '',
     unit: '',
@@ -150,6 +151,7 @@ export default function InventoryTable() {
       group: row.item_group || "",
       date: row.date_purchase ? new Date(row.date_purchase).toISOString().split("T")[0] : "",
       expiration: row.date_expiration ? new Date(row.date_expiration).toISOString().split("T")[0] : "",
+      amount: row.amount || "",
       price: row.price ? `₱ ${Number(row.price).toFixed(2)}` : "",
       unit: row.unit || "",
       stock: row.stock ?? 0,
@@ -195,6 +197,7 @@ export default function InventoryTable() {
       group: item.group,
       date: item.date,
       expiration: item.expiration,
+      amount: item.amount,
       stock: item.stock,
       unit: item.unit,
       price: priceInput,
@@ -315,6 +318,7 @@ export default function InventoryTable() {
       formData.append('item_group', newItem.group);
       formData.append('date_purchase', newItem.date);
       formData.append('date_expiration', newItem.expiration);
+      formData.append('amount', newItem.amount);
       formData.append('stock', quantity === '' ? 0 : quantity);
       formData.append('price', price === '' ? 0 : price);
       formData.append('unit', newItem.unit);
@@ -442,6 +446,7 @@ export default function InventoryTable() {
                 group: "",
                 date: "",
                 expiration: "",
+                amount: "",
                 stock: "",
                 price: "",
                 unit: "",
@@ -488,6 +493,7 @@ export default function InventoryTable() {
             <th>Expiration</th>
             <th>Price</th>
             <th>Stocks</th>
+            <th>Amount Unit</th>
             <th>Unit</th>
             <th>Actions</th>
           </tr>
@@ -495,7 +501,7 @@ export default function InventoryTable() {
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan="10" style={{ textAlign: "center", padding: "20px" }}>
+              <td colSpan="11" style={{ textAlign: "center", padding: "20px" }}>
                 <div className="loading-spinner" />
                 <p>Loading inventory...</p>
               </td>
@@ -531,6 +537,7 @@ export default function InventoryTable() {
                   {item.stock}
                   {item.low && <span className="status-down"> ↓</span>}
                 </td>
+                <td>{item.amount || 0}</td>
                 <td>{item.unit}</td>
                 <td>
                   <button
@@ -644,6 +651,11 @@ export default function InventoryTable() {
                 <div className="admin-inventory-form-group">
                   <label htmlFor="stock">Quantity</label>
                   <input type="number" id="stock" name="stock" value={newItem.stock} onChange={handleInputChange} className="admin-inventory-input-field" />
+                </div>
+
+                <div className='admin-inventory-form-group'>
+                  <label htmlFor="amount">Amount Unit</label>
+                  <input type="number" id="amount" name="amount" value={newItem.amount} onChange={handleInputChange} className="admin-inventory-input-field" />
                 </div>
 
                 <div className="admin-inventory-form-group">

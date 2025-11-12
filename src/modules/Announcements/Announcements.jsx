@@ -122,6 +122,7 @@ export default function Announcements() {
       console.error("Error deleting announcement:", err);
     } finally {
       setIsLoading(false);
+      setShowConfirmModal(false);
     }
   };
 
@@ -299,10 +300,10 @@ export default function Announcements() {
             <div className="All-deleteconfirm-actions">
               <button
                 className="All-deleteconfirm-btn confirm"
-                onClick={() => confirmDelete(selectedFeatureId)}
-                disabled={isProcessing}
+                onClick={() => confirmDelete(selectedAnnounceId)}
+                disabled={isLoading}
               >
-                {isProcessing ? (
+                {isLoading ? (
                   <>
                     Processing... <Loader2 size={16} className="feature-spinner" />
                   </>
@@ -313,7 +314,7 @@ export default function Announcements() {
               <button
                 className="All-deleteconfirm-btn cancel"
                 onClick={() => setShowConfirmModal(false)}
-                disabled={isProcessing}
+                disabled={isLoading}
               >
                 Cancel
               </button>
