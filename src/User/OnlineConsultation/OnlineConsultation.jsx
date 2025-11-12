@@ -6,6 +6,7 @@ import axios from 'axios';
 import JitsiWrapper from './component/jitsiApi';
 import { io } from 'socket.io-client';
 import DateTimeModal from './component/DateTimeModal';
+import { fi } from 'date-fns/locale';
 
 const OnlineConsultation = () => {
   const { user } = useContext(UserContext);
@@ -33,13 +34,16 @@ const OnlineConsultation = () => {
   const [startCall, setStartCall] = useState(false);
   const [channelConsultID, setChannelConsultID] = useState(null);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
+  const defaultBotMessages = [
     { from: 'bot', text: '👋 Hello! Thank you for submitting your consultation request.' },
     { from: 'bot', text: 'Please wait while one of our licensed veterinarians reviews your concern.' },
-  ]);
+  ];
+
+  const [messages, setMessages] = useState([...defaultBotMessages]);
 
   const chatEndRef = useRef(null);
   const socketRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
   const [messageModal, setMessageModal] = useState(false);
@@ -47,6 +51,8 @@ const OnlineConsultation = () => {
   const [petList, setPetList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState(null);
+
+  const mergeWithBot = (msgs) => [...defaultBotMessages, ...msgs];
 
   const handleConfirm = (data) => {
     setSelectedDateTime(data);
@@ -128,7 +134,19 @@ const OnlineConsultation = () => {
       } else {
         setShowModal(true)
         setMessageModal('Your Request is ' + res.data.message);
-        setFillUp({});
+        setFillUp({
+          owner_name: ``,
+          pet_name: "",
+          pet_type: "",
+          pet_species: "",
+          concern_description: "",
+          consult_type: "",
+          file_payment: '',
+        });
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = null;
+        }
         setSelectedDateTime(null);
       }
     } catch (err) {
@@ -196,29 +214,40 @@ const OnlineConsultation = () => {
   const handleSendMessage = () => {
     if (message.trim() === '' || !socketRef.current) return;
 
-    const name = [
-      user.firstName,
-      user.lastName,
-    ].filter(Boolean).join(' ');
+    const name = [user.firstName, user.lastName].filter(Boolean).join(' ');
 
-    const msgObj = { from: 'user', text: message, name: name };
+    const msgObj = { from: 'user', text: message, name };
+
+    // Emit via socket
     socketRef.current.emit('sendMessage', { consultID: channelConsultID, ...msgObj });
-    setMessages((prev) => [...prev, msgObj]);
+
+    // Update local state immediately
+    setMessages(prev => mergeWithBot([...prev.slice(defaultBotMessages.length), msgObj]));
     setMessage('');
   };
 
+  // Fetch messages only from DB, but always prepend the 2 default bot messages
   useEffect(() => {
-    const savedMessages = localStorage.getItem(`chat_${channelConsultID}`);
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
-  }, [channelConsultID]);
+    if (!channelConsultID) return;
 
-  useEffect(() => {
-    if (channelConsultID) {
-      localStorage.setItem(`chat_${channelConsultID}`, JSON.stringify(messages));
-    }
-  }, [messages, channelConsultID]);
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/consult_messages/${channelConsultID}`);
+        if (res.data.success) {
+          const dbMessages = res.data.messages.map(m => ({
+            from: m.sender_type,
+            text: m.message_text,
+            name: m.sender_name,
+          }));
+          setMessages(mergeWithBot(dbMessages));
+        }
+      } catch (err) {
+        console.error("Error loading messages:", err);
+      }
+    };
+
+    fetchMessages();
+  }, [channelConsultID]);
 
   // Auto-scroll to newest message
   useEffect(() => {
@@ -358,7 +387,13 @@ const OnlineConsultation = () => {
 
           <div className="form-group">
             <label>Payment Proof (Screenshot or Receipt)</label>
-            <input type="file" accept="image/*,application/pdf" onChange={handleFileUpload} required />
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleFileUpload}
+              required
+              ref={fileInputRef}
+            />
           </div>
 
           <div className="form-group">

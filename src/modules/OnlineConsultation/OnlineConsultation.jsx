@@ -23,17 +23,6 @@ const VetConsultationAdmin = () => {
   const [showProofModal, setShowProofModal] = useState(false);
   const [selectedProof, setSelectedProof] = useState(null);
 
-  useEffect(() => {
-    const storedChats = localStorage.getItem("vetChats");
-    if (storedChats) {
-      setChats(JSON.parse(storedChats));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("vetChats", JSON.stringify(chats));
-  }, [chats]);
-
   // Fetch consultations
   const fetchOnlineConsult = async () => {
     try {
@@ -61,13 +50,27 @@ const VetConsultationAdmin = () => {
     socketRef.current = socket;
 
     // Define handlers
-    const handleReceiveMessage = (message) => {
+    const handleReceiveMessage = async (message) => {
       const { consultID, from, text, name, photo } = message;
-      setChats(prev => ({
+
+      setChats((prev) => ({
         ...prev,
-        [consultID]: [...(prev[consultID] || []), { from, text, name, photo }]
+        [consultID]: [...(prev[consultID] || []), { from, text, name, photo }],
       }));
+
+      // 🟢 Save incoming user message to DB
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/consult_messages/save`, {
+          consult_id: consultID,
+          sender_type: from,
+          sender_name: name,
+          message_text: text,
+        });
+      } catch (err) {
+        console.error("Error saving incoming message:", err);
+      }
     };
+
 
     const handleSystemMessage = ({ consultID, message }) => {
       setChats(prev => ({
@@ -88,24 +91,86 @@ const VetConsultationAdmin = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const storedChatId = sessionStorage.getItem("ConsultId");
+    if (!storedChatId) return;
+
+    setActiveChatId(storedChatId);
+
+    const initializeChat = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/consult_messages/${storedChatId}`);
+        const messagesFromDB = res.data.success
+          ? res.data.messages.map((m) => ({
+            from: m.sender_type,
+            name: m.sender_name,
+            text: m.message_text,
+          }))
+          : [];
+
+        setChats((prev) => ({
+          ...prev,
+          [storedChatId]: messagesFromDB.length
+            ? messagesFromDB
+            : [
+              {
+                from: "bot",
+                text: `You resumed consultation with ${fetchOC.find((r) => r.channelConsult === storedChatId)?.ownerName || "the user"
+                  }.`,
+              },
+            ],
+        }));
+      } catch (err) {
+        console.error("Error initializing chat messages:", err);
+      }
+    };
+
+    if (fetchOC.length > 0) {
+      initializeChat();
+    }
+  }, [fetchOC]);
+
   // Scroll to bottom whenever chat updates
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chats, activeChatId]);
 
-  const startChat = (id) => {
+  const startChat = async (id) => {
     setActiveChatId(id);
     sessionStorage.setItem("ConsultId", id);
-    const adminName = "Admin"
-    socketRef.current.emit('joinConsult', { consultID: id, name: adminName, userType: 'vet' });
+    const adminName = "Admin";
 
-    if (!chats[id]) {
-      setChats(prev => ({
+    socketRef.current.emit("joinConsult", {
+      consultID: id,
+      name: adminName,
+      userType: "vet",
+    });
+
+    try {
+      // 🟢 Fetch messages from database
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/consult_messages/${id}`);
+      const messagesFromDB = res.data.success
+        ? res.data.messages.map((m) => ({
+          from: m.sender_type,
+          name: m.sender_name,
+          text: m.message_text,
+        }))
+        : [];
+
+      setChats((prev) => ({
         ...prev,
-        [id]: [
-          { from: 'bot', text: `You started consultation with ${fetchOC.find(r => r.channelConsult === id)?.ownerName}.` }
-        ]
+        [id]: messagesFromDB.length
+          ? messagesFromDB
+          : [
+            {
+              from: "bot",
+              text: `You started consultation with ${fetchOC.find((r) => r.channelConsult === id)?.ownerName
+                }.`,
+            },
+          ],
       }));
+    } catch (err) {
+      console.error("Error loading messages:", err);
     }
   };
 
@@ -128,26 +193,41 @@ const VetConsultationAdmin = () => {
     }
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!inputMessage.trim() || !activeChatId) return;
 
     const messageData = {
       consultID: activeChatId,
-      from: 'vet',
+      from: "vet",
       name: "Admin",
       text: inputMessage.trim(),
-      photo: `${process.env.REACT_APP_MAIN_URL}/images/logo.png`
+      photo: `${process.env.REACT_APP_MAIN_URL}/images/logo.png`,
     };
 
-    socketRef.current.emit('sendMessage', messageData);
+    // 🟣 Emit message via socket
+    socketRef.current.emit("sendMessage", messageData);
 
-    setChats(prev => ({
+    // 🟢 Save to state
+    setChats((prev) => ({
       ...prev,
-      [activeChatId]: [...(prev[activeChatId] || []), messageData]
+      [activeChatId]: [...(prev[activeChatId] || []), messageData],
     }));
 
-    setInputMessage('');
+    setInputMessage("");
+
+    // 🟢 Save to database
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/consult_messages/save`, {
+        consult_id: activeChatId,
+        sender_type: "vet",
+        sender_name: "Admin",
+        message_text: inputMessage.trim(),
+      });
+    } catch (err) {
+      console.error("Error saving message to DB:", err);
+    }
   };
+
 
   const openProofModal = (proofUrl) => {
     setSelectedProof(proofUrl);
