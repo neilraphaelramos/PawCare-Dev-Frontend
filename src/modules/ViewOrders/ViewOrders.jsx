@@ -192,31 +192,18 @@ const ViewOrders = () => {
     const buttons = receiptElement.querySelectorAll(".receipt-actions button");
     buttons.forEach(btn => (btn.style.display = "none"));
 
-    const originalOpacity = receiptElement.style.opacity;
-    const originalBg = receiptElement.style.backgroundColor;
-
-    receiptElement.style.opacity = "1";
-    receiptElement.style.backgroundColor = "#ffffff";
-
     setTimeout(() => {
-      html2canvas(receiptElement, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-      }).then(canvas => {
+      html2canvas(receiptElement, { scale: 2 }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
 
-        receiptElement.style.opacity = originalOpacity;
-        receiptElement.style.backgroundColor = originalBg;
         buttons.forEach(btn => (btn.style.display = ""));
 
-        // Download the image
         const link = document.createElement("a");
         link.href = imgData;
         link.download = `receipt_${Date.now()}.png`;
         link.click();
       });
-    }, 200); // 200ms delay
+    }, 200);
   };
 
   // ✅ Normalize for input type="date" (yyyy-mm-dd)
