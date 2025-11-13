@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import Appointments from "../Appointments/Appointments";
 import AiAssistant from "../AiAssistant/AiAssistant";
 import { Routes, Route, useNavigate } from "react-router-dom";
@@ -48,6 +48,16 @@ const Dashboard = () => {
     { name: "Online Consultation", keyword: "consultation", path: "/users/online-consultation" },
     { name: "Profile", keyword: "profile", path: "/users/profile" },
   ];
+
+  const scrollRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: -100, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: 100, behavior: "smooth" });
+  };
 
   const handleChange = (e) => {
     const value = e.target.value.toLowerCase();
@@ -200,6 +210,7 @@ const Dashboard = () => {
             className="user-dashboard-profile"
             src={user.pic || "/images/Default_Pic.jpg"}
             alt="profile"
+            onClick={() => navigate('/users/profile')}
           />
         </header>
 
@@ -301,9 +312,9 @@ const Dashboard = () => {
                       sessionStorage.setItem("startCall", JSON.stringify(false));
                       navigate('/users/online-consultation');
                     }}
-                    style={{
-                      cursor: 'pointer',
-                    }}
+                      style={{
+                        cursor: 'pointer',
+                      }}
                     >
                       Join Chat Session→
                     </a>
@@ -328,9 +339,16 @@ const Dashboard = () => {
         <section className="user-dashboard-products user-dashboard-card">
           <div className="user-dashboard-section-header">
             <h3>Products Purchased</h3>
-            <FaChevronRight />
           </div>
-          <div className="user-dashboard-products-list">
+
+          <button className="scroll-btn left" onClick={scrollLeft}>
+            <FaChevronLeft />
+          </button>
+          <button className="scroll-btn right" onClick={scrollRight}>
+            <FaChevronRight />
+          </button>
+
+          <div className="user-dashboard-products-list scrollable" ref={scrollRef}>
             {purchasedProducts.length === 0 ? (
               <p className="empty-text">No products purchased yet.</p>
             ) : (
