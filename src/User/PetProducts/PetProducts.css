@@ -884,6 +884,34 @@
   background: #288d8d;
 }
 
+.vo-total-footer {
+  padding: 10px;
+}
+
+.vo-receipt-btn {
+  background-color: #32b2b2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s ease-in-out;
+}
+
+.vo-receipt-btn:disabled {
+  background-color: #82b9b9;
+  cursor: not-allowed;
+}
+
+.vo-receipt-btn:hover {
+  background-color: #288d8d;
+}
+
+.vo-receipt-btn:hover:disabled {
+  background-color: #82b9b9;
+}
+
 /* ============================= */
 /* PAYMENT SUCCESS MODAL STYLES */
 /* ============================= */

@@ -255,7 +255,6 @@ export default function PetRecords() {
       photo: autoFill.photo_pet,
     }
 
-    console.table(formdata);
     try {
       setIsProcessing(true);
 
@@ -334,7 +333,6 @@ export default function PetRecords() {
       setIsLoading(true);
       const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
       setPets(res.data);
-      console.table(res.data);
     } catch (err) {
       console.error("Error fetching pets:", err);
     } finally {

@@ -205,7 +205,6 @@ export default function PetRecords() {
       const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/user_medical/${ownerUsername}`);
       if (res.data?.data) {
         setUserInfo(res.data.data);
-        console.log("Fetched user info:", res.data.data);
       }
     } catch (err) {
       console.error("Error fetching user info:", err);

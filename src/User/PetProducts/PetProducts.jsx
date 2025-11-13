@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import './PetProducts.css';
+import './modalReceipt/receipt.css'
 import { FaWallet, FaMoneyBillAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { UserContext } from '../../hook/authContext'
 import { useLocation } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 
 const UserInventory = () => {
   const [search, setSearch] = useState('');
@@ -31,6 +33,9 @@ const UserInventory = () => {
   const [paymentIntentId, setPaymentIntentId] = useState('');
   const [showQrModal, setShowQrModal] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const receiptRef = useRef(null);
 
   const userId = user?.id;
 
@@ -41,6 +46,63 @@ const UserInventory = () => {
     setShowMessageModal(false);
     setMessageModal('');
   }
+
+  const saveReceipt = async (orderId, method) => {
+    try {
+      const payload = {
+        order_ref: orderId,
+        date_order: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        uid: user.id,
+        customer_name: fullName,
+        total: totalAmount,
+        items: cart.map(item => ({
+          name: item.name,
+          qty: item.qty,
+          price: item.price
+        }))
+      };
+
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/order-receipt/save_receipt`, payload);
+
+      if (res.data.success) {
+        setReceiptData({
+          order_ref: orderId,
+          customer_name: fullName,
+          date_order: payload.date_order,
+          items: payload.items,
+          total: totalAmount
+        });
+        setShowReceipt(true);
+      } else {
+        console.warn("Failed to save receipt:", res.data.message);
+      }
+    } catch (err) {
+      console.error("Error saving receipt:", err);
+    }
+  };
+
+  const handleViewReceipt = async (orderId) => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/order-receipt/receipt/${orderId}`);
+      if (res.data.success) {
+        setReceiptData({
+          order_ref: res.data.receipt.order_ref,
+          customer_name: res.data.receipt.customer_name,
+          date_order: res.data.receipt.date_order,
+          items: res.data.items,
+          total: res.data.receipt.total
+        });
+        setShowReceipt(true); // show your existing receipt modal
+      } else {
+        setMessageModal("Receipt not found.");
+        setShowMessageModal(true);
+      }
+    } catch (err) {
+      console.error("Error loading receipt:", err);
+      setMessageModal("Error loading receipt data.");
+      setShowMessageModal(true);
+    }
+  };
 
   const handleConfirmOrder = async () => {
     if (cart.length === 0) {
@@ -67,7 +129,7 @@ const UserInventory = () => {
     // 💵 Cash on Delivery (skip PayMongo)
     if (paymentMethod === "cod") {
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_cod_order`, {
+        const orderRes = await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_cod_order`, {
           uid: user.id,
           customer_name: fullName,
           customer_address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
@@ -76,6 +138,8 @@ const UserInventory = () => {
           landmark: deliveryInfo.landmark,
           cart,
         });
+
+        await saveReceipt(orderRes.data.orderId);
 
         await sendNotification(
           "Order Placed Successfully (COD)",
@@ -130,7 +194,7 @@ const UserInventory = () => {
           if (status === "succeeded" && !orderSubmitted) {
             orderSubmitted = true;
 
-            await axios.post(`${process.env.REACT_APP_API_URL}/orders`, {
+            const orderSaveRes = await axios.post(`${process.env.REACT_APP_API_URL}/orders`, {
               uid: user.id,
               customer_name: fullName,
               customer_address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
@@ -139,6 +203,8 @@ const UserInventory = () => {
               landmark: deliveryInfo.landmark,
               cart,
             });
+
+            await saveReceipt(orderSaveRes.data.orderId);
 
             await sendNotification(
               "Order Placed Successfully (QRPH)",
@@ -174,6 +240,40 @@ const UserInventory = () => {
       setShowMessageModal(true);
       setMessageModal("Server error while creating payment intent.");
     }
+  };
+
+  const handlePrintReceipt = () => {
+    const receiptElement = receiptRef.current;
+    if (!receiptElement) return;
+
+    const buttons = receiptElement.querySelectorAll(".receipt-actions button");
+    buttons.forEach(btn => (btn.style.display = "none"));
+
+    const originalOpacity = receiptElement.style.opacity;
+    const originalBg = receiptElement.style.backgroundColor;
+
+    receiptElement.style.opacity = "1";
+    receiptElement.style.backgroundColor = "#ffffff";
+
+    setTimeout(() => {
+      html2canvas(receiptElement, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true, 
+      }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+
+        receiptElement.style.opacity = originalOpacity;
+        receiptElement.style.backgroundColor = originalBg;
+        buttons.forEach(btn => (btn.style.display = ""));
+
+        // Download the image
+        const link = document.createElement("a");
+        link.href = imgData;
+        link.download = `receipt_${Date.now()}.png`;
+        link.click();
+      });
+    }, 200); // 200ms delay
   };
 
   const handleCancelPayment = async () => {
@@ -334,7 +434,6 @@ const UserInventory = () => {
     }
   };
 
-
   const handleViewOrders = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/orders/${userId}`);
@@ -452,8 +551,8 @@ const UserInventory = () => {
               <div className='user-item-unit-container'>
                 <h3 className='user-h3'>{item.name}</h3>
                 <div className='user-unit-display'>{item.amount || 0} - <strong>{item.unit}</strong></div>
-               </div> 
-              
+              </div>
+
               <p>₱{item.price.toFixed(2)}</p>
 
               <button
@@ -699,40 +798,61 @@ const UserInventory = () => {
                 <p className="vo-no-orders">You have no orders yet.</p>
               ) : (
                 <div className="vo-modal-orders-list">
-                  {orders.map(order => (
-                    <div key={order.id_order} className="vo-modal-order-card">
-                      <div className="vo-modal-order-header">
-                        <h4>Order #{order.id_order}</h4>
-                        <span className={`vo-modal-order-status ${order.order_status.toLowerCase()}`}>
-                          {order.order_status}
-                        </span>
-                      </div>
+                  {orders.map(order => {
+                    let isPaid;
+                    if (order.status === "Paid") {
+                      isPaid = false;
+                    } else if (order.status === "Unpaid") {
+                      isPaid = true;
+                    } else {
+                      isPaid = true; // default
+                    }
+                    return (
+                      <div key={order.id_order} className="vo-modal-order-card">
+                        <div className="vo-modal-order-header">
+                          <h4>Order #{order.id_order}</h4>
+                          <span className={`vo-modal-order-status ${order.order_status.toLowerCase()}`}>
+                            {order.order_status}
+                          </span>
+                        </div>
 
-                      <p><strong>Date:</strong> {new Date(order.order_date).toLocaleString()}</p>
-                      <p><strong>Address:</strong> {order.customer_address}</p>
-
-                      <table className="vo-modal-items-table">
-                        <thead>
-                          <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.items.map((item, idx) => (
-                            <tr key={idx}>
-                              <td>{item.product_name}</td>
-                              <td>{item.quantity}</td>
+                        <p><strong>Date:</strong> {new Date(order.order_date).toLocaleString()}</p>
+                        <p><strong>Address:</strong> {order.customer_address}</p>
+                        <p>
+                          <strong>Payment Method:</strong>{" "}
+                          {order.method === "cod" ? "Cash on Delivery" : "QRPH"}
+                        </p>
+                        <p><strong>Payment Status:</strong> {order.status}</p>
+                        <table className="vo-modal-items-table">
+                          <thead>
+                            <tr>
+                              <th>Item</th>
+                              <th>Qty</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {order.items.map((item, idx) => (
+                              <tr key={idx}>
+                                <td>{item.product_name}</td>
+                                <td>{item.quantity}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
 
-                      <div className="vo-modal-order-footer">
-                        Total: ₱{order.total.toFixed(2)}
+                        <div className="vo-modal-order-footer">
+                          <span className='vo-total-footer'>Total: ₱{order.total.toFixed(2)}</span>
+                          <button
+                            className="vo-receipt-btn"
+                            onClick={() => handleViewReceipt(order.id_order)}
+                            disabled={isPaid}
+                          >
+                            See Receipt
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -819,6 +939,49 @@ const UserInventory = () => {
               >
                 {isConfirming ? 'Checking...' : 'I’ve Paid'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReceipt && receiptData && (
+        <div className="receipt-modal-overlay">
+          <div className="receipt-modal" id="receipt-content" ref={receiptRef}>
+            <h2>Payment Receipt</h2>
+            <p><strong>Date:</strong> {new Date(receiptData.date_order).toLocaleString()}</p>
+            <p><strong>Order Reference:</strong> {receiptData.order_ref}</p>
+            <p><strong>Customer:</strong> {receiptData.customer_name}</p>
+
+            <table className="receipt-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {receiptData.items.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.product_name}</td>
+                    <td>{item.qty}</td>
+                    <td>₱{item.price}</td>
+                    <td>₱{(item.price * item.qty)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "right" }}><strong>Total:</strong></td>
+                  <td><strong>₱{receiptData.total}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="receipt-actions">
+              <button onClick={() => setShowReceipt(false)}>Close</button>
+              <button onClick={handlePrintReceipt}>Print Receipt</button>
             </div>
           </div>
         </div>

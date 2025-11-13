@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ViewOrders.css';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
-import { set } from 'date-fns';
-
+import './modalReceipt/receipt.css'
+import html2canvas from 'html2canvas';
 
 export function exportToXLSX(data, filename = "orders.xlsx") {
   if (!data) {
@@ -172,6 +172,9 @@ const ViewOrders = () => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const receiptRef = useRef(null);
 
   // ✅ Format date from yyyy-mm-dd → dd/mm/yyyy
   const formatDate = (dateStr) => {
@@ -182,6 +185,39 @@ const ViewOrders = () => {
     return `${day}/${month}/${year}`;
   };
 
+  const handlePrintReceipt = () => {
+    const receiptElement = receiptRef.current;
+    if (!receiptElement) return;
+
+    const buttons = receiptElement.querySelectorAll(".receipt-actions button");
+    buttons.forEach(btn => (btn.style.display = "none"));
+
+    const originalOpacity = receiptElement.style.opacity;
+    const originalBg = receiptElement.style.backgroundColor;
+
+    receiptElement.style.opacity = "1";
+    receiptElement.style.backgroundColor = "#ffffff";
+
+    setTimeout(() => {
+      html2canvas(receiptElement, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+      }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+
+        receiptElement.style.opacity = originalOpacity;
+        receiptElement.style.backgroundColor = originalBg;
+        buttons.forEach(btn => (btn.style.display = ""));
+
+        // Download the image
+        const link = document.createElement("a");
+        link.href = imgData;
+        link.download = `receipt_${Date.now()}.png`;
+        link.click();
+      });
+    }, 200); // 200ms delay
+  };
 
   // ✅ Normalize for input type="date" (yyyy-mm-dd)
   const toInputDate = (dateStr) => {
@@ -308,6 +344,29 @@ const ViewOrders = () => {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  const handleViewReceipt = async (orderId) => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/order-receipt/receipt/${orderId}`);
+      if (res.data.success) {
+        setReceiptData({
+          order_ref: res.data.receipt.order_ref,
+          customer_name: res.data.receipt.customer_name,
+          date_order: res.data.receipt.date_order,
+          items: res.data.items,
+          total: res.data.receipt.total
+        });
+        setShowReceipt(true); // show your existing receipt modal
+      } else {
+        setMessageModal("Receipt not found.");
+        setShowMessageModal(true);
+      }
+    } catch (err) {
+      console.error("Error loading receipt:", err);
+      setMessageModal("Error loading receipt data.");
+      setShowMessageModal(true);
+    }
+  };
+
   const handleExport = (format) => {
     if (filteredOrders.length === 0) {
       setMessageModal("No data to export");
@@ -418,12 +477,13 @@ const ViewOrders = () => {
               <th>Total</th>
               <th>Order Status</th>
               <th>Payment Status</th>
+              <th>Receipt</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="9" className="loading-message">
+                <td colSpan="10" className="loading-message">
                   Loading orders...
                 </td>
               </tr>
@@ -483,11 +543,20 @@ const ViewOrders = () => {
                       <option value="Refunded">Refunded</option>
                     </select>
                   </td>
+                  <td>
+                    <button
+                      className='cursor-btn'
+                      type='button'
+                      onClick={() => handleViewReceipt(order.id)}
+                    >
+                      Show Receipt
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="9" className="empty-message">
+                <td colSpan="10" className="empty-message">
                   No orders found.
                 </td>
               </tr>
@@ -540,7 +609,7 @@ const ViewOrders = () => {
         <div className="All-Message-modal-overlay">
           <div className="All-Message-modal">
             <div className="All-Message-modal-header">
-              <h2>setMessageModal Message</h2>
+              <h2>Alert Message</h2>
             </div>
 
             <div className="All-Message-modal-body">
@@ -554,6 +623,49 @@ const ViewOrders = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReceipt && receiptData && (
+        <div className="admin-receipt-modal-overlay">
+          <div className="admin-receipt-modal" id="admin-receipt-content" ref={receiptRef}>
+            <h2>Payment Receipt</h2>
+            <p><strong>Date:</strong> {new Date(receiptData.date_order).toLocaleString()}</p>
+            <p><strong>Order Reference:</strong> {receiptData.order_ref}</p>
+            <p><strong>Customer:</strong> {receiptData.customer_name}</p>
+
+            <table className="admin-receipt-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {receiptData.items.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.product_name}</td>
+                    <td>{item.qty}</td>
+                    <td>₱{item.price}</td>
+                    <td>₱{(item.price * item.qty)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "right" }}><strong>Total:</strong></td>
+                  <td><strong>₱{receiptData.total}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="admin-receipt-actions">
+              <button onClick={() => setShowReceipt(false)}>Close</button>
+              <button onClick={handlePrintReceipt}>Print Receipt</button>
             </div>
           </div>
         </div>
