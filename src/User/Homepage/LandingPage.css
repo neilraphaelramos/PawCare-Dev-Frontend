@@ -689,6 +689,10 @@ body {
   margin-bottom: 10px;
 }
 
+.title-h1 {
+  text-align: left;
+}
+
 .rvc-hero-text p {
   font-size: 16px;
   color: #555;

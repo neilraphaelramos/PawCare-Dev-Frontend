@@ -9,7 +9,7 @@ export default function HeroText() {
       transition={{ duration: 0.8 }}
     >
       <header>
-        <h1>
+        <h1 className='title-h1'>
           Welcome to <br /> Rivera Veterinary Clinic
         </h1>
       </header>
