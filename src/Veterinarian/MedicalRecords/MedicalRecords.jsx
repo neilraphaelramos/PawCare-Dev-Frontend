@@ -444,7 +444,7 @@ export default function PetRecords() {
       );
 
       if (res.data.success) {
-        const history = await axios.get(`${APIENDPOINT}/visit_history/fetch/${selectedPet.id}`);
+        const history = await axios.get(`${APIENDPOINT}/pet_medical_records/visit_history/fetch/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
       }
