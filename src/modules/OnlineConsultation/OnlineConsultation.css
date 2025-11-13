@@ -375,7 +375,7 @@
   padding: 1rem;
   position: relative;
   width: 80%;
-  max-width: 700px;
+  max-width: 500px;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
   animation: popIn 0.3s ease-out;
 }
