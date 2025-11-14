@@ -369,7 +369,7 @@ body {
 }
 
 .AppointMessage-header {
-  background: #4ae2a8;
+  background: #32b2b2;
   color: white;
   padding: 1rem;
   text-align: center;
@@ -389,7 +389,7 @@ body {
 }
 
 .AppointMessage-close-btn {
-  background: #4ae2a8;
+  background: #32b2b2;
   color: white;
   border: none;
   padding: 0.5rem 1.25rem;
@@ -400,7 +400,7 @@ body {
 }
 
 .AppointMessage-close-btn:hover {
-  background: #39ac80;
+  background: #289999;
 }
 
 .calendar-day {
