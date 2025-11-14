@@ -181,9 +181,7 @@ export default function InventoryTable() {
 
 
   // ---- UI handlers (keep your design/UX) ----
-  const handleEdit = (index) => {
-    const item = inventoryData[index];
-
+  const handleEdit = (item) => {
     const priceInput = typeof item.price === "string"
       ? item.price.replace(/[₱,\s]/g, "")
       : item.price;
@@ -201,26 +199,27 @@ export default function InventoryTable() {
       unit: item.unit,
       price: priceInput,
     });
-    setEditingIndex(index);
+    setEditingIndex(item.id);
     setShowAddModal(true);
   };
 
-  const handleDelete = (index) => {
-    setSelectedInventoryId(index);
+  const handleDelete = (item) => {
+    setSelectedInventoryId(item.id);
     setMessageModal('Are you sure you want to delete this item?');
     setShowConfirmModal(true);
   }
 
+  const confirmDelete = async () => {
+    if (!selectedInventoryId) return;
 
-  const confirmDelete = async (index) => {
-    const item = inventoryData[selectedInventoryId];
-
+    setIsProcessing(true);
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${item.id}`);
-      setInventoryData(prev => prev.filter((_, i) => i !== index));
+      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${selectedInventoryId}`);
+      await fetchInventory();
     } catch (err) {
       console.error("Error deleting inventory:", err);
     } finally {
+      setIsProcessing(false);
       setShowConfirmModal(false);
     }
   };
@@ -332,12 +331,12 @@ export default function InventoryTable() {
           await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingItem.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
-          setSuccessMessage("Item updated successfully!");
+          setMessageModal("Item updated successfully!");
         } else {
           await axios.post(`${process.env.REACT_APP_API_URL}/inventory/add`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
-          setSuccessMessage("Item added successfully!");
+          setMessageModal("Item added successfully!");
         }
 
         await fetchInventory();
@@ -355,16 +354,17 @@ export default function InventoryTable() {
         });
         setEditingIndex(null);
         setShowAddModal(false);
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setShowMessageModal(true);
       } catch (err) {
         console.error("Error saving inventory:", err);
         setMessageModal("There was an error saving the item. Please try again.");
+        setShowMessageModal(true);
       } finally {
         setIsProcessing(false);
       }
     } else {
-      setShowMessageModal(true);
       setMessageModal("Please fill all fields");
+      setShowMessageModal(true);
     }
   };
 
@@ -475,12 +475,6 @@ export default function InventoryTable() {
         />
       </div>
 
-      {successMessage && (
-        <div className="success-popup">
-          {successMessage}
-        </div>
-      )}
-
       <table className="inventory-table">
         <thead>
           <tr>
@@ -541,14 +535,14 @@ export default function InventoryTable() {
                 <td>
                   <button
                     className="admin-inventory-edit-icon-btn"
-                    onClick={() => handleEdit(index)}
+                    onClick={() => handleEdit(item)}
                   >
                     <Edit size={16} />
                   </button>
 
                   <button
                     className="admin-inventory-delete-icon-btn"
-                    onClick={() => handleDelete(index)}
+                    onClick={() => handleDelete(item)}
                   >
                     <Trash2 size={16} />
                   </button>
