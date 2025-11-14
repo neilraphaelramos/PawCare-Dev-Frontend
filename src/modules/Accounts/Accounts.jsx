@@ -28,8 +28,10 @@ const Accounts = () => {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [accountId, setAccountId] = useState('');
   const [messageModal, setMessageModal] = useState("");
-  
+
 
   // 🔹 Fetch all accounts
   const handleAccounts = async () => {
@@ -116,7 +118,6 @@ const Accounts = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setShowConfirmModal(true);
       setMessageModal(res.data.message || "Account added successfully!");
       closeModal();
       handleAccounts();
@@ -129,9 +130,13 @@ const Accounts = () => {
     }
   };
 
-  const handleDeleteAccount = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this account?")) return;
+  const confirmDeleteAccount = (id) => {
+    setMessageModal('Are you sure you want to delete this account?');
+    setAccountId(id);
+    setShowConfirmDeleteModal(true);
+  }
 
+  const handleDeleteAccount = async (id) => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/delete_account`, {
         method: "POST",
@@ -315,7 +320,7 @@ const Accounts = () => {
                     <button className="services-edit-icon-btn" onClick={() => openModal(index)}>
                       <Edit size={16} />
                     </button>
-                    <button className="services-delete-icon-btn" onClick={() => handleDeleteAccount(user.id)}>
+                    <button className="services-delete-icon-btn" onClick={() => confirmDeleteAccount(user.id)}>
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -423,13 +428,45 @@ const Accounts = () => {
         </div>
       )}
 
+      {showConfirmDeleteModal && (
+        <div className="profileupdateconfirm-overlay" onClick={() => setShowConfirmDeleteModal(false)}>
+          <div
+            className="profileupdateconfirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="profileupdateconfirm-title">Confirm Delete</h3>
+            <p className="profileupdateconfirm-message">
+              {messageModal}
+            </p>
+            <div className="profileupdateconfirm-actions">
+              <button
+                className="profileupdateconfirm-btn cancel"
+                onClick={() => setShowConfirmDeleteModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="profileupdateconfirm-btn confirm"
+                onClick={() => {
+                  setShowConfirmDeleteModal(false);
+                  handleDeleteAccount(accountId);
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {showMessageModal && (
         <div className="All-Message-modal-overlay">
           <div className="All-Message-modal">
             <div className="All-Message-modal-header">
               <h2>Alert Message</h2>
             </div>
-
             <div className="All-Message-modal-body">
               <p>{messageModal}</p>
             </div>
