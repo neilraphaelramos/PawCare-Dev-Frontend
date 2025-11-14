@@ -48,6 +48,11 @@
 
 .cursor-btn {
   cursor: pointer;
+  text-decoration: underline;
+}
+
+.cursor-btn:hover {
+  color: #32b2b2;
 }
 
 .export-group .btn {

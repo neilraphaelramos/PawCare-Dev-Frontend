@@ -857,23 +857,24 @@ const UserInventory = () => {
         </div>
       )}
 
-      {showQrModal && (
-        <div className="messOrd-modal-overlay">
-          <div className="messOrd-modal">
-            <div className="messOrd-modal-header align-center-adjust">
-              <h2>Scan to Pay (QR Ph)</h2>
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Order Message</h2>
             </div>
 
-            <div className="messOrd-modal-body-qrph">
-              <img
-                src={qrImageUrl}
-                alt="QR Payment"
-                className='messOrd-qr-image'
-              />
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
             </div>
 
-            <div className="messOrd-modal-footer">
-              <button className='messOrd-close-btn' onClick={handleCancelPayment}>Cancel</button>
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

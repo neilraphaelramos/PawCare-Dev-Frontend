@@ -189,7 +189,7 @@ const ViewOrders = () => {
     const receiptElement = receiptRef.current;
     if (!receiptElement) return;
 
-    const buttons = receiptElement.querySelectorAll(".receipt-actions button");
+    const buttons = receiptElement.querySelectorAll(".admin-receipt-actions button");
     buttons.forEach(btn => (btn.style.display = "none"));
 
     setTimeout(() => {
