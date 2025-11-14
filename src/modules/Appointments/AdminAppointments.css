@@ -174,3 +174,18 @@
 .decline {
   background-color: #e57373;
 }
+
+.time-slot.approved {
+  background-color: #4caf50; /* green */
+  color: white;
+}
+
+.time-slot.pending {
+  background-color: #ff9800; /* orange */
+  color: white;
+}
+
+.time-slot.declined {
+  background-color: #f44336; /* red */
+  color: white;
+}

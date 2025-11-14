@@ -83,7 +83,7 @@ const Appointment = () => {
 
       await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
         UID: uid,
-        title_notify:  `Appointment ${status}`,
+        title_notify: `Appointment ${status}`,
         type_notify: "Appointment",
         details,
       });
@@ -210,10 +210,17 @@ const Appointment = () => {
                 return filtered.map((slot, i) => {
                   const appointment = appointments.find(a => a.set_time === slot);
                   const isSelected = slot === selectedSlot;
+
+                  let statusClass = '';
+                  if (appointment) {
+                    if (appointment.status === 'Approved') statusClass = 'approved';
+                    else if (appointment.status === 'Pending') statusClass = 'pending';
+                    else if (appointment.status === 'Declined') statusClass = 'declined';
+                  }
                   return (
                     <div
                       key={i}
-                      className={`time-slot ${isSelected ? 'selected-slot' : ''} ${appointment ? 'booked' : ''}`}
+                      className={`time-slot ${isSelected ? 'selected-slot' : ''} ${statusClass}`}
                       onClick={() => setSelectedSlot(slot)}
                     >
                       {slot} {appointment ? `(${appointment.owner_name})` : ''}

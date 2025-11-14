@@ -1,6 +1,6 @@
 // src/components/VetSidebar.jsx
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./VetSidebar.css";
 import { UserContext } from "../../hook/authContext";
 import { Loader2 } from "lucide-react";
@@ -30,14 +30,14 @@ const VetSidebar = () => {
           Pawcare
         </div>
         <nav className="vet-dashboard-nav">
-          <Link to="">Dashboard</Link>
-          <Link to="appointments">Appointments</Link>
-          <Link to="medical-records">Medical Records</Link>
-          <Link to="inventory">Inventory</Link>
-          <Link to="reports">Manage Reports</Link>
-          <Link to="online-consultation">Online Consultations</Link>
-          <Link to="notifications">Notifications</Link>
-          <Link to="profile">Profile</Link>
+          <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
+          <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>Appointments</NavLink>
+          <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>Medical Records</NavLink>
+          <NavLink to="inventory" className={({ isActive }) => isActive ? "active" : ""}>Inventory</NavLink>
+          <NavLink to="reports" className={({ isActive }) => isActive ? "active" : ""}>Manage Reports</NavLink>
+          <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>Notifications</NavLink>
+          <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>Online Consultations</NavLink>
+          <NavLink to="profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
         </nav>
         <button className="vet-dashboard-sign-out" onClick={() => setShowLogoutModal(true)}>Sign Out</button>
       </aside>

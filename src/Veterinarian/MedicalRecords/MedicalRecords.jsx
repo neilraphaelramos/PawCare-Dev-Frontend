@@ -136,6 +136,7 @@ export default function PetRecords() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
   const [services, setServices] = useState([]);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   const formRef = useRef(null);
 
@@ -258,9 +259,8 @@ export default function PetRecords() {
       if (res.data.success) {
         const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
-
+        resetAddForm();
         setShowAddPetModal(false);
-        form.reset();
       }
     } catch (err) {
       console.error("Error adding pet:", err);
@@ -303,18 +303,7 @@ export default function PetRecords() {
     }
   };
 
-  const handleDelete = (index) => {
-    setPetID(index);
-    setMessageModal("Are you sure to delete pet records including the visit history?");
-    setShowConfirmModal(true);
-  }
-
-  const confirmDelete = (id) => {
-
-  }
-
-  useEffect(() => {
-    const fetchPets = async () => {
+  const fetchPets = async () => {
       try {
         setIsLoading(true);
         const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
@@ -327,6 +316,30 @@ export default function PetRecords() {
       }
     };
 
+  const handleDelete = (index) => {
+    setPetID(index);
+    setMessageModal("Are you sure to delete pet records including the visit history?");
+    setShowConfirmModal(true);
+  }
+
+  const confirmDelete = async (id) => {
+    try {
+      const res = await axios.delete(`${APIENDPOINT}/pet_medical_records/delete/${id}`);
+      setMessageModal(res.data.message);
+    } catch (error) {
+      console.error("Error deleting record:", err);
+    } finally {
+      setShowConfirmModal(false);
+      setShowMessageModal(true);
+    }
+  }
+
+  const handleCloseModalMessage = () => {
+    setShowMessageModal(false);
+    fetchPets();
+  }
+
+  useEffect(() => {
     fetchPets();
   }, []);
 
@@ -503,7 +516,7 @@ export default function PetRecords() {
               <div>{pet.name}</div>
               <div>{pet.petType}</div>
               <div>{pet.species}</div>
-              <div>{pet.age} yrs</div>
+              <div>{pet.age}</div>
               <div>{pet.gender}</div>
               <div>{pet.condition}</div>
               <div>{pet.lastVisit}</div>
@@ -795,7 +808,7 @@ export default function PetRecords() {
                   />
                   <input
                     name="age"
-                    type="number"
+                    type="text"
                     placeholder="Age"
                     value={autoFill.age}
                     readOnly
@@ -911,7 +924,7 @@ export default function PetRecords() {
                   />
                   <input
                     name="age"
-                    type="number"
+                    type="text"
                     placeholder="Age"
                     value={editData?.age || ""}
                     readOnly
@@ -1122,6 +1135,29 @@ export default function PetRecords() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
+
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={handleCloseModalMessage}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

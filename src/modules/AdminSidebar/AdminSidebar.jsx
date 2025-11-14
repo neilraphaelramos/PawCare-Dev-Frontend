@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./AdminSidebar.css";
 import { UserContext } from "../../hook/authContext";
 import { Loader2 } from "lucide-react";
@@ -27,18 +27,51 @@ const AdminSidebar = () => {
       <aside className="admin-dashboard-sidebar">
         <div className="admin-dashboard-logo">Pawcare</div>
         <nav className="admin-dashboard-nav">
-          <Link to="">Dashboard</Link>
-          <Link to="medical-records">Pet Medical Records</Link>
-          <Link to="appointments">Appointment</Link>
-          <Link to="online-consultation">Online Consultation</Link>
-          <Link to="notifications">Notifications</Link>
-          <Link to="reports">Manage Reports</Link>
-          <Link to="view-orders">Manage Orders</Link>
-          <Link to="inventory">Manage Inventory</Link>
-          <Link to="services">Manage Services</Link>
-          <Link to="features">Manage Features</Link>
-          <Link to="announcements">Announcements</Link>
-          <Link to="accounts">Manage Accounts</Link>
+          <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
+
+          <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>
+            Pet Medical Records
+          </NavLink>
+
+          <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>
+            Appointment
+          </NavLink>
+
+          <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>
+            Online Consultation
+          </NavLink>
+
+          <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>
+            Notifications
+          </NavLink>
+
+          <NavLink to="reports" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Reports
+          </NavLink>
+
+          <NavLink to="view-orders" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Orders
+          </NavLink>
+
+          <NavLink to="inventory" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Inventory
+          </NavLink>
+
+          <NavLink to="services" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Services
+          </NavLink>
+
+          <NavLink to="features" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Features
+          </NavLink>
+
+          <NavLink to="announcements" className={({ isActive }) => isActive ? "active" : ""}>
+            Announcements
+          </NavLink>
+
+          <NavLink to="accounts" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Accounts
+          </NavLink>
         </nav>
         <button className="admin-dashboard-sign-out" onClick={() => setShowLogoutModal(true)}>Sign Out</button>
       </aside>

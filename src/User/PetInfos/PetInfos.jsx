@@ -16,6 +16,8 @@ export default function PetInfos() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [ageValue, setAgeValue] = React.useState("");
+    const [ageUnit, setAgeUnit] = React.useState("months");
 
     const fetchPets = async () => {
         try {
@@ -69,7 +71,6 @@ export default function PetInfos() {
         const petName = form.name.value;
         const petType = form.type.value;
         const species = form.species.value;
-        const petAge = form.age.value;
         const petGender = form.gender.value;
         const ownerUsername = user.username;
         const ownerName = [
@@ -79,11 +80,13 @@ export default function PetInfos() {
             user.suffix,
         ].filter(Boolean).join(' ');
 
+        const combinedAge = `${ageValue} ${ageUnit}`;
+
         formData.append("photo", photoFile);
         formData.append("petName", petName);
         formData.append("petType", petType);
         formData.append("species", species);
-        formData.append("petAge", petAge);
+        formData.append("petAge", combinedAge);
         formData.append("petGender", petGender);
         formData.append("ownerUsername", ownerUsername);
         formData.append("ownerName", ownerName);
@@ -126,11 +129,13 @@ export default function PetInfos() {
         const form = e.target;
         const formData = new FormData();
 
+        const combinedAge = `${ageValue} ${ageUnit}`;
+
         if (form.photo.files[0]) formData.append("photo", form.photo.files[0]);
         formData.append("petName", form.name.value);
         formData.append("petType", form.type.value);
         formData.append("species", form.species.value);
-        formData.append("petAge", form.age.value);
+        formData.append("petAge", combinedAge);
         formData.append("petGender", form.gender.value);
 
         try {
@@ -210,7 +215,12 @@ export default function PetInfos() {
                                     <td>
                                         <button
                                             className="petinfo-edit-btn"
-                                            onClick={() => setEditPet(pet)}
+                                            onClick={() => {
+                                                setEditPet(pet)
+                                                const [value, unit] = pet.petAge.split(" ");
+                                                setAgeValue(value);
+                                                setAgeUnit(unit);
+                                            }}
                                         >
                                             <FaEdit size={14} /> Edit
                                         </button>
@@ -282,7 +292,25 @@ export default function PetInfos() {
 
                             <div className="petinfo-form-group">
                                 <label>Age</label>
-                                <input type="number" name="age" required />
+                                <div className="petinfo-age-row">
+                                    <input
+                                        type="number"
+                                        name="age"
+                                        required
+                                        value={ageValue}
+                                        onChange={(e) => setAgeValue(e.target.value)}
+                                    />
+
+                                    <select
+                                        className="petinfo-age-unit"
+                                        name="ageUnit"
+                                        value={ageUnit}
+                                        onChange={(e) => setAgeUnit(e.target.value)}
+                                    >
+                                        <option value="months">Months</option>
+                                        <option value="years">Years</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="petinfo-form-group">
@@ -377,12 +405,25 @@ export default function PetInfos() {
 
                             <div className="petinfo-form-group">
                                 <label>Age</label>
-                                <input
-                                    type="number"
-                                    name="age"
-                                    defaultValue={editPet.petAge}
-                                    required
-                                />
+                                <div className="petinfo-age-row">
+                                    <input
+                                        type="number"
+                                        name="ageValue"
+                                        required
+                                        value={ageValue}
+                                        onChange={(e) => setAgeValue(e.target.value)}
+                                    />
+
+                                    <select
+                                        className="petinfo-age-unit"
+                                        name="ageUnit"
+                                        value={ageUnit}
+                                        onChange={(e) => setAgeUnit(e.target.value)}
+                                    >
+                                        <option value="months">Months</option>
+                                        <option value="years">Years</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="petinfo-form-group">

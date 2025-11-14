@@ -204,6 +204,30 @@
     transition: 0.2s;
 }
 
+.petinfo-age-row {
+    display: flex;
+    gap: 10px;
+}
+
+.petinfo-age-row input {
+    flex: 2;
+}
+
+.petinfo-age-unit {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.2s;
+    height: 41.81px;
+}
+
+.petinfo-age-unit:focus {
+    border-color: #16a085;
+    box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.15);
+}
+
 .petinfo-form-group input:focus,
 .petinfo-form-group select:focus {
     border-color: #16a085;

@@ -517,7 +517,7 @@ export default function PetRecords() {
               <div>{pet.name}</div>
               <div>{pet.petType}</div>
               <div>{pet.species}</div>
-              <div>{pet.age} yrs</div>
+              <div>{pet.age}</div>
               <div>{pet.gender}</div>
               <div>{pet.condition}</div>
               <div>{pet.lastVisit}</div>
@@ -812,7 +812,7 @@ export default function PetRecords() {
                   />
                   <input
                     name="age"
-                    type="number"
+                    type="text"
                     placeholder="Age"
                     value={autoFill.age}
                     readOnly
@@ -928,7 +928,7 @@ export default function PetRecords() {
                   />
                   <input
                     name="age"
-                    type="number"
+                    type="text"
                     placeholder="Age"
                     value={editData?.age || ""}
                     readOnly

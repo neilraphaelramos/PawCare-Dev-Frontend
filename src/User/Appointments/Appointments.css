@@ -282,11 +282,11 @@ body {
   color: #d98c00;
 }
 
-.appoint-status.confirmed {
+.appoint-status.approved {
   color: #008a1e;
 }
 
-.appoint-status.cancelled {
+.appoint-status.declined {
   color: #c40000;
 }
 
