@@ -655,7 +655,7 @@ export default function InventoryTable() {
                 </div>
 
                 <div className="admin-inventory-form-group">
-                  <label htmlFor="amount">Amount Unit</label>
+                  <label htmlFor="amount">Amount</label>
                   <input type="number" id="amount" name="amount" value={newItem.amount} onChange={handleInputChange} className="admin-inventory-input-field" />
                 </div>
 

@@ -318,7 +318,7 @@ function VetReports() {
             doc.text(`${user.firstName} ${user.lastName}`, pageWidth / 2, yOffset, { align: "center" });
             doc.setFont("helvetica", "normal");
             yOffset += 15;
-            doc.text("Administrator", pageWidth / 2, yOffset, { align: "center" });
+            doc.text("Veterinarian", pageWidth / 2, yOffset, { align: "center" });
 
             doc.save(`PawCareVet_Reports_${startDate}_to_${endDate}.pdf`);
         };
