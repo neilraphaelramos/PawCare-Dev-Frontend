@@ -30,7 +30,7 @@ const AdminSidebar = () => {
           <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
 
           <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>
-            Appointment
+            Appointments
           </NavLink>
 
           <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>
