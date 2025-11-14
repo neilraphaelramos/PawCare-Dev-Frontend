@@ -16,13 +16,13 @@
     font-size: 1.8rem;
 }
 
-.admin-report-filters select,
 .admin-report-filters input {
     margin-left: 0.5rem;
     padding: 0.4rem 0.6rem;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 0.9rem;
+    margin-right: 10px;
 }
 
 .admin-report-grid {

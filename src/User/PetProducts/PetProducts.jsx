@@ -35,6 +35,8 @@ const UserInventory = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+
   const receiptRef = useRef(null);
 
   const userId = user?.id;
@@ -111,7 +113,6 @@ const UserInventory = () => {
       return;
     }
 
-    // 🧾 Function to create a notification safely
     const sendNotification = async (title, details) => {
       try {
         await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
@@ -120,13 +121,12 @@ const UserInventory = () => {
           type_notify: 'order',
           details,
         });
-        console.log("✅ Notification sent successfully.");
       } catch (notifyErr) {
-        console.error("❌ Notification error:", notifyErr.response?.data || notifyErr);
+        console.error("Notification error:", notifyErr.response?.data || notifyErr);
       }
     };
 
-    // 💵 Cash on Delivery (skip PayMongo)
+    // Cash on Delivery
     if (paymentMethod === "cod") {
       try {
         const orderRes = await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_cod_order`, {
@@ -151,24 +151,22 @@ const UserInventory = () => {
         setMessageModal("✅ Order placed successfully with Cash on Delivery!");
         setCart([]);
       } catch (err) {
-        console.error("❌ Error placing COD order:", err);
+        console.error("Error placing COD order:", err);
         setShowMessageModal(true);
         setMessageModal("Server error while placing order. Please try again.");
       }
       return;
     }
 
-    // 💳 QRPH / PayMongo Flow
+    // QRPH Payment (Automatic)
     try {
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_API_URL}/orders/create_payment_intent`,
-        {
-          amount: totalAmount,
-          name: fullName,
-          email: user.email,
-          phone: user.phone,
-        }
-      );
+      setPaymentStatus('pending')
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/orders/create_payment_intent`, {
+        amount: totalAmount,
+        name: fullName,
+        email: user.email,
+        phone: user.phone,
+      });
 
       if (!data.success) {
         setShowMessageModal(true);
@@ -180,61 +178,64 @@ const UserInventory = () => {
       setPaymentIntentId(data.payment_intent_id);
       setShowQrModal(true);
       setShowModal(false);
+      console.log(paymentStatus);
 
+      // AUTOMATIC PAYMENT CONFIRMATION LOOP
       let orderSubmitted = false;
-
-      const checkPayment = async () => {
+      const autoConfirmPayment = async () => {
         try {
-          const statusRes = await axios.get(
-            `${process.env.REACT_APP_API_URL}/orders/check_payment_status/${data.payment_intent_id}`
-          );
+          const statusRes = await axios.get(`${process.env.REACT_APP_API_URL}/orders/check_payment_status/${data.payment_intent_id}`);
           const status = statusRes.data.status;
-          console.log(`🔍 Payment Status: ${status}`);
 
           if (status === "succeeded" && !orderSubmitted) {
             orderSubmitted = true;
+            setPaymentStatus("succeeded");
 
-            const orderSaveRes = await axios.post(`${process.env.REACT_APP_API_URL}/orders`, {
+            const orderSaveRes = await axios.post(`${process.env.REACT_APP_API_URL}/orders/confirm_order`, {
+              payment_intent_id: data.payment_intent_id,
+              amount: totalAmount,
+              name: fullName,
+              address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
+              date: new Date().toISOString().slice(0, 10),
+              items: cart.map(item => ({
+                product_ID: item.id,
+                name: item.name,
+                qty: item.qty,
+              })),
               uid: user.id,
-              customer_name: fullName,
-              customer_address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
-              total: totalAmount,
-              methodPayments: "qrph",
-              landmark: deliveryInfo.landmark,
-              cart,
             });
 
-            await saveReceipt(orderSaveRes.data.orderId);
+            if (orderSaveRes.data.success) {
+              await saveReceipt(orderSaveRes.data.orderId);
+              await sendNotification(
+                "Order Placed Successfully (QRPH)",
+                `Your order totaling ₱${totalAmount} has been paid successfully via QRPH.`
+              );
 
-            await sendNotification(
-              "Order Placed Successfully (QRPH)",
-              `Your order totaling ₱${totalAmount} has been paid successfully via QRPH.`
-            );
-
+              setShowQrModal(false);
+              setCart([]);
+              setShowMessageModal(true);
+              setMessageModal("✅ Payment successful! Your order has been placed automatically.");
+            } else {
+              console.warn("Backend did not confirm payment:", orderSaveRes.data.message);
+            }
+          } else if (status === "awaiting_payment_method" || status === "awaiting_next_action") {
+            setTimeout(autoConfirmPayment, 5000);
+          } else if (status === "cancelled") {
             setShowQrModal(false);
             setShowMessageModal(true);
-            setMessageModal("✅ Payment successful! Your order has been placed.");
-            setCart([]);
-          }
-          else if (
-            status === "awaiting_payment_method" ||
-            status === "awaiting_next_action"
-          ) {
-            setTimeout(checkPayment, 5000);
-          }
-          else if (status === "cancelled") {
-            setShowQrModal(false);
-          }
-          else {
-            setTimeout(checkPayment, 5000);
+            setMessageModal("❌ Payment was cancelled.");
+            setPaymentStatus("failed");
+          } else {
+            setTimeout(autoConfirmPayment, 5000);
           }
         } catch (err) {
           console.error("Error checking payment status:", err);
-          setTimeout(checkPayment, 7000);
+          setTimeout(autoConfirmPayment, 7000);
         }
       };
 
-      checkPayment();
+      autoConfirmPayment();
     } catch (err) {
       console.error("Error creating payment intent:", err);
       setShowMessageModal(true);
@@ -294,55 +295,6 @@ const UserInventory = () => {
       setPaymentIntentId("");
       setShowMessageModal(true);
       setIsConfirming(false);
-    }
-  };
-
-  const handleConfirmPayment = async () => {
-    try {
-      // 1️⃣ Check PayMongo payment status
-      const statusRes = await axios.get(
-        `${process.env.REACT_APP_API_URL}/orders/check_payment_status/${paymentIntentId}`
-      );
-
-      if (statusRes.data.status === "succeeded") {
-        console.log("✅ Payment succeeded! Confirming order in backend...");
-
-        // 2️⃣ Confirm order (this route verifies with PayMongo and saves to DB)
-        const res = await axios.post(`${process.env.REACT_APP_API_URL}/orders/confirm_order`, {
-          payment_intent_id: paymentIntentId,
-          amount: totalAmount,
-          name: fullName,
-          address: `${deliveryInfo.houseStreet}, ${deliveryInfo.barangay}, ${deliveryInfo.municipality}, ${deliveryInfo.province}`,
-          date: new Date().toISOString().slice(0, 10),
-          items: cart.map(item => ({
-            product_ID: item.id,
-            name: item.name,
-            qty: item.qty,
-          })),
-          uid: user.id,
-        });
-
-        if (res.data.success) {
-          console.log("✅ Order confirmed and saved!");
-          setShowQrModal(false);
-          setCart([]);
-          setMessageModal("✅ Payment verified and order confirmed!");
-        } else {
-          console.warn("⚠️ Backend did not confirm payment:", res.data.message);
-          setMessageModal(res.data.message || "Payment not yet confirmed. Please wait or try again.");
-        }
-      } else if (statusRes.data.status === "cancelled") {
-        setMessageModal("❌ Payment was cancelled.");
-      } else {
-        console.log("⏳ Payment still pending:", statusRes.data.status);
-        setMessageModal("Payment not yet confirmed. Please wait or try again.");
-      }
-
-      setShowMessageModal(true);
-    } catch (err) {
-      console.error("❌ Error confirming payment:", err);
-      setMessageModal("Server error confirming payment. Please try again later.");
-      setShowMessageModal(true);
     }
   };
 
@@ -881,21 +833,24 @@ const UserInventory = () => {
         </div>
       )}
 
-      {showMessageModal && (
+      {showQrModal && (
         <div className="messOrd-modal-overlay">
           <div className="messOrd-modal">
-            <div className="messOrd-modal-header">
-              <h2>Alert Message</h2>
+            <div className="messOrd-modal-header align-center-adjust">
+              <h2>Scan to Pay (QR Ph)</h2>
             </div>
-            <div className="messOrd-modal-body">
-              <p>{messageModal || "Your order message goes here."}</p>
+
+            <div className="messOrd-modal-body-qrph">
+              <img src={qrImageUrl} alt="QR Payment" className='messOrd-qr-image' />
             </div>
+
             <div className="messOrd-modal-footer">
               <button
-                className="messOrd-close-btn"
-                onClick={handleMessageModal}
+                className='messOrd-close-btn'
+                onClick={() => setShowQrModal(false)}
+                disabled={paymentStatus === "pending"} // prevent closing while processing
               >
-                Close
+                Cancel
               </button>
             </div>
           </div>
@@ -919,13 +874,6 @@ const UserInventory = () => {
 
             <div className="messOrd-modal-footer">
               <button className='messOrd-close-btn' onClick={handleCancelPayment}>Cancel</button>
-              <button
-                className='messOrd-confirm-btn'
-                onClick={handleConfirmPayment}
-                disabled={isConfirming}
-              >
-                {isConfirming ? 'Checking...' : 'I’ve Paid'}
-              </button>
             </div>
           </div>
         </div>

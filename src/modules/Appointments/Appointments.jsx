@@ -166,7 +166,7 @@ const Appointment = () => {
               selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
 
             const isWednesday = date.getDay() === 3;
-            const isFullyBooked = fullyBookedDates.includes(dateStr);
+            const isFullyBooked = !isPast && fullyBookedDates.includes(dateStr);
 
             // Admin can still click full-booked dates
             const isDisabled = isPast || isWednesday;
@@ -268,6 +268,24 @@ const Appointment = () => {
               ) : (
                 <p>No reservation for this time slot.</p>
               )}
+            </div>
+
+            <div className="admin-appointment-indicator">
+              <h5>Status Reference</h5>
+              <div className="admin-indicator-list">
+                <div className="admin-indicator-item">
+                  <span className="admin-dot approved"></span> Approved
+                </div>
+                <div className="admin-indicator-item">
+                  <span className="admin-dot pending"></span> Pending
+                </div>
+                <div className="admin-indicator-item">
+                  <span className="admin-dot declined"></span> Declined
+                </div>
+                <div className="admin-indicator-item">
+                  <span className="admin-dot available"></span> Available Slot
+                </div>
+              </div>
             </div>
           </>
         )}

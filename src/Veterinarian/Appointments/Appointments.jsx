@@ -164,7 +164,7 @@ const Appointment = () => {
               selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
 
             const isWednesday = date.getDay() === 3;
-            const isFullyBooked = fullyBookedDates.includes(dateStr);
+            const isFullyBooked = !isPast && fullyBookedDates.includes(dateStr);
 
             const isDisabled = isPast || isWednesday;
 
@@ -265,6 +265,24 @@ const Appointment = () => {
               ) : (
                 <p>No reservation for this time slot.</p>
               )}
+            </div>
+
+            <div className="vet-appointment-indicator">
+              <h5>Status Reference</h5>
+              <div className="vet-indicator-list">
+                <div className="vet-indicator-item">
+                  <span className="vet-dot approved"></span> Approved
+                </div>
+                <div className="vet-indicator-item">
+                  <span className="vet-dot pending"></span> Pending
+                </div>
+                <div className="vet-indicator-item">
+                  <span className="vet-dot declined"></span> Declined
+                </div>
+                <div className="vet-indicator-item">
+                  <span className="vet-dot available"></span> Available Slot
+                </div>
+              </div>
             </div>
           </>
         )}

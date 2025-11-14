@@ -304,7 +304,7 @@ const Accounts = () => {
                   </td>
                   <td>
                     {user.role === "Admin"
-                      ? "PawCare Admin"
+                      ? `${user.firstName || ""} ${user.middleName || ""} ${user.lastName || ""} ${user.suffix || ""}`.trim() || "N/A"
                       : `${user.firstName || ""} ${user.middleName || ""} ${user.lastName || ""} ${user.suffix || ""}`.trim() || "N/A"}
                   </td>
                   <td>{user.username}</td>

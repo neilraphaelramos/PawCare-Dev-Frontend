@@ -135,7 +135,6 @@ export default function InventoryTable() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-
   const getPhotoUrl = (photo) => {
     if (!photo) return "";
     if (photo.startsWith("http") || photo.startsWith("data:")) return photo;
@@ -213,7 +212,7 @@ export default function InventoryTable() {
   }
 
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (index) => {
     const item = inventoryData[selectedInventoryId];
 
     try {
@@ -747,7 +746,7 @@ export default function InventoryTable() {
             <div className="All-deleteconfirm-actions">
               <button
                 className="All-deleteconfirm-btn confirm"
-                onClick={() => confirmDelete(selectedFeatureId)}
+                onClick={() => confirmDelete(selectedInventoryId)}
                 disabled={isProcessing}
               >
                 {isProcessing ? (

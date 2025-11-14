@@ -42,8 +42,7 @@
   transition: background-color 0.3s ease;
 }
 
-.filter-buttons button.active-filter,
-.filter-buttons button:hover {
+.filter-buttons button.active-filter {
   background-color: #289e9e;
 }
 
@@ -467,8 +466,8 @@
 }
 
 .approve-btn-vet {
-  background-color: #32b258;
-  color: white;
+  background-color: #bbf7d0;
+  color: #166534;
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -489,7 +488,7 @@
 }
 
 .approve-btn-vet:hover {
-  background-color: #258f58;
+  background-color: #82aa90;
 }
 
 .decline-btn-vet:hover {

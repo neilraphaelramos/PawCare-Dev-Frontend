@@ -189,3 +189,54 @@
   background-color: #f44336; /* red */
   color: white;
 }
+
+.admin-appointment-indicator {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+}
+
+.admin-appointment-indicator h5 {
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-indicator-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-indicator-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.admin-indicator-item .admin-dot {
+  width: 14px;
+  height: 14px;
+  margin-right: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Match your slot colors */
+.admin-dot.approved {
+  background: #32b2b2;
+}
+
+.admin-dot.pending {
+  background: #ff9800;
+}
+
+.admin-dot.declined {
+  background: #f44336;
+}
+
+.admin-dot.available {
+  background: #bdbdbd;
+}

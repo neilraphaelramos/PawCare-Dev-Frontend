@@ -209,7 +209,7 @@ const Appointment = () => {
 
             const isPast = date < new Date().setHours(0, 0, 0, 0);
             const isWednesday = date.getDay() === 3;
-            const isFullyBooked = fullyBookedDates.includes(dateStr);
+            const isFullyBooked = !isPast && fullyBookedDates.includes(dateStr);
 
             const isDisabled = isPast || isWednesday || isFullyBooked;
 

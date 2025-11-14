@@ -35,8 +35,8 @@ const VetSidebar = () => {
           <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>Medical Records</NavLink>
           <NavLink to="inventory" className={({ isActive }) => isActive ? "active" : ""}>Inventory</NavLink>
           <NavLink to="reports" className={({ isActive }) => isActive ? "active" : ""}>Manage Reports</NavLink>
-          <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>Notifications</NavLink>
           <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>Online Consultations</NavLink>
+          <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>Notifications</NavLink>
           <NavLink to="profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
         </nav>
         <button className="vet-dashboard-sign-out" onClick={() => setShowLogoutModal(true)}>Sign Out</button>

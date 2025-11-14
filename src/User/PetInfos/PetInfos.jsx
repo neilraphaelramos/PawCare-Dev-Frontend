@@ -18,6 +18,7 @@ export default function PetInfos() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [ageValue, setAgeValue] = React.useState("");
     const [ageUnit, setAgeUnit] = React.useState("months");
+    const [isNotify, setIsNotify] = useState(false);
 
     const fetchPets = async () => {
         try {
@@ -111,13 +112,27 @@ export default function PetInfos() {
             };
 
             if (res.data.success) {
+                setIsNotify(true);
                 setMessage("✅ Pet added successfully!");
+                setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
                 setAddPetInfo(false);
                 fetchPets();
-            } else setMessage("Failed to add pet.");
+            } else {
+                setMessage("Failed to add pet.");
+                setIsNotify(true);
+                setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
+            };
         } catch (err) {
             console.error(err);
             setMessage("Error adding pet.");
+            setIsNotify(true);
+            setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
         } finally {
             setIsProcessing(false);
         }
@@ -148,12 +163,26 @@ export default function PetInfos() {
 
             if (res.data.success) {
                 setMessage("✅ Pet updated successfully!");
+                setIsNotify(true);
+                setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
                 setEditPet(null);
                 fetchPets();
-            } else setMessage("Failed to update pet.");
+            } else {
+                setMessage("Failed to update pet.");
+                setIsNotify(true);
+                setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
+            };
         } catch (err) {
             console.error(err);
             setMessage("Error updating pet.");
+            setIsNotify(true);
+            setTimeout(() => {
+                    setIsNotify(false);
+                }, 3000);
         } finally {
             setIsProcessing(false);
         }
@@ -458,7 +487,7 @@ export default function PetInfos() {
                 </div>
             )}
 
-            {message && <div className="petinfo-toast">{message}</div>}
+            {isNotify && <div className="petinfo-toast">{message}</div>}
         </div>
     );
 }

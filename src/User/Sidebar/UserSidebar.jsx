@@ -33,8 +33,8 @@ const UserSidebar = () => {
           <NavLink to="pet-records" className={({ isActive }) => isActive ? "active" : ""}>Pet Records</NavLink>
           <NavLink to="pet-infos" className={({ isActive }) => isActive ? "active" : ""}>My Pets</NavLink>
           <NavLink to="pet-products" className={({ isActive }) => isActive ? "active" : ""}>Pet Products</NavLink>
-          <NavLink to="notification" className={({ isActive }) => isActive ? "active" : ""}>Notification</NavLink>
           <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>Online Consultation</NavLink>
+          <NavLink to="notification" className={({ isActive }) => isActive ? "active" : ""}>Notification</NavLink>
           <NavLink to="profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
         </nav>
         <button className="user-dashboard-sign-out" onClick={() => setShowLogoutModal(true)}>Sign Out</button>

@@ -11,7 +11,7 @@ const frequentQuestions = [
 
 const AiChatBox = ({ onClose }) => {
   const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! I’m your AI Assistant, Dr. Paw. Ask me anything!" }
+    { sender: "ai", text: "Hello! I’m Dr. Paws, your AI pet guide. I’m here to answer your questions about your pet." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +57,7 @@ const AiChatBox = ({ onClose }) => {
   return (
     <div className="ai-chatbox-container">
       <div className="ai-chatbox-header">
-        <span>🐾 AI Assistant</span>
+        <span>🐾 PetCare AI Chatbot</span>
         <button onClick={onClose}>✕</button>
       </div>
 

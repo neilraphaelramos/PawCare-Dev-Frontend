@@ -438,8 +438,8 @@
 }
 
 .approve-btn-admin {
-  background-color: #32b258;
-  color: white;
+  background-color: #bbf7d0;
+  color: #166534;
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -460,7 +460,7 @@
 }
 
 .approve-btn-admin:hover {
-  background-color: #258f58;
+  background-color: #82aa90;
 }
 
 .decline-btn-admin:hover {

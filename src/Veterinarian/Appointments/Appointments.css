@@ -132,7 +132,7 @@
 }
 
 .time-slot.approved {
-  background-color: #4caf50; /* green */
+  background-color: #32b2b2; /* green */
   color: white;
 }
 
@@ -152,4 +152,55 @@
 
 .decline {
   background-color: #e57373;
+}
+
+.vet-appointment-indicator {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+}
+
+.vet-appointment-indicator h5 {
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.vet-indicator-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vet-indicator-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.vet-indicator-item .vet-dot {
+  width: 14px;
+  height: 14px;
+  margin-right: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Match your slot colors */
+.vet-dot.approved {
+  background: #32b2b2;
+}
+
+.vet-dot.pending {
+  background: #ff9800;
+}
+
+.vet-dot.declined {
+  background: #f44336;
+}
+
+.vet-dot.available {
+  background: #bdbdbd;
 }

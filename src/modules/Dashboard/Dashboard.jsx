@@ -459,7 +459,7 @@ export default function Dashboard() {
                 <div className="charts-tab-content">
                   {activeTab === "appointments" && (
                     <div className="admin-dashboard-card-graph-box">
-                      <h3>Appointments Summary (6 Months)</h3>
+                      <h3>Appointments Summary</h3>
                       <Bar data={appointmentSummaryData} />
                     </div>
                   )}

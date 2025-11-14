@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import "./AdminReports.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { UserContext } from "../../hook/authContext";
 
 function AdminReports() {
     const [reports, setReports] = useState({
@@ -16,16 +19,31 @@ function AdminReports() {
         servicesUsage: [],
     });
 
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [startDate, setStartDate] = useState(
+        new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            1
+        ).toLocaleDateString('en-CA')
+    );
+
+    const [endDate, setEndDate] = useState(
+        new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() + 1,
+            0
+        ).toLocaleDateString('en-CA')
+    );
+
+    new Date().toLocaleDateString('en-CA');
+
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
         const fetchReports = async () => {
-            console.log(month);
-            console.log(year);
             try {
                 const { data } = await axios.get(
-                    `${process.env.REACT_APP_API_URL}/reports/monthly?month=${month}&year=${year}`
+                    `${process.env.REACT_APP_API_URL}/reports/range?start_date=${startDate}&end_date=${endDate}`
                 );
 
                 setReports({
@@ -58,7 +76,7 @@ function AdminReports() {
             }
         };
         fetchReports();
-    }, [month, year]);
+    }, [startDate, endDate]);
 
     const exportToExcel = () => {
         const workbook = XLSX.utils.book_new();
@@ -84,7 +102,6 @@ function AdminReports() {
             if (sheetData.length) {
                 sheetData.push({ "": `Printed by: ${printedBy}` });
             } else {
-                // if sheet is empty, just show printed by row
                 sheetData = [{ "": `Printed by: ${printedBy}` }];
             }
 
@@ -114,10 +131,8 @@ function AdminReports() {
             );
         });
 
-        const fileName = `PawCareVet_Reports_${year}-${String(month).padStart(
-            2,
-            "0"
-        )}.xlsx`;
+        // Format file name based on start and end dates
+        const fileName = `PawCareVet_Reports_${startDate}_to_${endDate}.xlsx`;
 
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
         const blob = new Blob([excelBuffer], {
@@ -126,30 +141,217 @@ function AdminReports() {
         saveAs(blob, fileName);
     };
 
+    const exportToPDF = () => {
+        const doc = new jsPDF("p", "pt");
+        const printedBy = `${user.firstName} ${user.lastName}`;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let yOffset = 40;
+
+        // Logo on left
+        const img = new Image();
+        img.src = "/images/LandingPage/rivera-logo.png";
+        img.onload = () => {
+            const imgWidth = 60;
+            const imgHeight = 60;
+            doc.addImage(img, "PNG", 40, yOffset, imgWidth, imgHeight);
+
+            // Clinic info centered
+            const clinicText = [
+                "PetCare Animal Clinic",
+                "123 Veterinary Street, Bocaue, Bulacan",
+                "Contact: (044) 123-4567 | Email: petcare@clinic.com",
+                `Date: ${new Date().toLocaleDateString()}`
+            ];
+            doc.setFontSize(12);
+            clinicText.forEach((line, index) => {
+                doc.text(line, pageWidth / 2 + imgWidth / 2, yOffset + index * 14, { align: "center" });
+            });
+
+            yOffset += imgHeight + 20;
+
+            // Report title
+            doc.setFontSize(18);
+            doc.text("Summary Reports", pageWidth / 2, yOffset, { align: "center" });
+            yOffset += 25;
+
+            // Printed by and date range
+            doc.setFontSize(12);
+            doc.text(`Printed by: ${printedBy}`, pageWidth / 2, yOffset, { align: "center" });
+            yOffset += 15;
+            doc.text(`Date Range: ${startDate} to ${endDate}`, pageWidth / 2, yOffset, { align: "center" });
+            yOffset += 25;
+
+            const addTable = (title, columns, rows) => {
+                if (!rows || rows.length === 0) return;
+
+                doc.setFontSize(14);
+                doc.text(title, 40, yOffset);
+                yOffset += 5;
+
+                autoTable(doc, {
+                    startY: yOffset,
+                    head: [columns],
+                    body: rows,
+                    theme: "grid",
+                    headStyles: { fillColor: [50, 178, 178], textColor: 255, halign: "center" },
+                    styles: { fontSize: 10 },
+                    margin: { left: 40, right: 40 },
+                    didDrawPage: (data) => {
+                        yOffset = data.cursor.y + 40;
+                    },
+                });
+            };
+
+            // 1️⃣ Order Reports
+            addTable(
+                "Order Reports",
+                ["Order ID", "Client", "Status", "Payment Status", "Items", "Total", "Date"],
+                reports.orders.details?.map((o) => [
+                    o.id_order,
+                    o.customer_name,
+                    o.order_status,
+                    o.paymentStatus,
+                    o.items_purchased,
+                    Number(o.total),
+                    new Date(o.order_date).toLocaleDateString(),
+                ])
+            );
+
+            // 2️⃣ Product Reports
+            addTable(
+                "Product Reports",
+                ["Item ID", "Name", "Total Sold"],
+                reports.product_solds?.map((p) => [
+                    p.product_id,
+                    p.product_name,
+                    Number(p.total_sold)
+                ])
+            );
+
+            // 3️⃣ Total Orders Summary
+            addTable(
+                "Total Orders Summary",
+                ["Total Orders", "Total Revenue"],
+                reports.orders.summary ? [[
+                    Number(reports.orders.summary.total_orders),
+                    Number(reports.orders.summary.total_revenue || 0)
+                ]] : []
+            );
+
+            // 4️⃣ Registered Pets
+            addTable(
+                "Registered Pet Reports",
+                ["Pet Name", "Owner", "Species", "Date Added"],
+                reports.pets.details?.map((p) => [
+                    p.pet_name,
+                    p.owner_name,
+                    p.species,
+                    new Date(p.created_At).toLocaleDateString()
+                ])
+            );
+
+            // 5️⃣ Pet Types & Species
+            addTable(
+                "Pet Types & Species",
+                ["#", "Species", "Pet Type", "Total Species"],
+                reports.totalSpecies.details?.map((p, i) => [
+                    i + 1,
+                    p.species,
+                    p.petType,
+                    Number(p.total_species)
+                ])
+            );
+
+            // 6️⃣ Clinic Visits
+            addTable(
+                "Clinic Visit Reports",
+                ["Visit ID", "Owner", "Pet", "Veterinarian", "Visit Date"],
+                reports.visits?.map((v) => [
+                    v.id_pet_history,
+                    v.owner_name,
+                    v.pet_name,
+                    `Dr. ${v.veterinarian_name}`,
+                    new Date(v.date_visit).toLocaleDateString()
+                ])
+            );
+
+            // 7️⃣ Inventory Reports
+            addTable(
+                "Inventory Reports",
+                ["Item Name", "Stock In", "Stock Out", "Current Stock", "Date"],
+                reports.stock.summary?.map((i) => [
+                    i.product_name,
+                    Number(i.total_stock_in),
+                    Number(i.total_stock_out),
+                    Number(i.current_stock),
+                    new Date(i.last_movement_date).toLocaleDateString()
+                ])
+            );
+
+            // 8️⃣ Appointment Reports
+            addTable(
+                "Appointment Reports",
+                ["ID", "Owner", "Date", "Status"],
+                reports.appointments.details?.map((a) => [
+                    a.id_appoint,
+                    a.owner_name,
+                    new Date(a.set_date).toLocaleDateString(),
+                    a.status
+                ])
+            );
+
+            // 9️⃣ Pet Service Usage
+            addTable(
+                "Pet Service Usage",
+                ["Service", "Used Count"],
+                reports.servicesUsage?.map((s) => [
+                    s.service_title,
+                    Number(s.usage_count || 0)
+                ])
+            );
+
+            // Footer / Signature
+            doc.setFontSize(12);
+            doc.text("_________________________", pageWidth / 2, yOffset, { align: "center" });
+            yOffset += 15;
+            doc.setFont("helvetica", "bold");
+            doc.text(`${user.firstName} ${user.lastName}`, pageWidth / 2, yOffset, { align: "center" });
+            doc.setFont("helvetica", "normal");
+            yOffset += 15;
+            doc.text("Administrator", pageWidth / 2, yOffset, { align: "center" });
+
+            doc.save(`PawCareVet_Reports_${startDate}_to_${endDate}.pdf`);
+        };
+    };
+
     return (
         <div className="admin-report-container">
             <div className="admin-report-header">
-                <h2>Monthly Reports</h2>
+                <h2>Reports</h2>
                 <div className="admin-report-actions">
                     <div className="admin-report-filters">
-                        <select value={month} onChange={(e) => setMonth(e.target.value)}>
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1}>
-                                    {new Date(0, i).toLocaleString("default", { month: "long" })}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            value={year}
-                            min="2020"
-                            max="2100"
-                            onChange={(e) => setYear(e.target.value)}
-                        />
+                        <label>
+                            Start Date:
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            End Date:
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </label>
                     </div>
-
                     <button className="admin-export-btn" onClick={exportToExcel}>
                         Export to Excel
+                    </button>
+                    <button className="admin-export-btn" onClick={exportToPDF}>
+                        Export to PDF
                     </button>
                 </div>
             </div>
