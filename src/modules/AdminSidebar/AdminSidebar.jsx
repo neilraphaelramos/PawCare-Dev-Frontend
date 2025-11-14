@@ -29,12 +29,12 @@ const AdminSidebar = () => {
         <nav className="admin-dashboard-nav">
           <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
 
-          <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>
-            Pet Medical Records
-          </NavLink>
-
           <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>
             Appointment
+          </NavLink>
+
+          <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>
+            Pet Medical Records
           </NavLink>
 
           <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>
