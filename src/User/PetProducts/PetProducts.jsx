@@ -489,7 +489,7 @@ const UserInventory = () => {
 
               <div className='user-item-unit-container'>
                 <h3 className='user-h3'>{item.name}</h3>
-                <div className='user-unit-display'>{item.amount || 0} - <strong>{item.unit}</strong></div>
+                <div className='user-unit-display'>{item.amount || 0} - {item.unit}</div>
               </div>
 
               <p>₱{item.price.toFixed(2)}</p>
