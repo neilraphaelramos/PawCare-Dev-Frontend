@@ -93,8 +93,21 @@ export default function Notifications() {
     }
   };
 
+  const clearNotification = async (notify_id) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/notifications/vetadminapi/clear`,
+        { notify_id, UID }
+      );
+
+      setNotifications((prev) => prev.filter((n) => n.notify_id !== notify_id));
+    } catch (err) {
+      console.error("❌ Error clearing notification:", err);
+    }
+  };
+
   const dismissNotification = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.notify_id !== id));
+    clearNotification(id);
   };
 
   const categorize = (n) => {

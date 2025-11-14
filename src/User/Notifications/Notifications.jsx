@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import io from "socket.io-client";
 import "./Notifications.css";
 import { UserContext } from "../../hook/authContext";
+import axios from "axios";
 
 const socket = io(process.env.REACT_APP_API_URL);
 function NotificationCard({ notification, onDismiss }) {
@@ -23,7 +24,7 @@ function NotificationCard({ notification, onDismiss }) {
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const { user } = useContext(UserContext); // ✅ move inside the component
-  const userId = user?.id; 
+  const userId = user?.id;
 
   // Fetch initial notifications
   useEffect(() => {
@@ -45,8 +46,21 @@ export default function Notifications() {
     };
   }, [userId]);
 
-  const dismissNotification = id => {
-    setNotifications(prev => prev.filter(n => n.notify_id !== id));
+  const dismissNotification = (id) => {
+    clearNotification(id)
+  };
+
+  const clearNotification = async (notify_id) => {
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/notifications/api/remove/${notify_id}`,
+        { notify_id }
+      );
+
+      setNotifications((prev) => prev.filter((n) => n.notify_id !== notify_id));
+    } catch (err) {
+      console.error("❌ Error clearing notification:", err);
+    }
   };
 
   return (

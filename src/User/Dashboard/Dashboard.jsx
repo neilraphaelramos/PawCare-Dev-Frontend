@@ -143,7 +143,6 @@ const Dashboard = () => {
       }
 
       setUpcomingOnlineConsults(data);
-      console.log("Upcoming Consultations:", data);
     } catch (err) {
       console.error("Error fetching upcoming appointments:", err);
       setUpcomingOnlineConsults([]); // fallback
