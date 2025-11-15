@@ -852,8 +852,10 @@ const UserInventory = () => {
             <div className="messOrd-modal-footer">
               <button
                 className='messOrd-close-btn'
-                onClick={() => setShowQrModal(false)}
-                disabled={paymentStatus === "pending"} // prevent closing while processing
+                onClick={() => {
+                  handleCancelPayment(paymentIntentId);
+                  setShowQrModal(false);
+                }}
               >
                 Cancel
               </button>
