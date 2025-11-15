@@ -74,7 +74,12 @@ const UserInventory = () => {
           items: payload.items,
           total: totalAmount
         });
-        setShowReceipt(true);
+
+        if(paymentMethod === "cod") {
+          setShowReceipt(false);
+        } else {
+          setShowReceipt(true);
+        }
       } else {
         console.warn("Failed to save receipt:", res.data.message);
       }

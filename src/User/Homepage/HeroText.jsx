@@ -14,8 +14,8 @@ export default function HeroText() {
         </h1>
       </header>
       <p>
-        All-in-one pet care—records, appointments, and health. Join Rivera Veterinary Clinic
-        and try our AI Symptom Checker to better understand your pet’s health.
+        PawCare brings a smarter, more connected experience to pet healthcare—simple, 
+        reliable, and designed with your pet’s well-being in mind.
       </p>
       <a href="login" className="rvc-hero-btn">Get Started</a>
     </motion.div>
