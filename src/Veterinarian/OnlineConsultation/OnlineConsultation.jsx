@@ -372,6 +372,9 @@ const VetConsultationAdmin = () => {
                         {req.status}
                       </span>
                     </p>
+                    {req.status === 'Declined' && (
+                      <p><strong>Time:</strong> {req.setTime || "Null"}</p>
+                    )}
                     <div className='btn-container-footer'>
                       <button
                         className='approve-btn-vet'

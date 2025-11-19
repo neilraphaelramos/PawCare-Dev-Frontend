@@ -116,20 +116,27 @@ const Appointment = () => {
         type_notify: "Appointment",
         details,
       });
+
+      fetchAppoint(selectedDate);
     } catch (error) {
       console.error(error)
     }
   };
 
-  useEffect(() => {
-    if (selectedDate) {
-      const dateStr = selectedDate.toLocaleDateString('en-CA');
+  const fetchAppoint = (date) => {
+    if (date) {
+      const dateStr = date.toLocaleDateString('en-CA');
       axios.get(`${process.env.REACT_APP_API_URL}/appointments/vets/${dateStr}`)
         .then(res => {
+          console.log('Appointments fetched:', res.data);
           setAppointments(res.data);
         })
         .catch(err => console.error(err));
     }
+  }
+
+  useEffect(() => {
+    fetchAppoint(selectedDate);
   }, [selectedDate]);
 
   useEffect(() => {

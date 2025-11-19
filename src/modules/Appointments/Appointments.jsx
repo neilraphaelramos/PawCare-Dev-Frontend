@@ -42,8 +42,7 @@ const Appointment = () => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [declineData, setDeclineData] = useState(null);
-  const { user } = useContext(UserContext);
- 
+
   const { am, pm } = generateTimeSlots();
 
   const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -93,14 +92,16 @@ const Appointment = () => {
         type_notify: "Appointment",
         details,
       });
+
+      fetchAppoint(selectedDate);
     } catch (error) {
       console.error(error)
     }
   };
 
-  useEffect(() => {
-    if (selectedDate) {
-      const dateStr = selectedDate.toLocaleDateString('en-CA');
+  const fetchAppoint = (date) => {
+    if (date) {
+      const dateStr = date.toLocaleDateString('en-CA');
       axios.get(`${process.env.REACT_APP_API_URL}/appointments/vets/${dateStr}`)
         .then(res => {
           console.log('Appointments fetched:', res.data);
@@ -108,6 +109,10 @@ const Appointment = () => {
         })
         .catch(err => console.error(err));
     }
+  }
+
+  useEffect(() => {
+    fetchAppoint(selectedDate);
   }, [selectedDate]);
 
   useEffect(() => {
@@ -246,6 +251,9 @@ const Appointment = () => {
                     <strong>{selectedAppointment.owner_name}</strong><br />
                     Time: {selectedSlot}<br />
                     Status: {selectedAppointment.status || 'Pending'}
+                    {selectedAppointment.status === 'Declined' && (
+                      <p>Reason: {selectedAppointment.reason}</p>
+                    )}
                   </div>
                   <div className="action-buttons">
                     <button className="approve" onClick={() =>
