@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './Appointments.css';
+import '../../modal/modal_design.css'
 import axios from 'axios';
+import { UserContext } from '../../hook/authContext';
 
 const generateTimeSlots = () => {
   const start = new Date();
@@ -37,6 +39,27 @@ const Appointment = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
+  const { user } = useContext(UserContext);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [declineData, setDeclineData] = useState(null);
+
+
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user?.id,
+          vetName: `${user?.firstName} ${user?.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✅ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err.response?.data || err);
+    }
+  };
 
   const { am, pm } = generateTimeSlots();
 
@@ -63,9 +86,9 @@ const Appointment = () => {
     }
   };
 
-  const updateStatus = async (id, status, uid, setDate, setTime) => {
+  const updateStatus = async (id, status, uid, setDate, setTime, reason = "") => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/appointments/${id}/status`, { status })
+      await axios.put(`${process.env.REACT_APP_API_URL}/appointments/${id}/status`, { status, reason })
       setAppointments(
         prev => prev.map(a => a.id_appoint === id ? { ...a, status } : a)
       );
@@ -79,7 +102,13 @@ const Appointment = () => {
       const details =
         status === "Approved"
           ? `Your appointment on ${readableDate} at ${setTime} has been approved.`
-          : `Your appointment on ${readableDate} at ${setTime} has been declined.`;
+          : `Your appointment on ${readableDate} at ${setTime} has been declined. Reason: ${reason}`;
+
+      if (status === 'Approved') {
+        logVetAction(`Appointment set ${status} from Appointment ID: ${id}`);
+      } else {
+        logVetAction(`Appointment set ${status} from Appointment ID: ${id} | Reason: ${reason}`);
+      }
 
       await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
         UID: uid,
@@ -87,7 +116,6 @@ const Appointment = () => {
         type_notify: "Appointment",
         details,
       });
-
     } catch (error) {
       console.error(error)
     }
@@ -250,14 +278,15 @@ const Appointment = () => {
                       )}>
                       Approve
                     </button>
-                    <button className="decline" onClick={() =>
-                      updateStatus(
-                        selectedAppointment.id_appoint,
-                        'Declined',
-                        selectedAppointment.UID,
-                        selectedAppointment.set_date,
-                        selectedAppointment.set_time
-                      )}>
+                    <button className="decline" onClick={() => {
+                      setDeclineData({
+                        id: selectedAppointment.id_appoint,
+                        uid: selectedAppointment.UID,
+                        setDate: selectedAppointment.set_date,
+                        setTime: selectedAppointment.set_time
+                      });
+                      setShowDeclineModal(true);
+                    }}>
                       Decline
                     </button>
                   </div>
@@ -286,7 +315,55 @@ const Appointment = () => {
             </div>
           </>
         )}
+
       </div>
+
+      {showDeclineModal && (
+        <div className="all-decline-modal-overlay" onClick={() => setShowDeclineModal(false)}>
+          <div className="all-decline-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Decline Appointment</h3>
+            <p>Please provide a reason for declining this appointment:</p>
+
+            <textarea
+              className="all-decline-textarea"
+              value={declineReason}
+              onChange={(e) => setDeclineReason(e.target.value)}
+              placeholder="Enter reason..."
+            />
+
+            <div className="all-decline-actions">
+              <button
+                className="all-decline-confirm"
+                disabled={!declineReason.trim()}
+                onClick={() => {
+                  updateStatus(
+                    declineData.id,
+                    "Declined",
+                    declineData.uid,
+                    declineData.setDate,
+                    declineData.setTime,
+                    declineReason
+                  );
+                  setShowDeclineModal(false);
+                  setDeclineReason("");
+                }}
+              >
+                Confirm Decline
+              </button>
+
+              <button
+                className="all-decline-cancel"
+                onClick={() => {
+                  setShowDeclineModal(false);
+                  setDeclineReason("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

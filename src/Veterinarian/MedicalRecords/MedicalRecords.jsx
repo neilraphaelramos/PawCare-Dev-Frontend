@@ -142,10 +142,27 @@ export default function PetRecords() {
 
   const APIENDPOINT = process.env.REACT_APP_API_URL;
 
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${APIENDPOINT}/logs-vet/set-action-in`,
+        {
+          UID: user?.id,
+          vetName: `${user?.firstName} ${user?.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✅ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err.response?.data || err);
+    }
+  };
+
   const handleView = (pet) => {
     axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${pet.id}`)
       .then((res) => {
         setSelectedPet({ ...pet, checkups: res.data });
+        logVetAction(`Viewed visit history of pet: ${pet.name}`);
       })
       .catch((err) => {
         console.error("Error fetching visit history:", err);
@@ -257,6 +274,7 @@ export default function PetRecords() {
       });
 
       if (res.data.success) {
+        await logVetAction(`Added new pet record for ${formdata.pet_name}`);
         const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
         resetAddForm();
@@ -291,6 +309,7 @@ export default function PetRecords() {
 
       if (res.data.success) {
         // ✅ Refresh pets
+        await logVetAction(`Edited pet info: ${editData.pet_name}`);
         const updatedPets = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
         setPets(updatedPets.data);
         setShowEditModal(false);
@@ -304,17 +323,17 @@ export default function PetRecords() {
   };
 
   const fetchPets = async () => {
-      try {
-        setIsLoading(true);
-        const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
-        setPets(res.data);
-        console.table(res.data);
-      } catch (err) {
-        console.error("Error fetching pets:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    try {
+      setIsLoading(true);
+      const res = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch`);
+      setPets(res.data);
+      console.table(res.data);
+    } catch (err) {
+      console.error("Error fetching pets:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDelete = (index) => {
     setPetID(index);
@@ -325,6 +344,7 @@ export default function PetRecords() {
   const confirmDelete = async (id) => {
     try {
       const res = await axios.delete(`${APIENDPOINT}/pet_medical_records/delete/${id}`);
+      await logVetAction(`Deleted pet and all related records (pet ID: ${id})`);
       setMessageModal(res.data.message);
     } catch (error) {
       console.error("Error deleting record:", err);
@@ -404,6 +424,7 @@ export default function PetRecords() {
 
       if (res.data.success) {
         // ✅ Refetch updated history
+        await logVetAction(`Added visit history for pet ${selectedPet.name}: ${newRecord.service}`);
         const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
 
@@ -456,6 +477,7 @@ export default function PetRecords() {
       );
 
       if (res.data.success) {
+        await logVetAction(`Updated visit history #${selectedVisit.history_id} for pet ${selectedPet.name}`);
         const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
         setSelectedPet({ ...selectedPet, checkups: history.data });
         setSelectedVisit(null);
@@ -745,7 +767,7 @@ export default function PetRecords() {
           selectedPet={selectedPet}
           onClose={() => setSelectedVisit(null)}
           role={user.role}
-          printName={`Dr. ${user.firstName}`}
+          printName={`${user.firstName} ${user.lastName}`}
           setSelectedVisit={setSelectedVisit}
           Saving={handleUpdateVisit}
           processing={isProcessing}

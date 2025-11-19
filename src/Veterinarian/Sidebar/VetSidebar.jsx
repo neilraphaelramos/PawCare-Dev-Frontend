@@ -5,23 +5,42 @@ import "./VetSidebar.css";
 import { UserContext } from "../../hook/authContext";
 import { Loader2 } from "lucide-react";
 import '../../modal/modal_design.css';
+import axios from 'axios';
 
 const VetSidebar = () => {
-  const { logout } = useContext(UserContext);
+  const { logout, user } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setIsProcessing(true);
+
+    try {
+      console.log("📤 Sending vet logout log...");
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user?.id,
+          vetName: `${user?.firstName} ${user?.lastName}`,
+          action_vet: "Logout"
+        }
+      );
+
+      console.log("✅ Logout log saved.");
+    } catch (err) {
+      console.error("❌ Failed to log vet logout:", err.response?.data || err);
+    }
+
     setTimeout(() => {
-      navigate("/");
       logout();
+      navigate("/");
       setIsProcessing(false);
       setShowLogoutModal(false);
-    }, 1000);
-  }
+    }, 500);
+  };
 
   return (
     <>

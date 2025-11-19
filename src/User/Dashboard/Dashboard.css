@@ -337,10 +337,20 @@ body {
   margin: 0.5rem 0;
 }
 
-.user-dashboard-doctor-card .status {
+.user-dashboard-doctor-card .status-approved {
   display: inline-block;
   background: #dcfce7;
   color: #166534;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-top: 0.3rem;
+}
+
+.user-dashboard-doctor-card .status-declined {
+  display: inline-block;
+  background: #fcdcdc;
+  color: #651616;
   font-weight: 500;
   border-radius: 6px;
   padding: 0.35rem 0.6rem;

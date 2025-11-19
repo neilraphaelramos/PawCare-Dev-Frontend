@@ -304,7 +304,10 @@ const Dashboard = () => {
                     <p><strong>Pet Name:</strong> {doc.petName}</p>
                     <p><strong>Appointment:</strong> {doc.setDate} @ {doc.setTime}</p>
                     <p className="user-dashboard-concern">Primary Concern: {doc.concern}</p>
-                    <p><span className="status">Status: {doc.status}</span></p>
+                    <p><span className={`status-${doc.status.toLowerCase()}`}>Status: {doc.status}</span></p>
+                    {doc.status === 'Declined' && (
+                      <p><strong>Reason Declined: </strong></p>
+                    )}
                     <a onClick={() => {
                       sessionStorage.setItem("channelConsultID", doc.channelConsult);
                       sessionStorage.setItem("isSubmitted", JSON.stringify(true));

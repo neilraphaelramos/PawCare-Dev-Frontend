@@ -19,6 +19,7 @@ export const UserProvider = ({ children }) => {
     return storedAllData ? JSON.parse(storedAllData) : [];
   });
 
+  // Sync user to localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -27,6 +28,7 @@ export const UserProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Sync token to localStorage
   useEffect(() => {
     if (tokenData) {
       localStorage.setItem("token", JSON.stringify(tokenData));
@@ -35,6 +37,7 @@ export const UserProvider = ({ children }) => {
     }
   }, [tokenData]);
 
+  // Sync allUser to localStorage (only for Admin)
   useEffect(() => {
     if (user?.role === "Admin") {
       if (allUser) {
@@ -56,7 +59,17 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout, setAllUser, allUser, tokenData, setTokenData }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        logout,
+        setAllUser,
+        allUser,
+        tokenData,
+        setTokenData,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

@@ -7,7 +7,7 @@ import { UserContext } from "../../hook/authContext";
 import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login() {
-  const { setUser, setTokenData } = useContext(UserContext);
+  const { setUser, setTokenData, setLogID } = useContext(UserContext);
   const [form, setForm] = useState({ email: "", password: "" });
   const [showModal, setShowModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
@@ -37,16 +37,35 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoggingIn(true)
+    setIsLoggingIn(true);
+
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, form);
 
       if (res.data.message === "Login successful") {
-        const role = res.data.user.role;
-        setUser(res.data.user);
-        setTokenData(res.data.jitsiToken);
+        const user = res.data.user;
+        const role = user.role;
 
-        // Determine the route based on role
+        setUser(user);
+        setTokenData(res.data.jitsiToken);
+        if (role === "Veterinarian") {
+          try {
+            console.log("📤 Sending vet log request...");
+            const logRes = await axios.post(
+              `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+              {
+                UID: user.id,
+                vetName: `${user.firstName} ${user.lastName}`,
+                action_vet: "Login"
+              }
+            );
+
+            console.log("✅ Vet log saved:", logRes.data);
+          } catch (err) {
+            console.error("❌ Vet log failed:", err.response?.data || err);
+          }
+        }
+        // Redirect based on role
         let route = "";
         if (role === "Admin") route = "/admin";
         else if (role === "Veterinarian") route = "/veterinarian";
@@ -55,11 +74,11 @@ export default function Login() {
         openModal(res.data.message, route);
       } else {
         openModal("Login failed.");
-        setIsLoggingIn(false)
+        setIsLoggingIn(false);
       }
     } catch (error) {
       openModal(error.response?.data?.error || "Login failed.");
-      setIsLoggingIn(false)
+      setIsLoggingIn(false);
     }
   };
 
@@ -69,7 +88,8 @@ export default function Login() {
         token: credentialResponse.credential,
       });
 
-      setUser(res.data.user);
+      const user = res.data.user;
+      setUser(user);
       openModal(res.data.message, "/users");
     } catch (err) {
       console.error(err);

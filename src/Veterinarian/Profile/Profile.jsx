@@ -94,6 +94,45 @@ export default function Profile() {
         setUser(data.user);
         setIsEditing(false);
         setTimeout(() => setIsEditing(true), 5000);
+
+        // ✅ Determine what was updated for logging
+        let changes = [];
+        if (formData.imageFile) changes.push("Profile Picture");
+        if (
+          formData.firstName !== user.firstName ||
+          formData.middleName !== user.middleName ||
+          formData.lastName !== user.lastName ||
+          formData.suffix !== user.suffix ||
+          formData.phone !== user.phone ||
+          formData.bio !== user.bio ||
+          formData.houseNumber !== user.houseNum ||
+          formData.province !== user.province ||
+          formData.municipality !== user.municipality ||
+          formData.barangay !== user.barangay ||
+          formData.zipCode !== user.zipCode
+        ) changes.push("Profile Info");
+        if (formData.newPassword || formData.confirmPassword) changes.push("Password");
+
+        const actionDescription = changes.length
+          ? `Updated ${changes.join(" & ")}`
+          : "Profile Update";
+
+        // ✅ Add log entry
+        try {
+          await fetch(`${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              UID: user.id,
+              vetName: `${user.firstName} ${user.lastName}`,
+              action_vet: actionDescription,
+            }),
+          });
+          console.log("Profile update logged:", actionDescription);
+        } catch (logErr) {
+          console.error("Failed to log profile update:", logErr);
+        }
+
       } else {
         setResultMessage(data.error || "Update failed.");
       }

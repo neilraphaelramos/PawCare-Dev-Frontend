@@ -349,6 +349,15 @@ const Appointment = () => {
                         </span>
                       </div>
 
+                      {appt.status === 'Declined' && (
+                        <div className="appoint-appointment-row">
+                          <span className="appoint-label">Reason Declined:</span>
+                          <span className={`appoint-value`}>
+                            {''}
+                          </span>
+                        </div>
+                      )}
+
                       {bookedText && (
                         <div className="appoint-appointment-row">
                           <span className="appoint-label">📅</span>

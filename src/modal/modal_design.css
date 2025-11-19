@@ -211,3 +211,68 @@
   background: #32b2b2;
   color: #fff;
 }
+
+.all-decline-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.all-decline-modal {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  border-radius: 8px;
+  animation: fadeIn .2s ease-in-out;
+}
+
+.all-decline-modal h3 {
+  text-align: center;
+  font-weight: bold;
+}
+
+.all-decline-textarea {
+  width: 100%;
+  height: 120px;
+  padding: 10px;
+  resize: none;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.all-decline-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.all-decline-confirm {
+  background: #e63946;
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+}
+
+.all-decline-confirm:disabled {
+  background: #aaa;
+}
+
+.all-decline-cancel {
+  background: #32b2b2;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 5px;
+}
+
+.all-decline-cancel:hover {
+  background: #279999;
+}

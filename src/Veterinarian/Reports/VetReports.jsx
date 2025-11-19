@@ -40,6 +40,10 @@ function VetReports() {
 
     new Date().toLocaleDateString('en-CA');
 
+    const [selectedReport, setSelectedReport] = useState("All");
+    const [reportOpen, setReportOpen] = useState(false);
+    const [formatOpen, setFormatOpen] = useState(false);
+
     useEffect(() => {
         const fetchReports = async () => {
             try {
@@ -79,27 +83,44 @@ function VetReports() {
         fetchReports();
     }, [startDate, endDate]);
 
-    const exportToExcel = () => {
-        const workbook = XLSX.utils.book_new();
-        const printedBy = "Admin"; // or dynamically from user context
+    const logVetAction = async (action) => {
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+                {
+                    UID: user?.id,
+                    vetName: `${user?.firstName} ${user?.lastName}`,
+                    action_vet: action
+                }
+            );
+            console.log("✅ Vet action logged:", action);
+        } catch (err) {
+            console.error("❌ Failed to log vet action:", err.response?.data || err);
+        }
+    };
 
-        Object.entries(reports).forEach(([key, data]) => {
+    const exportToExcel = (reportKey = "All") => {
+        logVetAction(`Exported to Excel. ${reportKey} reports. Set Date Range ${startDate} to ${endDate}.`);
+        const workbook = XLSX.utils.book_new();
+        const printedBy = `${user.firstName} ${user.lastName}`;
+
+        const reportsToExport = reportKey === "All"
+            ? reports
+            : { [reportKey]: reports[reportKey] };
+
+        Object.entries(reportsToExport).forEach(([key, data]) => {
             let sheetData = [];
 
-            // Handle Inventory specifically
             if (key === "stock") {
-                sheetData = Array.isArray(data.summary) && data.summary.length
-                    ? data.summary
-                    : [];
+                sheetData = Array.isArray(data.summary) ? data.summary : [];
             } else if (Array.isArray(data)) {
                 sheetData = data;
             } else if (data.details) {
                 sheetData = data.details;
             } else if (data.summary) {
-                sheetData = [data.summary]; // summary as single row
+                sheetData = [data.summary];
             }
 
-            // Add footer row with "Printed by"
             if (sheetData.length) {
                 sheetData.push({ "": `Printed by: ${printedBy}` });
             } else {
@@ -108,21 +129,17 @@ function VetReports() {
 
             const worksheet = XLSX.utils.json_to_sheet(sheetData);
 
-            // Autofit columns
+            // Auto-fit columns
             const colWidths = sheetData[0]
                 ? Object.keys(sheetData[0]).map((_, colIndex) => {
-                    let max = 10; // minimum width
+                    let max = 10;
                     sheetData.forEach((row) => {
                         const val = Object.values(row)[colIndex];
-                        if (val != null) {
-                            const length = String(val).length;
-                            if (length > max) max = length;
-                        }
+                        if (val != null) max = Math.max(max, String(val).length);
                     });
                     return { wch: max + 2 };
                 })
                 : [];
-
             worksheet['!cols'] = colWidths;
 
             XLSX.utils.book_append_sheet(
@@ -133,21 +150,18 @@ function VetReports() {
         });
 
         const fileName = `PawCareVet_Reports_${startDate}_to_${endDate}.xlsx`;
-
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const blob = new Blob([excelBuffer], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
+        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         saveAs(blob, fileName);
     };
 
-    const exportToPDF = () => {
+    const exportToPDF = (reportKey = "All") => {
+        logVetAction(`Exported to PDF. ${reportKey} reports. Set Date Range ${startDate} to ${endDate}.`);
         const doc = new jsPDF("p", "pt");
-        const printedBy = `${user.firstName} ${user.lastName}`;
         const pageWidth = doc.internal.pageSize.getWidth();
         let yOffset = 40;
 
-        // Logo on left
+        // Header: Logo and clinic info
         const img = new Image();
         img.src = "/images/LandingPage/rivera-logo.png";
         img.onload = () => {
@@ -155,7 +169,6 @@ function VetReports() {
             const imgHeight = 60;
             doc.addImage(img, "PNG", 40, yOffset, imgWidth, imgHeight);
 
-            // Clinic info centered
             const clinicText = [
                 "PetCare Animal Clinic",
                 "123 Veterinary Street, Bocaue, Bulacan",
@@ -169,17 +182,29 @@ function VetReports() {
 
             yOffset += imgHeight + 20;
 
-            // Report title
             doc.setFontSize(18);
-            doc.text("Summary Reports", pageWidth / 2, yOffset, { align: "center" });
+
+            const reportTitles = {
+                All: "Summary Reports",
+                orders: "Order Reports",
+                product_solds: "Product Sold Reports",
+                pets: "Registered Pet Reports",
+                visits: "Clinic Visit Reports",
+                appointments: "Appointment Reports",
+                stock: "Inventory Reports",
+                totalSpecies: "Pet Types & Species",
+                servicesUsage: "Pet Service Usage Reports"
+            };
+
+            const headerTitle = reportTitles[reportKey] || "Summary Reports";
+            doc.text(headerTitle, pageWidth / 2, yOffset, { align: "center" });
             yOffset += 25;
 
-            // Printed by and date range
             doc.setFontSize(12);
-            doc.text(`Printed by: ${printedBy}`, pageWidth / 2, yOffset, { align: "center" });
-            yOffset += 15;
             doc.text(`Date Range: ${startDate} to ${endDate}`, pageWidth / 2, yOffset, { align: "center" });
             yOffset += 25;
+
+            const reportsToExport = reportKey === "All" ? reports : { [reportKey]: reports[reportKey] };
 
             const addTable = (title, columns, rows) => {
                 if (!rows || rows.length === 0) return;
@@ -197,130 +222,145 @@ function VetReports() {
                     styles: { fontSize: 10 },
                     margin: { left: 40, right: 40 },
                     didDrawPage: (data) => {
+                        // Update yOffset for next table
                         yOffset = data.cursor.y + 40;
+
+                        // Add page number
+                        const pageNumber = doc.internal.getNumberOfPages();
+                        doc.setFontSize(10);
+                        doc.text(`Page ${pageNumber}`, pageWidth - 50, doc.internal.pageSize.getHeight() - 20);
                     },
                 });
             };
 
-            // 1️⃣ Order Reports
-            addTable(
-                "Order Reports",
-                ["Order ID", "Client", "Status", "Payment Status", "Items", "Total", "Date"],
-                reports.orders.details?.map((o) => [
-                    o.id_order,
-                    o.customer_name,
-                    o.order_status,
-                    o.paymentStatus,
-                    o.items_purchased,
-                    Number(o.total),
-                    new Date(o.order_date).toLocaleDateString(),
-                ])
-            );
+            // Loop through selected reports
+            Object.entries(reportsToExport).forEach(([key, data]) => {
+                switch (key) {
+                    case "orders":
+                        addTable(
+                            "Order Reports",
+                            ["Order ID", "Client", "Status", "Payment Status", "Items", "Total", "Date"],
+                            data.details?.map((o) => [
+                                o.id_order,
+                                o.customer_name,
+                                o.order_status,
+                                o.paymentStatus,
+                                o.items_purchased,
+                                Number(o.total),
+                                new Date(o.order_date).toLocaleDateString(),
+                            ])
+                        );
+                        break;
+                    case "product_solds":
+                        addTable(
+                            "Product Reports",
+                            ["Item ID", "Name", "Total Sold"],
+                            data.map((p) => [p.product_id, p.product_name, Number(p.total_sold)])
+                        );
+                        break;
+                    case "pets":
+                        addTable(
+                            "Registered Pet Reports",
+                            ["Pet Name", "Owner", "Species", "Date Added"],
+                            data.details?.map((p) => [
+                                p.pet_name,
+                                p.owner_name,
+                                p.species,
+                                new Date(p.created_At).toLocaleDateString()
+                            ])
+                        );
+                        break;
+                    case "visits":
+                        addTable(
+                            "Clinic Visit Reports",
+                            ["Visit ID", "Owner", "Pet", "Veterinarian", "Visit Date"],
+                            data?.map((v) => [
+                                v.id_pet_history,
+                                v.owner_name,
+                                v.pet_name,
+                                `Dr. ${v.veterinarian_name}`,
+                                new Date(v.date_visit).toLocaleDateString()
+                            ])
+                        );
+                        break;
+                    case "appointments":
+                        addTable(
+                            "Appointment Reports",
+                            ["ID", "Owner", "Date", "Status"],
+                            data.details?.map((a) => [
+                                a.id_appoint,
+                                a.owner_name,
+                                new Date(a.set_date).toLocaleDateString(),
+                                a.status
+                            ])
+                        );
+                        break;
+                    case "stock":
+                        addTable(
+                            "Inventory Reports",
+                            ["Item Name", "Stock In", "Stock Out", "Current Stock", "Date"],
+                            data.summary?.map((i) => [
+                                i.product_name,
+                                Number(i.total_stock_in),
+                                Number(i.total_stock_out),
+                                Number(i.current_stock),
+                                new Date(i.last_movement_date).toLocaleDateString()
+                            ])
+                        );
+                        break;
+                    case "totalSpecies":
+                        addTable(
+                            "Pet Types & Species",
+                            ["#", "Species", "Pet Type", "Total Species"],
+                            data.details?.map((p, i) => [i + 1, p.species, p.petType, Number(p.total_species)])
+                        );
+                        break;
+                    case "servicesUsage":
+                        addTable(
+                            "Pet Service Usage",
+                            ["Service", "Used Count"],
+                            data?.map((s) => [s.service_title, Number(s.usage_count || 0)])
+                        );
+                        break;
+                    case "vetLogs":
+                        addTable(
+                            "Veterinarian Logs",
+                            ["Vet Name", "Time In", "Action"],
+                            data?.map((log) => [
+                                log.vetName,
+                                new Date(log.time_In).toLocaleString(),
+                                log.action_vet
+                            ])
+                        );
+                        break;
+                    default:
+                        break;
+                }
+            });
 
-            // 2️⃣ Product Reports
-            addTable(
-                "Product Reports",
-                ["Item ID", "Name", "Total Sold"],
-                reports.product_solds?.map((p) => [
-                    p.product_id,
-                    p.product_name,
-                    Number(p.total_sold)
-                ])
-            );
+            // Footer signature
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const footerHeight = 50; // space needed for signature
 
-            // 3️⃣ Total Orders Summary
-            addTable(
-                "Total Orders Summary",
-                ["Total Orders", "Total Revenue"],
-                reports.orders.summary ? [[
-                    Number(reports.orders.summary.total_orders),
-                    Number(reports.orders.summary.total_revenue || 0)
-                ]] : []
-            );
+            // Check if we need a new page for footer
+            if (yOffset + footerHeight > pageHeight) {
+                doc.addPage();
+                yOffset = pageHeight - footerHeight; // place at bottom of new page
+            } else {
+                yOffset = pageHeight - footerHeight; // place at bottom of current page
+            }
 
-            // 4️⃣ Registered Pets
-            addTable(
-                "Registered Pet Reports",
-                ["Pet Name", "Owner", "Species", "Date Added"],
-                reports.pets.details?.map((p) => [
-                    p.pet_name,
-                    p.owner_name,
-                    p.species,
-                    new Date(p.created_At).toLocaleDateString()
-                ])
-            );
-
-            // 5️⃣ Pet Types & Species
-            addTable(
-                "Pet Types & Species",
-                ["#", "Species", "Pet Type", "Total Species"],
-                reports.totalSpecies.details?.map((p, i) => [
-                    i + 1,
-                    p.species,
-                    p.petType,
-                    Number(p.total_species)
-                ])
-            );
-
-            // 6️⃣ Clinic Visits
-            addTable(
-                "Clinic Visit Reports",
-                ["Visit ID", "Owner", "Pet", "Veterinarian", "Visit Date"],
-                reports.visits?.map((v) => [
-                    v.id_pet_history,
-                    v.owner_name,
-                    v.pet_name,
-                    `Dr. ${v.veterinarian_name}`,
-                    new Date(v.date_visit).toLocaleDateString()
-                ])
-            );
-
-            // 7️⃣ Inventory Reports
-            addTable(
-                "Inventory Reports",
-                ["Item Name", "Stock In", "Stock Out", "Current Stock", "Date"],
-                reports.stock.summary?.map((i) => [
-                    i.product_name,
-                    Number(i.total_stock_in),
-                    Number(i.total_stock_out),
-                    Number(i.current_stock),
-                    new Date(i.last_movement_date).toLocaleDateString()
-                ])
-            );
-
-            // 8️⃣ Appointment Reports
-            addTable(
-                "Appointment Reports",
-                ["ID", "Owner", "Date", "Status"],
-                reports.appointments.details?.map((a) => [
-                    a.id_appoint,
-                    a.owner_name,
-                    new Date(a.set_date).toLocaleDateString(),
-                    a.status
-                ])
-            );
-
-            // 9️⃣ Pet Service Usage
-            addTable(
-                "Pet Service Usage",
-                ["Service", "Used Count"],
-                reports.servicesUsage?.map((s) => [
-                    s.service_title,
-                    Number(s.usage_count || 0)
-                ])
-            );
-
-            // Footer / Signature
             doc.setFontSize(12);
             doc.text("_________________________", pageWidth / 2, yOffset, { align: "center" });
             yOffset += 15;
             doc.setFont("helvetica", "bold");
-            doc.text(`${user.firstName} ${user.lastName}`, pageWidth / 2, yOffset, { align: "center" });
-            doc.setFont("helvetica", "normal");
+            doc.text(`Prepared by: ${user.firstName} ${user.lastName}`, pageWidth / 2, yOffset, { align: "center" });
             yOffset += 15;
+            doc.setFont("helvetica", "normal");
             doc.text("Veterinarian", pageWidth / 2, yOffset, { align: "center" });
 
-            doc.save(`PawCareVet_Reports_${startDate}_to_${endDate}.pdf`);
+
+            doc.save(`PawCareVet_Reports_${startDate}_to_${endDate}_${reportKey}.pdf`);
         };
     };
 
@@ -328,8 +368,52 @@ function VetReports() {
         <div className="vet-report-container">
             <div className="vet-report-header">
                 <h2>Reports</h2>
-                <div className="vet-report-actions">
-                    <div className="vet-report-filters">
+                <div className="admin-report-actions">
+                    <div className="report-select-dropdown" style={{ position: "relative" }}>
+                        <button
+                            className="admin-export-btn"
+                            onClick={() => setReportOpen(!reportOpen)}
+                            style={{ padding: "8px 12px", cursor: "pointer" }}
+                        >
+                            {selectedReport || "All"} ▾
+                        </button>
+
+                        {reportOpen && (
+                            <ul
+                                style={{
+                                    position: "absolute",
+                                    top: "80%",
+                                    left: -45,
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #ccc",
+                                    borderRadius: "4px",
+                                    listStyle: "none",
+                                    padding: 0,
+                                    margin: 0,
+                                    minWidth: "150px",
+                                    zIndex: 100,
+                                    textAlign: "center"
+                                }}
+                            >
+                                <li
+                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    onClick={() => { setSelectedReport("All"); setReportOpen(false); }}
+                                >
+                                    All
+                                </li>
+                                {Object.keys(reports).map((key) => (
+                                    <li
+                                        key={key}
+                                        style={{ padding: "8px", cursor: "pointer" }}
+                                        onClick={() => { setSelectedReport(key); setReportOpen(false); }}
+                                    >
+                                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    <div className="admin-report-filters">
                         <label>
                             Start Date:
                             <input
@@ -347,13 +431,54 @@ function VetReports() {
                             />
                         </label>
                     </div>
+                    <div className="export-format-dropdown" style={{ position: "relative" }}>
+                        <button
+                            className="admin-export-btn"
+                            onClick={() => setFormatOpen(!formatOpen)}
+                            style={{ padding: "8px 12px", cursor: "pointer" }}
+                            disabled={!selectedReport} // optional: disable until a report is selected
+                        >
+                            Export ▾
+                        </button>
 
-                    <button className="vet-export-btn" onClick={exportToExcel}>
-                        Export to Excel
-                    </button>
-                    <button className="vet-export-btn" onClick={exportToPDF}>
-                        Export to PDF
-                    </button>
+                        {formatOpen && (
+                            <ul
+                                style={{
+                                    position: "absolute",
+                                    top: "80%",
+                                    left: -15,
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #ccc",
+                                    borderRadius: "4px",
+                                    listStyle: "none",
+                                    padding: 0,
+                                    margin: 0,
+                                    minWidth: "120px",
+                                    zIndex: 100,
+                                    textAlign: "center"
+                                }}
+                            >
+                                <li
+                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    onClick={() => {
+                                        selectedReport === "All" ? exportToExcel() : exportToExcel(selectedReport);
+                                        setFormatOpen(false);
+                                    }}
+                                >
+                                    Excel
+                                </li>
+                                <li
+                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    onClick={() => {
+                                        selectedReport === "All" ? exportToPDF() : exportToPDF(selectedReport);
+                                        setFormatOpen(false);
+                                    }}
+                                >
+                                    PDF
+                                </li>
+                            </ul>
+                        )}
+                    </div>
                 </div>
             </div>
 

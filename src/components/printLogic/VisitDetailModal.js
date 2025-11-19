@@ -1,11 +1,14 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import "./VisitDetailModal.css";
 import { useReactToPrint } from "react-to-print";
+import { UserContext } from "../../hook/authContext";
+import axios from 'axios';
 
 const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName, setSelectedVisit, Saving, processing }) => {
     if (!selectedVisit) return null;
     const [printBy, setPrintBy] = useState("");
     const [isSwitch, setIsSwitch] = useState(true);
+    const { user } = useContext(UserContext);
     const contentRef = useRef(null);
     const actionsRef = useRef(null);
     const reactToPrint = useReactToPrint({
@@ -18,6 +21,41 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
             setIsSwitch(false);
         },
     });
+
+    const logVetAction = async (action) => {
+        try {
+            await axios.post(
+                `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+                {
+                    UID: user.id,
+                    vetName: printName,
+                    action_vet: action
+                }
+            );
+            console.log("✔ Vet action logged:", action);
+        } catch (err) {
+            console.error("❌ Failed to log vet action:", err);
+        }
+    };
+
+    const handleVetSave = async () => {
+        if (role === "Veterinarian") {
+            await logVetAction(`Edited/Updated visit history of ${selectedPet?.name}`);
+        }
+        Saving();
+    };
+
+    const handleVetPrint = async () => {
+        if (role === "Veterinarian") {
+            await logVetAction(`Printed visit record for ${selectedPet?.name}`);
+        }
+
+        setIsSwitch(true);
+
+        setTimeout(() => {
+            reactToPrint();
+        }, 500);
+    };
 
     useEffect(() => {
         if (!actionsRef.current) return;
@@ -44,12 +82,7 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                 <div className='all-user-print-button'>
                     <button
                         className="all-print-btn"
-                        onClick={() => {
-                            setIsSwitch(true);
-                            setTimeout(() => {
-                                reactToPrint();
-                            }, 500);
-                        }}
+                        onClick={handleVetPrint}
                     >Print
                     </button>
                     <button className="all-close-btn" onClick={() => onClose(null)}>×</button>
@@ -381,7 +414,7 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                     <div className="all-detail-actions" ref={actionsRef}>
                         <button
                             className="all-save-btn"
-                            onClick={Saving}
+                            onClick={handleVetSave}
                             disabled={processing}
                         >
                             {processing ? "Saving..." : "Save Changes"}

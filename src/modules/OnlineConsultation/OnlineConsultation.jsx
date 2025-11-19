@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { FaTimes, FaPaperPlane, FaVideo, FaSpinner } from 'react-icons/fa';
 import './OnlineConsultation.css';
+import '../../modal/modal_design.css'
 import axios from 'axios';
 import { UserContext } from '../../hook/authContext';
 import JitsiWrapper from './componentAdmin/jitsiApiAdmin';
@@ -22,6 +23,10 @@ const VetConsultationAdmin = () => {
 
   const [showProofModal, setShowProofModal] = useState(false);
   const [selectedProof, setSelectedProof] = useState(null);
+
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [declineData, setDeclineData] = useState(null);
 
   // Fetch consultations
   const fetchOnlineConsult = async () => {
@@ -183,15 +188,63 @@ const VetConsultationAdmin = () => {
 
   const handleUpdateStatus = async (consultID, newStatus) => {
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`, {
-        status: newStatus
-      });
-      fetchOnlineConsult();
+      const res = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`,
+        { status: newStatus }
+      );
+
+      if (res.data.success) {
+        const userId = res.data.user_id;
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+          UID: userId,
+          title_notify: `Consultation ${newStatus}`,
+          type_notify: "Consultation",
+          details: `Your online consultation request has been ${newStatus}.`,
+        });
+
+        fetchOnlineConsult();
+      }
     } catch (err) {
       console.error("Error updating status:", err);
       setError("Failed to update status. Please try again.");
     }
-  }
+  };
+
+  const confirmDecline = async () => {
+    if (!declineData) return;
+
+    try {
+      const res = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/online_consult/update-status/${declineData.channelConsult}`,
+        {
+          status: "Declined",
+          decline_reason: declineReason
+        }
+      );
+
+      if (res.data.success) {
+        const userId = res.data.user_id; // 🔥 GET USER ID
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+          UID: userId,
+          title_notify: "Consultation Declined",
+          type_notify: "Consultation",
+          details: `Your online consultation request has been declined. Reason: ${declineReason}`,
+        });
+
+        // Clean up modal
+        setShowDeclineModal(false);
+        setDeclineReason("");
+        setDeclineData(null);
+        fetchOnlineConsult();
+      }
+
+    } catch (err) {
+      console.error("Error declining consultation:", err);
+      alert("Failed to submit decline reason.");
+    }
+  };
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || !activeChatId) return;
@@ -310,7 +363,10 @@ const VetConsultationAdmin = () => {
                       </button>
                       <button
                         className='decline-btn-admin'
-                        onClick={() => handleUpdateStatus(req.channelConsult, 'Declined')}
+                        onClick={() => {
+                          setDeclineData(req);
+                          setShowDeclineModal(true);
+                        }}
                       >
                         Declined
                       </button>
@@ -398,6 +454,42 @@ const VetConsultationAdmin = () => {
             ) : (
               <p>No proof available</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {showDeclineModal && (
+        <div className="all-decline-modal-overlay" onClick={() => setShowDeclineModal(false)}>
+          <div className="all-decline-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Decline Appointment</h3>
+            <p>Please provide a reason for declining this appointment:</p>
+
+            <textarea
+              className="all-decline-textarea"
+              value={declineReason}
+              onChange={(e) => setDeclineReason(e.target.value)}
+              placeholder="Enter reason..."
+            />
+
+            <div className="all-decline-actions">
+              <button
+                className="all-decline-confirm"
+                disabled={!declineReason.trim()}
+                onClick={confirmDecline}
+              >
+                Confirm Decline
+              </button>
+
+              <button
+                className="all-decline-cancel"
+                onClick={() => {
+                  setShowDeclineModal(false);
+                  setDeclineReason("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

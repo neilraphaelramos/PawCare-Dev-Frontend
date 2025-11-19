@@ -7,21 +7,21 @@ import { Loader2 } from "lucide-react";
 import '../../modal/modal_design.css';
 
 const UserSidebar = () => {
-  const { logout } = useContext(UserContext);
+  const { logout, user } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setIsProcessing(true);
     setTimeout(() => {
-      navigate("/");
       logout();
+      navigate("/");
       setIsProcessing(false);
       setShowLogoutModal(false);
     }, 1000);
-  }
+  };
 
   return (
     <>
