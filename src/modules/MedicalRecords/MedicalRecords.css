@@ -86,23 +86,35 @@ body {
 .admin-pet-records-row {
   display: grid;
   grid-template-columns:
-    minmax(150px, 1.5fr) /* Owner Name */
-    80px                 /* Photo */
-    minmax(100px, 1fr)   /* Name */
-    minmax(80px, 0.8fr)  /* Pet Type */
-    minmax(120px, 1fr)   /* Species */
-    minmax(60px, 0.5fr)  /* Age */
-    minmax(80px, 0.8fr)  /* Gender */
-    minmax(100px, 1fr)   /* Condition */
-    minmax(100px, 1fr)   /* Last Visit */
-    minmax(140px, 1.5fr) /* Diagnosis */
-    80px;                /* Action */
+    minmax(150px, 1.5fr)
+    /* Owner Name */
+    80px
+    /* Photo */
+    minmax(100px, 1fr)
+    /* Name */
+    minmax(80px, 0.8fr)
+    /* Pet Type */
+    minmax(120px, 1fr)
+    /* Species */
+    minmax(60px, 0.5fr)
+    /* Age */
+    minmax(80px, 0.8fr)
+    /* Gender */
+    minmax(100px, 1fr)
+    /* Condition */
+    minmax(100px, 1fr)
+    /* Last Visit */
+    minmax(140px, 1.5fr)
+    /* Diagnosis */
+    80px;
+  /* Action */
   align-items: center;
   padding: 0.75rem 1rem;
   border-radius: 10px;
   font-size: 0.875rem;
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  gap: 5px;
 }
 
 .admin-pet-records-header {
@@ -191,12 +203,15 @@ body {
 .pet-modal {
   background-color: #ffffff;
   border-radius: 12px;
-  width: fit-content;
-  max-width: 100%;
+  max-width: 950px;
+  width: 90%;
   padding: 30px 25px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   position: relative;
   animation: fadeInScale 0.3s ease-in-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-pet-modal-add,
@@ -732,6 +747,7 @@ body {
   cursor: pointer;
   background-color: #f8f9fa;
 }
+
 .clickable-owner-field:hover {
   background-color: #eef1f4;
 }
@@ -849,8 +865,15 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .input-with-tipT {
@@ -874,4 +897,52 @@ body {
 .input-with-tipT input,
 .input-with-tipT select {
   width: 100%;
+}
+
+.admin-pet-modal-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  z-index: 10;
+  border-bottom: 2px solid #ddd;
+}
+
+.admin-button-history {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.admin-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #32b2b2;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: 42px;
+}
+
+.pet-modal-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  z-index: 10;
+  border-bottom: 2px solid #ddd;
+}
+
+.pet-modal-body {
+  overflow-y: auto;
+  flex-grow: 1;
 }

@@ -69,7 +69,7 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
             setIsSwitch(false);
             actionsRef.current.style.display = "block";
         } else {
-            setPrintBy({ name: "Admin" });
+            setPrintBy({ name: `${printName}-Admin` });
             setIsSwitch(false);
             actionsRef.current.style.display = "block";
         }
@@ -210,7 +210,7 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                             )}
                         </div>
                         <div className="all-detail-field">
-                            <div className="all-detail-label">Date Admitted:</div>
+                            <div className="all-detail-label">Date Visit:</div>
                             {isSwitch ? (
                                 <div className="all-detail-value">{selectedVisit.date || 'N/A'}</div>
                             ) : (
@@ -218,6 +218,19 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                                     type="date"
                                     value={selectedVisit.date || ''}
                                     onChange={(e) => setSelectedVisit({ ...selectedVisit, date: e.target.value })}
+                                    className="all-editable-input"
+                                />
+                            )}
+                        </div>
+                        <div className="all-detail-field">
+                            <div className="all-detail-label">Time Visit:</div>
+                            {isSwitch ? (
+                                <div className="all-detail-value">{selectedVisit.time || 'N/A'}</div>
+                            ) : (
+                                <input
+                                    type="time"
+                                    value={selectedVisit.time || ''}
+                                    onChange={(e) => setSelectedVisit({ ...selectedVisit, time: e.target.value })}
                                     className="all-editable-input"
                                 />
                             )}

@@ -273,6 +273,9 @@ const Appointment = () => {
                     <strong>{selectedAppointment.owner_name}</strong><br />
                     Time: {selectedSlot}<br />
                     Status: {selectedAppointment.status || 'Pending'}
+                    {selectedAppointment.status === 'Declined' && (
+                      <p>Reason: {selectedAppointment.reason}</p>
+                    )}
                   </div>
                   <div className="action-buttons">
                     <button className="approve" onClick={() =>

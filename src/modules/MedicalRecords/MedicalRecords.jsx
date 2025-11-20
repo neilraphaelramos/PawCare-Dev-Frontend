@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { FaPlus, FaRegEye, FaEdit } from 'react-icons/fa';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Plus } from 'lucide-react';
 import axios from 'axios'
 import './MedicalRecords.css';
 import VisitDetailModal from '../../components/printLogic/VisitDetailModal';
@@ -90,6 +90,16 @@ const ServiceSelector = ({ value, onChange, options }) => {
   );
 };
 
+function formatTimeToAMPM(time24) {
+  if (!time24) return "N/A";
+
+  const [hour, minute] = time24.split(":");
+  let h = parseInt(hour, 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${minute} ${ampm}`;
+}
+
 export default function PetRecords() {
   const { user } = useContext(UserContext);
   const [pets, setPets] = useState([]);
@@ -107,6 +117,7 @@ export default function PetRecords() {
     ownerPhoneNum: '',
     day: '',
     date: '',
+    time: '',
     service: '',
     complaint: '',
     diagnosis: '',
@@ -251,6 +262,7 @@ export default function PetRecords() {
       pet_gender: form.gender.value,
       pet_condition: form.condition.value,
       last_visit: form.lastVisit.value,
+      time_visit: form.timeVisit.value,
       diagnosis: form.diagnosis.value,
       photo: autoFill.photo_pet,
     }
@@ -288,6 +300,7 @@ export default function PetRecords() {
 
     formData.append("pet_condition", form.condition.value);
     formData.append("last_visit", form.lastVisit.value);
+    formData.append("time_visit", form.timeVisit.value);
     formData.append("diagnosis", form.diagnosis.value);
 
     try {
@@ -385,6 +398,7 @@ export default function PetRecords() {
         owner_phonenumber: newRecord.ownerPhoneNum,
         day: newRecord.day,
         date_visit: newRecord.date,
+        date_time: newRecord.time,
         service_type: newRecord.service,
         main_complaint: newRecord.complaint,
         pet_diagnosis: newRecord.diagnosis,
@@ -437,6 +451,7 @@ export default function PetRecords() {
           owner_phonenumber: selectedVisit.ownerPhoneNum,
           day: selectedVisit.day,
           date_visit: selectedVisit.date,   // yyyy-MM-dd format
+          date_time: selectedVisit.time,
           service_type: selectedVisit.service,
           main_complaint: selectedVisit.complaint,
           pet_diagnosis: selectedVisit.diagnosis,
@@ -520,7 +535,7 @@ export default function PetRecords() {
               <div>{pet.age}</div>
               <div>{pet.gender}</div>
               <div>{pet.condition}</div>
-              <div>{pet.lastVisit}</div>
+              <div>{pet.lastVisit} {formatTimeToAMPM(pet.timeVisit)}</div>
               <div className="diagnosis-text">
                 {pet.diagnosis?.length > 30
                   ? pet.diagnosis.slice(0, 30) + '…'
@@ -532,7 +547,7 @@ export default function PetRecords() {
                   title="View Record"
                   onClick={() => handleView(pet)}
                 >
-                  <FaRegEye size={16} />
+                  <Plus size={16} />
                 </button>
                 <button
                   className="admin-aksi-btn margin-btn"
@@ -560,185 +575,276 @@ export default function PetRecords() {
       {selectedPet && (
         <div className="pet-modal-overlay">
           <div className="pet-modal">
-            <button className="close-btn" onClick={handleCloseModal}>×</button>
-            <h3>{selectedPet.name}'s Visit History</h3>
+            <div className="pet-modal-header">
+              <button className="close-btn" onClick={handleCloseModal}>×</button>
+              <h3>{selectedPet.name}'s Visit History</h3>
 
-            <div className="pet-modal-top-row">
-              <input
-                type="text"
-                className="modal-search-input"
-                placeholder="Search visit history..."
-                value={modalSearchTerm}
-                onChange={(e) => setModalSearchTerm(e.target.value)}
-              />
-              <button
-                className="add-btn margin2"
-                onClick={() => {
-                  if (switchBtn) {
-                    formRef.current?.requestSubmit();
-                    setSwitchBtn(false);
-                  } else {
-                    handleUserInfo(selectedPet.userName);
-                    handleAddRecord();
-                    setSwitchBtn(true);
-                  }
-                }}
-              >
-                {switchBtn ? "💾 Save" : <><FaPlus /> Add Record</>}
-              </button>
+              <div className="pet-modal-top-row">
+                <input
+                  type="text"
+                  className="modal-search-input"
+                  placeholder="Search visit history..."
+                  value={modalSearchTerm}
+                  onChange={(e) => setModalSearchTerm(e.target.value)}
+                />
+                <div className='vet-button-history'>
+                  <button
+                    className="add-btn margin2"
+                    onClick={() => {
+                      if (switchBtn) {
+                        formRef.current?.requestSubmit();
+                        setSwitchBtn(false);
+                      } else {
+                        handleUserInfo(selectedPet.userName);
+                        handleAddRecord();
+                        setSwitchBtn(true);
+                      }
+                    }}
+                  >
+                    {switchBtn ? "💾 Save" : <><FaPlus /> Add Record</>}
+                  </button>
+                  {addingRecord && (
+                    <button
+                      className='vet-cancel-btn'
+                      onClick={() => {
+                        setSwitchBtn(false);
+                        setAddingRecord(false);
+                        setNewRecord({
+                          day: '',
+                          date: '',
+                          time: '',
+                          service: '',
+                          complaint: '',
+                          diagnosis: '',
+                          status: '',
+                          completed: ''
+                        });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {addingRecord && (
+                <form className="new-record-form" ref={formRef} onSubmit={handleNewRecordSubmit}>
+                  <input
+                    type="text"
+                    name="ownerEmail"
+                    placeholder="Email"
+                    value={newRecord.ownerEmail}
+                    onChange={handleNewRecordChange}
+                    required
+                    readOnly
+                    className="addvisit-input"
+                  />
+                  <input
+                    type="text"
+                    name="ownerAddress"
+                    placeholder="Address"
+                    value={newRecord.ownerAddress}
+                    readOnly
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <input
+                    type="text"
+                    name="ownerPhoneNum"
+                    placeholder="Phone Number"
+                    value={newRecord.ownerPhoneNum}
+                    readOnly
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <input
+                    type="text"
+                    name="day"
+                    placeholder="Day of Visit (e.g., Monday)"
+                    value={newRecord.day}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <div className="addvisit-input-group">
+                    <input
+                      type="date"
+                      name="date"
+                      placeholder="Date"
+                      value={newRecord.date}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="completed" className="addvisit-label">
+                      Date Visit
+                    </label>
+                  </div>
+
+                  <div className="addvisit-input-group">
+                    <input
+                      type="time"
+                      name="time"
+                      value={newRecord.time}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="time" className="addvisit-label">
+                      Time of Visit
+                    </label>
+                  </div>
+
+                  <ServiceSelector
+                    value={newRecord.service}
+                    onChange={(val) => setNewRecord({ ...newRecord, service: val })}
+                    options={services}
+                  />
+
+                  <input
+                    type="text"
+                    name="complaint"
+                    placeholder="Main Complaint"
+                    value={newRecord.complaint}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <input
+                    type="text"
+                    name="diagnosis"
+                    placeholder="Diagnosis"
+                    value={newRecord.diagnosis}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <input
+                    type="text"
+                    name="status"
+                    placeholder="Treatment Status"
+                    value={newRecord.status}
+                    onChange={handleNewRecordChange}
+                    required
+                    className="addvisit-input"
+                  />
+                  <div className="addvisit-input-group">
+                    <input
+                      type="date"
+                      id="completed"
+                      name="completed"
+                      value={newRecord.completed}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="completed" className="addvisit-label">
+                      Completed On
+                    </label>
+                  </div>
+                </form>
+              )}
             </div>
 
-            {addingRecord && (
-              <form className="new-record-form" ref={formRef} onSubmit={handleNewRecordSubmit}>
-                <input
-                  type="text"
-                  name="ownerEmail"
-                  placeholder="Email"
-                  value={newRecord.ownerEmail}
-                  onChange={handleNewRecordChange}
-                  required
-                  readOnly
-                  className="addvisit-input"
-                />
-                <input
-                  type="text"
-                  name="ownerAddress"
-                  placeholder="Address"
-                  value={newRecord.ownerAddress}
-                  readOnly
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <input
-                  type="text"
-                  name="ownerPhoneNum"
-                  placeholder="Phone Number"
-                  value={newRecord.ownerPhoneNum}
-                  readOnly
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <input
-                  type="text"
-                  name="day"
-                  placeholder="Day of Visit (e.g., Monday)"
-                  value={newRecord.day}
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <div className="addvisit-input-group">
-                  <input
-                    type="date"
-                    name="date"
-                    placeholder="Date"
-                    value={newRecord.date}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <label htmlFor="completed" className="addvisit-label">
-                    Date Visit
-                  </label>
-                </div>
-                <ServiceSelector
-                  value={newRecord.service}
-                  onChange={(val) => setNewRecord({ ...newRecord, service: val })}
-                  options={services}
-                />
-                <input
-                  type="text"
-                  name="complaint"
-                  placeholder="Main Complaint"
-                  value={newRecord.complaint}
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <input
-                  type="text"
-                  name="diagnosis"
-                  placeholder="Diagnosis"
-                  value={newRecord.diagnosis}
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <input
-                  type="text"
-                  name="status"
-                  placeholder="Treatment Status"
-                  value={newRecord.status}
-                  onChange={handleNewRecordChange}
-                  required
-                  className="addvisit-input"
-                />
-                <div className="addvisit-input-group">
-                  <input
-                    type="date"
-                    id="completed"
-                    name="completed"
-                    value={newRecord.completed}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <label htmlFor="completed" className="addvisit-label">
-                    Completed On
-                  </label>
-                </div>
-              </form>
-            )}
+            <article className="pet-modal-body">
+              {selectedPet.checkups?.length > 0 ? (
+                <div className="checkup-history-row-style">
+                  <div className="checkup-card-wide">
+                    <div className="checkup-col">
+                      <p className="checkup-label">Owner Name</p>
+                      <p>{selectedPet.ownerName}</p>
+                    </div>
 
-            {selectedPet.checkups?.length > 0 ? (
-              <div className="checkup-history-row-style">
-                {filterCheckups(selectedPet.checkups).map((visit, i) => (
-                  <div key={i} className="checkup-card-wide">
                     <div className="checkup-col">
-                      <p className="checkup-label">Date</p>
-                      <p>
-                        <strong className='label-admin-date'>{visit.day}</strong>
-                        <br />
-                        <span className='label-admin-date'>{visit.date}</span>
-                      </p>
+                      <p className="checkup-label">Name</p>
+                      <p>{selectedPet.name}</p>
                     </div>
+
                     <div className="checkup-col">
-                      <p className="checkup-label">Service Type</p>
-                      <p>{visit.service}</p>
+                      <p className="checkup-label">Pet Type</p>
+                      <p>{selectedPet.petType}</p>
                     </div>
+
                     <div className="checkup-col">
-                      <p className="checkup-label">Main Complaint</p>
-                      <p>{visit.complaint}</p>
+                      <p className="checkup-label">Species</p>
+                      <p>{selectedPet.species}</p>
                     </div>
+
+                    <div className="checkup-col">
+                      <p className="checkup-label">Age</p>
+                      <p>{selectedPet.age}</p>
+                    </div>
+
+                    <div className="checkup-col">
+                      <p className="checkup-label">Gender</p>
+                      <p>{selectedPet.gender}</p>
+                    </div>
+
+                    <div className="checkup-col">
+                      <p className="checkup-label">Condition</p>
+                      <p>{selectedPet.condition}</p>
+                    </div>
+
+                    <div className="checkup-col">
+                      <p className="checkup-label">Last Visit</p>
+                      <p>{selectedPet.lastVisit} {formatTimeToAMPM(selectedPet.timeVisit)}</p>
+                    </div>
+
                     <div className="checkup-col">
                       <p className="checkup-label">Diagnosis</p>
-                      <p>{visit.diagnosis}</p>
-                    </div>
-                    <div className="checkup-col">
-                      <p className="checkup-label">Treatment Status</p>
-                      <p>{visit.status}</p>
-                    </div>
-                    <div className="checkup-col">
-                      <p className="checkup-label">Completed On</p>
-                      <p>{visit.completed}</p>
-                    </div>
-                    <div className="checkup-col action-col">
-                      <p className="checkup-label">Action</p>
-                      <button className="aksi-btn" onClick={() => {
-                        console.log("Tap")
-                        setSelectedVisit(visit)
-                      }}>
-                        <FaRegEye size={14} />
-                      </button>
+                      <p>{selectedPet.diagnosis}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p>No visit records found.</p>
-            )}
+
+                  {filterCheckups(selectedPet.checkups).length > 0 ? (
+                    filterCheckups(selectedPet.checkups).map((visit, i) => (
+                      <div key={i} className="checkup-card-wide">
+                        <div className="checkup-col">
+                          <p className="checkup-label">Date and Time Visit</p>
+                          <p>
+                            <strong className="label-admin-date">{visit.day}</strong>
+                            <br />
+                            <span className="label-admin-date">{visit.date} {formatTimeToAMPM(visit.time)}</span>
+                          </p>
+                        </div>
+                        <div className="checkup-col">
+                          <p className="checkup-label">Service Type</p>
+                          <p>{visit.service}</p>
+                        </div>
+                        <div className="checkup-col">
+                          <p className="checkup-label">Main Complaint</p>
+                          <p>{visit.complaint}</p>
+                        </div>
+                        <div className="checkup-col">
+                          <p className="checkup-label">Diagnosis</p>
+                          <p>{visit.diagnosis}</p>
+                        </div>
+                        <div className="checkup-col">
+                          <p className="checkup-label">Treatment Status</p>
+                          <p>{visit.status}</p>
+                        </div>
+                        <div className="checkup-col">
+                          <p className="checkup-label">Completed On</p>
+                          <p>{visit.completed}</p>
+                        </div>
+                        <div className="checkup-col action-col">
+                          <p className="checkup-label">Action</p>
+                          <button className="aksi-btn" onClick={() => setSelectedVisit(visit)}>
+                            <FaRegEye size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="no-records">No visit records found</div>
+                  )}
+                </div>
+              ) : (
+                <p>No visit records found.</p>
+              )}
+            </article>
           </div>
         </div>
       )}
@@ -750,8 +856,8 @@ export default function PetRecords() {
           onClose={() => setSelectedVisit(null)}
           role={user.role}
           printName={user.firstName}
-          setSelectedVisit={setSelectedVisit}  
-          Saving={handleUpdateVisit}            
+          setSelectedVisit={setSelectedVisit}
+          Saving={handleUpdateVisit}
           processing={isProcessing}
         />
       )}
@@ -850,6 +956,7 @@ export default function PetRecords() {
                 <div className="add-form-group">
                   <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition" />
                   <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit' />
+                  <input name="timeVisit" type="time" placeholder="Time Visit" required title='Time Visit' />
                 </div>
 
                 <div className="add-form-group">
@@ -980,6 +1087,14 @@ export default function PetRecords() {
                     defaultValue={editData?.lastVisit || ""}
                     required
                     title="Last Visit"
+                  />
+                  <input
+                    name="timeVisit"
+                    type="time"
+                    placeholder="Time Visit"
+                    defaultValue={editData?.timeVisit || ""}
+                    required
+                    title="Time Visit"
                   />
                 </div>
 
