@@ -131,8 +131,8 @@ export default function PetInfos() {
             setMessage("Error adding pet.");
             setIsNotify(true);
             setTimeout(() => {
-                    setIsNotify(false);
-                }, 3000);
+                setIsNotify(false);
+            }, 3000);
         } finally {
             setIsProcessing(false);
         }
@@ -181,8 +181,8 @@ export default function PetInfos() {
             setMessage("Error updating pet.");
             setIsNotify(true);
             setTimeout(() => {
-                    setIsNotify(false);
-                }, 3000);
+                setIsNotify(false);
+            }, 3000);
         } finally {
             setIsProcessing(false);
         }
@@ -214,50 +214,52 @@ export default function PetInfos() {
 
             <div className="petinfo-table-wrapper">
                 {filteredPets.length > 0 ? (
-                    <table className="petinfo-table">
-                        <thead>
-                            <tr>
-                                <th>Photo</th>
-                                <th>Name</th>
-                                <th>Pet Type</th>
-                                <th>Species</th>
-                                <th>Age</th>
-                                <th>Gender</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredPets.map((pet) => (
-                                <tr key={pet.id}>
-                                    <td>
-                                        <img
-                                            src={pet.photo}
-                                            alt={pet.petName}
-                                            className="petinfo-thumb"
-                                        />
-                                    </td>
-                                    <td>{pet.petName}</td>
-                                    <td>{pet.petType}</td>
-                                    <td>{pet.species}</td>
-                                    <td>{pet.petAge}</td>
-                                    <td>{pet.petGender}</td>
-                                    <td>
-                                        <button
-                                            className="petinfo-edit-btn"
-                                            onClick={() => {
-                                                setEditPet(pet)
-                                                const [value, unit] = pet.petAge.split(" ");
-                                                setAgeValue(value);
-                                                setAgeUnit(unit);
-                                            }}
-                                        >
-                                            <FaEdit size={14} /> Edit
-                                        </button>
-                                    </td>
+                    <div className="petinfo-table-scroll">
+                        <table className="petinfo-table">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Name</th>
+                                    <th>Pet Type</th>
+                                    <th>Species</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {filteredPets.map((pet) => (
+                                    <tr key={pet.id}>
+                                        <td>
+                                            <img
+                                                src={pet.photo}
+                                                alt={pet.petName}
+                                                className="petinfo-thumb"
+                                            />
+                                        </td>
+                                        <td>{pet.petName}</td>
+                                        <td>{pet.petType}</td>
+                                        <td>{pet.species}</td>
+                                        <td>{pet.petAge}</td>
+                                        <td>{pet.petGender}</td>
+                                        <td>
+                                            <button
+                                                className="petinfo-edit-btn"
+                                                onClick={() => {
+                                                    setEditPet(pet)
+                                                    const [value, unit] = pet.petAge.split(" ");
+                                                    setAgeValue(value);
+                                                    setAgeUnit(unit);
+                                                }}
+                                            >
+                                                <FaEdit size={14} /> Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <div className="petinfo-empty">No pet records found.</div>
                 )}

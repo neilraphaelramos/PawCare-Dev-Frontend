@@ -164,6 +164,22 @@ export default function PetRecords() {
       });
   };
 
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user.id,
+          vetName: `${user.firstName} ${user.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✔ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err);
+    }
+  };
+
   useEffect(() => {
     if (addingRecord) {
       axios.get(`${APIENDPOINT}/pet_medical_records/fetch/services`)
@@ -279,6 +295,7 @@ export default function PetRecords() {
 
         setShowAddPetModal(false);
         form.reset();
+        logVetAction(`Added Pet Record. ${form.name.value}`);
       }
     } catch (err) {
       console.error("Error adding pet:", err);
@@ -314,6 +331,7 @@ export default function PetRecords() {
         setPets(updatedPets.data);
         setShowEditModal(false);
         setEditData(null);
+        logVetAction(`Updated Pet Record.`);
       }
     } catch (err) {
       console.error("Error editing pet:", err);
@@ -337,6 +355,7 @@ export default function PetRecords() {
     } finally {
       setShowConfirmModal(false);
       setShowMessageModal(true);
+      logVetAction(`Pet Record Deleted.`);
     }
   }
 
@@ -431,6 +450,8 @@ export default function PetRecords() {
           status: '',
           completed: ''
         });
+
+        logVetAction(`Added Pet History.`);
       }
     } catch (err) {
       console.error("Error adding new visit history:", err);
@@ -479,9 +500,9 @@ export default function PetRecords() {
       console.error("Error updating visit history:", err);
     } finally {
       setIsProcessing(false);
+      logVetAction(`Updated Pet History.`);
     }
   };
-
 
   return (
     <div className="pet-records-wrapper">

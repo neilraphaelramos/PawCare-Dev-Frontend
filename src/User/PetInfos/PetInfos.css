@@ -75,6 +75,11 @@
     min-width: 700px;
 }
 
+.petinfo-table-scroll {
+  max-height: 680px; /* adjust as needed */
+  overflow-y: auto;
+}
+
 .petinfo-table thead {
     background-color: #eaf5f4;
 }

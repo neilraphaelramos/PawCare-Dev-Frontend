@@ -46,8 +46,14 @@ const VetSidebar = () => {
     <>
       <aside className="vet-dashboard-sidebar">
         <div className="vet-dashboard-logo">
-          Pawcare
+          <img
+            src="/images/logo.png"
+            alt="Pawcare Logo"
+            className="vet-dashboard-logo-img"
+          />
+          <span>Pawcare</span>
         </div>
+        
         <nav className="vet-dashboard-nav">
           <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
           <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>Appointments</NavLink>

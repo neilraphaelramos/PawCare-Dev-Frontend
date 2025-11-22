@@ -25,7 +25,15 @@ const AdminSidebar = () => {
   return (
     <>
       <aside className="admin-dashboard-sidebar">
-        <div className="admin-dashboard-logo">Pawcare</div>
+        <div className="admin-dashboard-logo">
+          <img
+            src="/images/logo.png"
+            alt="Pawcare Logo"
+            className="admin-dashboard-logo-img"
+          />
+          <span>Pawcare</span>
+        </div>
+
         <nav className="admin-dashboard-nav">
           <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
 
@@ -43,6 +51,10 @@ const AdminSidebar = () => {
 
           <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>
             Notifications
+          </NavLink>
+
+          <NavLink to="availability-date-time" className={({ isActive }) => isActive ? "active" : ""}>
+            Manage Availability
           </NavLink>
 
           <NavLink to="reports" className={({ isActive }) => isActive ? "active" : ""}>

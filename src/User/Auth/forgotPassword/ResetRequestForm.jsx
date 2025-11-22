@@ -16,7 +16,10 @@ export default function ResetRequestForm() {
         setShowModal(true);
     };
 
-    const closeModal = () => setShowModal(false);
+    const closeModal = () => {
+        setShowModal(false);
+        navigate("/login");
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,7 +34,6 @@ export default function ResetRequestForm() {
             if (res.data.message) {
                 openModal("✅ " + res.data.message);
                 setEmail("");
-                navigate("/login");
             } else if (res.data.error) {
                 openModal(res.data.error);
             }

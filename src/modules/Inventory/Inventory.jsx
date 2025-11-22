@@ -327,8 +327,7 @@ export default function InventoryTable() {
 
       try {
         if (editingIndex !== null) {
-          const editingItem = inventoryData[editingIndex];
-          await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingItem.id}`, formData, {
+          await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingIndex}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setMessageModal("Item updated successfully!");

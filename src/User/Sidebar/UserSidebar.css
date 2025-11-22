@@ -11,11 +11,19 @@
 }
 
 .user-dashboard-logo {
-  font-size: 1.6rem;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #32b2b2;
-  text-align: center;
-  margin-bottom: 1rem;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 20px 0;
+}
+
+.user-dashboard-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .user-dashboard-nav a {

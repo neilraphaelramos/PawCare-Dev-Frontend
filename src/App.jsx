@@ -33,6 +33,7 @@ import AdminNotifications from "./modules/Notifications/Notifications";
 import ViewOrders from "./modules/ViewOrders/ViewOrders";
 import VetConsultationAdmin from "./modules/OnlineConsultation/OnlineConsultation";
 import AdminReports from "./modules/Reports/AdminReports";
+import Availability from "./modules/AvailabilityDateTime/Availability";
 
 
 // User panel components
@@ -114,6 +115,7 @@ export default function App() {
           <Route path="view-orders" element={<ViewOrders />} />
           <Route path="online-consultation" element={<VetConsultationAdmin />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="availability-date-time" element={<Availability />} />
         </Route>
 
         <Route

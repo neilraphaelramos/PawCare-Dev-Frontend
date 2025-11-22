@@ -57,7 +57,7 @@ export default function Notifications() {
     const fetchNotifications = async () => {
       try {
         const { data } = await axios.get(
-          `${process.env.REACT_APP_API_URL}/notifications/vetadminapi/${UID}`
+          `${process.env.REACT_APP_API_URL}/notifications/vetadminapi/${UID}/${'Vet'}`
         );
         setNotifications(data);
       } catch (err) {

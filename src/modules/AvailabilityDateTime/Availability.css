@@ -1,0 +1,28 @@
+.availability-container {
+  padding: 20px;
+}
+
+.availability-form {
+  display: grid;
+  gap: 10px;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.availability-form input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.unavailable-list {
+  margin-top: 20px;
+}
+
+.unavailable-item {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid #d9534f;
+}

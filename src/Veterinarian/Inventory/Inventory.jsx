@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Edit, Trash2, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import "./Inventory.css";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { UserContext } from '../../hook/authContext';
 
 // Utility: Generate item code based on group prefix
 const generateItemCode = (group = 'X') => {
@@ -44,65 +46,110 @@ function exportToCSV(data) {
   document.body.removeChild(link);
 }
 
-function exportToPDF(data) {
-  const doc = new jsPDF();
+function exportToPDF(data, user) {
+  const doc = new jsPDF("p", "pt");
 
-  const headers = ['Item Code', 'Item Name', 'Item Group', 'Last Purchase', 'Expiration', 'Price', 'Stocks'];
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let yOffset = 40;
 
-  let startX = 14;
-  let startY = 20;
-  let lineHeight = 10;
+  // Load Logo
+  const img = new Image();
+  img.src = "/images/LandingPage/rivera-logo.png";
 
-  doc.setFontSize(16);
-  doc.text("Inventory Report", startX, startY);
-  startY += 10;
+  img.onload = () => {
+    // ----- HEADER -----
+    const imgWidth = 60;
+    const imgHeight = 60;
 
-  doc.setFontSize(10);
+    doc.addImage(img, "PNG", 40, yOffset, imgWidth, imgHeight);
 
-  headers.forEach((header, i) => {
-    doc.text(header, startX + i * 30, startY);
-  });
-
-  startY += lineHeight;
-
-  data.forEach((item) => {
-    let cleanPrice = "";
-    if (item.price !== undefined && item.price !== null && item.price !== "") {
-      cleanPrice = String(
-        Number(String(item.price).replace(/[₱,\s]/g, ""))
-          .toFixed(2)
-      );
-    }
-
-    const row = [
-      item.code,
-      item.name,
-      item.group,
-      item.date,
-      item.expiration,
-      cleanPrice,
-      String(item.stock ?? ""),
+    const clinicText = [
+      "PetCare Animal Clinic",
+      "123 Veterinary Street, Bocaue, Bulacan",
+      "Contact: (044) 123-4567 | Email: petcare@clinic.com",
+      `Date: ${new Date().toLocaleDateString()}`
     ];
 
-    row.forEach((cell, i) => {
-      doc.text(String(cell ?? ""), startX + i * 30, startY);
+    doc.setFontSize(12);
+    clinicText.forEach((line, i) => {
+      doc.text(line, pageWidth / 2 + imgWidth / 2, yOffset + i * 14, { align: "center" });
     });
 
-    startY += lineHeight;
+    yOffset += imgHeight + 30;
 
-    // Handle page break
-    if (startY > 280) {
-      doc.addPage();
-      startY = 20;
-    }
-  });
+    // Title
+    doc.setFontSize(18);
+    doc.text("Inventory Report", pageWidth / 2, yOffset, { align: "center" });
+    yOffset += 25;
 
-  // Save PDF
-  doc.save("inventory_report.pdf");
+    // ----- TABLE -----
+    const tableColumn = [
+      "Item Code",
+      "Item Name",
+      "Item Group",
+      "Last Purchase",
+      "Expiration",
+      "Price",
+      "Stocks"
+    ];
+
+    const tableRows = data.map(item => {
+      let cleanPrice = "";
+
+      if (item.price !== undefined && item.price !== null && item.price !== "") {
+        cleanPrice = String(
+          Number(String(item.price).replace(/[₱,\s]/g, "")).toFixed(2)
+        );
+      }
+
+      return [
+        item.code,
+        item.name,
+        item.group,
+        item.date,
+        item.expiration,
+        cleanPrice,
+        String(item.stock ?? "")
+      ];
+    });
+
+    autoTable(doc, {
+      startY: yOffset,
+      head: [tableColumn],
+      body: tableRows,
+      theme: "grid",
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [50, 178, 178], textColor: 255, halign: "center" },
+      margin: { left: 40, right: 40 },
+
+      // PAGE NUMBER + AUTO Y OFFSET HANDLING
+      didDrawPage: (data) => {
+        // Add page number
+        const pageNumber = doc.internal.getNumberOfPages();
+        doc.setFontSize(10);
+        doc.text(`Page ${pageNumber}`, pageWidth - 50, pageHeight - 20);
+      }
+    });
+
+    // ----- FOOTER SIGNATURE -----
+    let footerY = pageHeight - 80;
+
+    doc.setFontSize(12);
+    doc.text("_________________________", pageWidth / 2, footerY, { align: "center" });
+    footerY += 15;
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`Prepared by: ${user.firstName} ${user.lastName}`, pageWidth / 2, footerY, { align: "center" });
+    footerY += 15;
+
+    doc.setFont("helvetica", "normal");
+    doc.text("Veterinarian", pageWidth / 2, footerY, { align: "center" });
+
+    // SAVE
+    doc.save(`Inventory_Report_${new Date().toLocaleDateString()}.pdf`);
+  };
 }
-
-const API_BASE = "/server-api";
-
 
 export default function InventoryTable() {
   const [inventoryData, setInventoryData] = useState([]);
@@ -133,7 +180,36 @@ export default function InventoryTable() {
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const { user } = useContext(UserContext);
 
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user.id,
+          vetName: `${user.firstName} ${user.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✔ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err);
+    }
+  };
+
+  const sendAdminNotification = async (title, type, details) => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/post`, {
+        title_notify: title,
+        type_notify: type,
+        details: details,
+        displaySet: "Admin"
+      });
+    } catch (err) {
+      console.error("❌ Failed to send admin notification:", err);
+    }
+  };
 
   const getPhotoUrl = (photo) => {
     if (!photo) return "";
@@ -204,7 +280,7 @@ export default function InventoryTable() {
   };
 
   const handleDelete = (item) => {
-    setSelectedInventoryId(item.id);
+    setSelectedInventoryId(item);
     setMessageModal('Are you sure you want to delete this item?');
     setShowConfirmModal(true);
   }
@@ -214,13 +290,21 @@ export default function InventoryTable() {
 
     setIsProcessing(true);
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${selectedInventoryId}`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${selectedInventoryId.id}`);
       await fetchInventory();
+
+      await sendAdminNotification(
+        "Inventory Item Deleted",
+        "Stock",
+        `Item "${selectedInventoryId.name}" was removed from inventory.`
+      );
+
     } catch (err) {
       console.error("Error deleting inventory:", err);
     } finally {
       setIsProcessing(false);
       setShowConfirmModal(false);
+      logVetAction(`Item remove. (${selectedInventoryId.name})`);
     }
   };
 
@@ -327,16 +411,29 @@ export default function InventoryTable() {
 
       try {
         if (editingIndex !== null) {
-          const editingItem = inventoryData[editingIndex];
-          await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingItem.id}`, formData, {
+          const res = await axios.put(`${process.env.REACT_APP_API_URL}/inventory/update/${editingIndex}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setMessageModal("Item updated successfully!");
+          logVetAction(`Item Added. (${newItem.name}) | New Stock: ${res.data.stock}, Stock-In: ${res.data.stockIn}, Stock-Out: ${res.data.stockOut}`);
+
+          await sendAdminNotification(
+            "Inventory Item Updated",
+            "Stock",
+            `Item "${newItem.name}" was updated. New Stock: ${res.data.stock}, In: ${res.data.stockIn}, Out: ${res.data.stockOut}`
+          );
         } else {
-          await axios.post(`${process.env.REACT_APP_API_URL}/inventory/add`, formData, {
+          const res = await axios.post(`${process.env.REACT_APP_API_URL}/inventory/add`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           setMessageModal("Item added successfully!");
+          logVetAction(`Item Updated. (${newItem.name}) Added Stock: ${res.data.stockAdded}`);
+
+          await sendAdminNotification(
+            "New Inventory Item Added",
+            "Stock",
+            `Item "${newItem.name}" was added to inventory. Quantity: ${newItem.stock}`
+          );
         }
 
         await fetchInventory();
@@ -384,7 +481,7 @@ export default function InventoryTable() {
     if (type === 'csv') {
       exportToCSV(exportData);
     } else if (type === 'pdf') {
-      exportToPDF(exportData);
+      exportToPDF(exportData, user);
     }
   };
 

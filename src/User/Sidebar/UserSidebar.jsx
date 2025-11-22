@@ -26,7 +26,15 @@ const UserSidebar = () => {
   return (
     <>
       <aside className="user-dashboard-sidebar">
-        <div className="user-dashboard-logo">Pawcare</div>
+        <div className="user-dashboard-logo">
+          <img
+            src="/images/logo.png"
+            alt="Pawcare Logo"
+            className="user-dashboard-logo-img"
+          />
+          <span>Pawcare</span>
+        </div>
+
         <nav className="user-dashboard-nav">
           <NavLink to="" end className={({ isActive }) => isActive ? "active" : ""}>Dashboard</NavLink>
           <NavLink to="appointments" className={({ isActive }) => isActive ? "active" : ""}>Appointment</NavLink>

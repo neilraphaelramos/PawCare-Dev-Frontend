@@ -75,7 +75,7 @@ const UserInventory = () => {
           total: totalAmount
         });
 
-        if(paymentMethod === "cod") {
+        if (paymentMethod === "cod") {
           setShowReceipt(false);
         } else {
           setShowReceipt(true);
@@ -472,46 +472,48 @@ const UserInventory = () => {
           </div>
         </div>
 
-        <div className="inventory-grid scrollable-area">
-          {filteredInventory.map(item => (
-            <div
-              key={item.id}
-              className={`inventory-card ${item.quantity === 0 ? 'out-of-stock' : ''}`}
-            >
-              <div className="product-image-wrapper">
-                <img src={item.image} alt={item.name} className="product-image" />
-
-                {item.quantity === 0 && (
-                  <div className="outofstock-overlay">
-                    <img
-                      src="/images/outofstockimg.png"
-                      alt="Out of Stock"
-                      className="outofstock-image"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className='user-item-unit-container'>
-                <h3 className='user-h3'>{item.name}</h3>
-                <div className='user-unit-display'>{item.amount || 0} - {item.unit}</div>
-              </div>
-
-              <p>₱{item.price.toFixed(2)}</p>
-
-              <button
-                onClick={() => item.quantity > 0 && addToCart(item)}
-                disabled={item.quantity === 0}
+        <div className="inventory-scroll-container">
+          <div className="inventory-grid">
+            {filteredInventory.map(item => (
+              <div
+                key={item.id}
+                className={`inventory-card ${item.quantity === 0 ? 'out-of-stock' : ''}`}
               >
-                {item.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
-              </button>
-            </div>
-          ))}
+                <div className="product-image-wrapper">
+                  <img src={item.image} alt={item.name} className="product-image" />
+
+                  {item.quantity === 0 && (
+                    <div className="outofstock-overlay">
+                      <img
+                        src="/images/outofstockimg.png"
+                        alt="Out of Stock"
+                        className="outofstock-image"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className='user-item-unit-container'>
+                  <h3 className='user-h3'>{item.name}</h3>
+                  <div className='user-unit-display'>{item.amount || 0} - {item.unit}</div>
+                </div>
+
+                <p>₱{item.price.toFixed(2)}</p>
+
+                <button
+                  onClick={() => item.quantity > 0 && addToCart(item)}
+                  disabled={item.quantity === 0}
+                >
+                  {item.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Right: Cart */}
-      <div className="inventory-cart scrollable-area">
+      <div className="inventory-cart">
         <h2>My Order</h2>
         {cart.length === 0 ? (
           <p className="empty-cart">Your cart is empty.</p>
