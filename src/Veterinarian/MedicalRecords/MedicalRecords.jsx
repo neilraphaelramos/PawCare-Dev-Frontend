@@ -294,11 +294,19 @@ export default function PetRecords() {
         setPets(updatedPets.data);
 
         setShowAddPetModal(false);
-        form.reset();
+        resetAddForm();
         logVetAction(`Added Pet Record. ${form.name.value}`);
       }
     } catch (err) {
       console.error("Error adding pet:", err);
+
+      if (err.response && err.response.status == 409) {
+        setMessageModal(err.response.data.message);
+      } else {
+        setMessageModal("Error adding pet record.");
+      }
+
+      setShowMessageModal(true);
     } finally {
       setIsProcessing(false);
     }
@@ -416,7 +424,7 @@ export default function PetRecords() {
         owner_phonenumber: newRecord.ownerPhoneNum,
         day: newRecord.day,
         date_visit: newRecord.date,
-        date_time: newRecord.time,
+        time_visit: newRecord.time,
         service_type: newRecord.service,
         main_complaint: newRecord.complaint,
         pet_diagnosis: newRecord.diagnosis,
@@ -432,7 +440,7 @@ export default function PetRecords() {
         blood_pressure: newRecord.bloodPressure || '',
         pulse: newRecord.pulse || '',
         medications: newRecord.medications || '',
-        veterinarian_name: "Admin"
+        veterinarian_name: `${user.firstName} ${user.lastName}`
       });
 
       if (res.data.success) {
@@ -455,6 +463,14 @@ export default function PetRecords() {
       }
     } catch (err) {
       console.error("Error adding new visit history:", err);
+
+      if (err.response && err.response.status == 409) {
+        setMessageModal(err.response.data.message);
+      } else {
+        setMessageModal("Error adding new visit history");
+      }
+
+      setShowMessageModal(true);
     } finally {
       setIsProcessing(false);
     }

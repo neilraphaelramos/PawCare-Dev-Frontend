@@ -279,10 +279,18 @@ export default function PetRecords() {
         setPets(updatedPets.data);
 
         setShowAddPetModal(false);
-        form.reset();
+        resetAddForm();
       }
     } catch (err) {
       console.error("Error adding pet:", err);
+
+      if (err.response && err.response.status == 409) {
+        setMessageModal(err.response.data.message);
+      } else {
+        setMessageModal("Error adding pet:");
+      }
+
+      setShowMessageModal(true);
     } finally {
       setIsProcessing(false);
     }
@@ -435,6 +443,14 @@ export default function PetRecords() {
       }
     } catch (err) {
       console.error("Error adding new visit history:", err);
+
+      if (err.response && err.response.status == 409) {
+        setMessageModal(err.response.data.message);
+      } else {
+        setMessageModal("Error adding new visit history");
+      }
+
+      setShowMessageModal(true);
     } finally {
       setIsProcessing(false);
     }

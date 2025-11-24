@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import './PetProducts.css';
 import './modalReceipt/receipt.css'
+import '../../modal/modal_design.css'
 import { FaWallet, FaMoneyBillAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { UserContext } from '../../hook/authContext'
 import { useLocation } from 'react-router-dom';
 import html2canvas from 'html2canvas';
+import { tr } from 'date-fns/locale';
 
 const UserInventory = () => {
   const [search, setSearch] = useState('');
@@ -36,6 +38,10 @@ const UserInventory = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [showEditAddressModal, setShowEditAddressModal] = useState(false);
+  const [selectedOrderForEdit, setSelectedOrderForEdit] = useState(null);
+  const [editedAddress, setEditedAddress] = useState("");
+  const [isUpdate, setIsUpdate] = useState(false);
 
   const receiptRef = useRef(null);
 
@@ -341,7 +347,6 @@ const UserInventory = () => {
       if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map(mapRowToUIItem);
         setItems(mapped);
-        console.table(mapped);
       }
     } catch (err) {
       console.error("Error fetching inventory:", err);
@@ -440,6 +445,37 @@ const UserInventory = () => {
   });
 
   const itemTypes = [...new Set(items.map(item => item.type))];
+
+  // Handler to open modal
+  const handleEditAddress = (order) => {
+    setSelectedOrderForEdit(order);
+    setEditedAddress(order.customer_address);
+    setShowEditAddressModal(true);
+  };
+
+  // Handler to save updated address (example with API call)
+  const handleSaveAddress = async () => {
+    setIsUpdate(true);
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/orders/update_address/${selectedOrderForEdit.id_order}`, {
+        newAddress: editedAddress
+      });
+      setOrders(prev =>
+        prev.map(o =>
+          o.id_order === selectedOrderForEdit.id_order
+            ? { ...o, customer_address: editedAddress }
+            : o
+        )
+      );
+
+      setShowEditAddressModal(false);
+      setSelectedOrderForEdit(null);
+    } catch (err) {
+      console.error("Error updating address:", err);
+    } finally {
+      setIsUpdate(false);
+    }
+  };
 
   return (
     <div className="inventory-wrapper">
@@ -763,7 +799,19 @@ const UserInventory = () => {
                         </div>
 
                         <p><strong>Date:</strong> {new Date(order.order_date).toLocaleString()}</p>
-                        <p><strong>Address:</strong> {order.customer_address}</p>
+                        <p>
+                          <strong>Address: </strong>
+                          {order.order_status === 'Pending' ? (
+                            <a
+                              className="edit-address-btn"
+                              onClick={() => handleEditAddress(order)}
+                            >
+                              {order.customer_address}
+                            </a>
+                          ) : (
+                            <a>{order.customer_address}</a>
+                          )}
+                        </p>
                         <p>
                           <strong>Payment Method:</strong>{" "}
                           {order.method === "cod" ? "Cash on Delivery" : "QRPH"}
@@ -927,6 +975,33 @@ const UserInventory = () => {
             <div className="receipt-actions">
               <button onClick={() => setShowReceipt(false)}>Close</button>
               <button onClick={handlePrintReceipt}>Print Receipt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditAddressModal && (
+        <div className="all-modal-overlay">
+          <div className="all-modal">
+            <div className="all-modal-header">
+              <h2>Edit Address</h2>
+            </div>
+            <div className="all-modal-body">
+              <input
+                type="text"
+                value={editedAddress}
+                onChange={(e) => setEditedAddress(e.target.value)}
+                className="all-edit-address-input"
+              />
+            </div>
+            <div className="all-modal-footer">
+              <button
+                onClick={handleSaveAddress}
+                disabled={isUpdate}
+              >
+                {isUpdate ? "Updating..." : "Save"}
+              </button>
+              <button onClick={() => setShowEditAddressModal(false)}>Cancel</button>
             </div>
           </div>
         </div>

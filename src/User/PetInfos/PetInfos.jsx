@@ -128,7 +128,13 @@ export default function PetInfos() {
             };
         } catch (err) {
             console.error(err);
-            setMessage("Error adding pet.");
+
+            if (err.response && err.response.status == 409) {
+                setMessage(err.response.data.message);
+            } else {
+                setMessage("Error adding pet.");
+            }
+
             setIsNotify(true);
             setTimeout(() => {
                 setIsNotify(false);
