@@ -43,7 +43,8 @@ const Appointment = () => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [declineData, setDeclineData] = useState(null);
-
+  const [unavailableDates, setUnavailableDates] = useState([]);
+  const [unavailableTimes, setUnavailableTimes] = useState([]);
 
   const logVetAction = async (action) => {
     try {
@@ -147,30 +148,82 @@ const Appointment = () => {
       .catch(err => console.error("Error fetching fully booked dates:", err));
   }, []);
 
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_URL}/availability`)
+      .then(res => {
+        const { fullDays, times } = res.data;
+
+        // Full-day unavailable dates with event
+        const fullDates = fullDays.map(d => ({
+          date: d.date,
+          event: d.event || "Unavailable" // default if no event provided
+        }));
+        setUnavailableDates(fullDates);
+
+        // Partial time ranges grouped by date
+        const timeMap = {};
+        times.forEach(t => {
+          if (!timeMap[t.date]) timeMap[t.date] = [];
+          timeMap[t.date].push({
+            time: `${t.time_from} - ${t.time_to}`,
+            event: t.event || "Unavailable"
+          });
+        });
+        setUnavailableTimes(timeMap);
+
+        console.log("Full days:", fullDates);
+        console.log("Partial times:", timeMap);
+      })
+      .catch(err => console.error("Error fetching unavailable data:", err));
+  }, []);
 
   const filterSlots = (slots) => {
-    return slots.filter((slot) => {
+    if (!selectedDate) return [];
+
+    const dateStr = selectedDate.toLocaleDateString('en-CA');
+    const blockedSlots = unavailableTimes[dateStr] || []; // array of objects now
+
+    return slots.filter(slot => {
+      const [slotStartStr, slotEndStr] = slot.split(" - ");
+
+      const parseTime = (timeStr) => {
+        if (!timeStr) return { hour: 0, minute: 0 };
+        const [time, meridian] = timeStr.split(" ");
+        let [hour, minute] = time.split(":").map(Number);
+        if (meridian === "PM" && hour !== 12) hour += 12;
+        if (meridian === "AM" && hour === 12) hour = 0;
+        return { hour, minute };
+      };
+
+      const startTime = parseTime(slotStartStr);
+      const endTime = parseTime(slotEndStr);
+
       const slotStart = new Date(selectedDate);
-      const [startTime] = slot.split(" - ");
-      const [time, meridian] = startTime.split(" ");
-      const [hourStr, minuteStr] = time.split(":");
-
-      let hours = parseInt(hourStr, 10);
-      const minutes = parseInt(minuteStr, 10);
-
-      if (meridian === "PM" && hours !== 12) hours += 12;
-      if (meridian === "AM" && hours === 12) hours = 0;
-
-      slotStart.setHours(hours, minutes, 0, 0);
+      slotStart.setHours(startTime.hour, startTime.minute, 0, 0);
+      const slotEnd = new Date(selectedDate);
+      slotEnd.setHours(endTime.hour, endTime.minute, 0, 0);
 
       const now = new Date();
-      const isToday =
-        selectedDate &&
-        now.toDateString() === selectedDate.toDateString();
-
+      const isToday = selectedDate.toDateString() === now.toDateString();
       const isPast = isToday && slotStart <= now;
 
-      return !isPast; // hide past slots
+      // ✅ Use blocked.time instead of blocked directly
+      const isBlocked = blockedSlots.some(blocked => {
+        if (!blocked.time) return false;
+
+        const [bStartStr, bEndStr] = blocked.time.split(" - ");
+        const bStart = parseTime(bStartStr);
+        const bEnd = parseTime(bEndStr);
+
+        const blockedStart = new Date(selectedDate);
+        blockedStart.setHours(bStart.hour, bStart.minute, 0, 0);
+        const blockedEnd = new Date(selectedDate);
+        blockedEnd.setHours(bEnd.hour, bEnd.minute, 0, 0);
+
+        return slotStart < blockedEnd && slotEnd > blockedStart;
+      });
+
+      return !isPast && !isBlocked;
     });
   };
 
@@ -199,9 +252,12 @@ const Appointment = () => {
               selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
 
             const isWednesday = date.getDay() === 3;
-            const isFullyBooked = !isPast && fullyBookedDates.includes(dateStr);
+            const isFullyBooked = fullyBookedDates.includes(dateStr); // just for display
+            const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
+            const isUnavailable = !!fullDateInfo;  // fully disabled
+            const tooltipText = fullDateInfo?.event || "Unavailable";
 
-            const isDisabled = isPast || isWednesday;
+            const isDisabled = isPast || isWednesday || isUnavailable;
 
             return (
               <div
@@ -209,14 +265,14 @@ const Appointment = () => {
                 className={`admin-calendar-day 
                   ${isFullyBooked ? 'admin-fully-booked' : ''} 
                   ${isDisabled ? 'admin-disabled' : ''} 
-                  ${isSelected ? 'selected' : ''}`}
+                  ${isSelected ? 'selected' : ''}`
+                }
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}
-                {isFullyBooked && <span className="admin-tooltip">This date is full</span>}
-                {isWednesday && !isFullyBooked && (
-                  <span className="admin-tooltip">Closed (Wednesday)</span>
-                )}
+                {isFullyBooked && <span className="admin-tooltip">This date is fully booked</span>}
+                {isUnavailable && <span className="admin-tooltip">{tooltipText}</span>}
+                {isWednesday && <span className="admin-tooltip">Closed (Wednesday)</span>}
               </div>
             );
           })}

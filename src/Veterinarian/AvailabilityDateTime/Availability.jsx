@@ -15,13 +15,15 @@ const formatTimeAMPM = (time) => {
 };
 
 
-export default function Availability() {
+export default function VetAvailability() {
   const { user } = useContext(UserContext);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
 
   const [unavailableDates, setUnavailableDates] = useState([]); // {date, full_day, event}
   const [unavailableTimes, setUnavailableTimes] = useState([]); // {date, from, to, event}
+  const [adminUnavailableDates, setAdminUnavailableDates] = useState([]);
+  const [adminUnavailableTimes, setAdminUnavailableTimes] = useState({});
 
   const [showModal, setShowModal] = useState(false);
 
@@ -62,6 +64,36 @@ export default function Availability() {
       console.error("Error loading availability", err);
     }
   };
+
+  // Fetch admin full-day unavailable dates separately
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_URL}/availability`) // admin endpoint
+      .then(res => {
+        const { fullDays, times } = res.data;
+
+        // Full-day admin unavailable dates
+        const fullDates = fullDays.map(d => ({
+          date: d.date,
+          event: d.event || "Unavailable"
+        }));
+        setAdminUnavailableDates(fullDates);
+
+        // Partial time ranges grouped by date
+        const timeMap = {};
+        times.forEach(t => {
+          if (!timeMap[t.date]) timeMap[t.date] = [];
+          timeMap[t.date].push({
+            time: `${formatTimeAMPM(t.time_from)} - ${formatTimeAMPM(t.time_to)}`,
+            event: t.event || "Unavailable"
+          });
+        });
+        setAdminUnavailableTimes(timeMap);
+
+        console.log("Admin Full days:", fullDates);
+        console.log("Admin Partial times:", timeMap);
+      })
+      .catch(err => console.error("Error fetching admin unavailable data:", err));
+  }, []);
 
   useEffect(() => {
     loadUnavailable();
@@ -108,6 +140,16 @@ export default function Availability() {
 
     try {
       if (disableFullDay) {
+        const dateStr = selectedDate.toLocaleDateString("en-CA");
+        const adminFullDay = adminUnavailableDates.find(d => d.date === dateStr);
+        const adminTimeBlocks = adminUnavailableTimes[dateStr] || [];
+
+        if (adminFullDay || adminTimeBlocks.length > 0) {
+          setMessageModal("Cannot mark full day unavailable: Admin has set availability on this date.");
+          setShowMessageModal(true);
+          return;
+        }
+
         await axios.post(`${process.env.REACT_APP_API_URL}/availability/add-full-day`, {
           user_id: user.id,
           date: dateStr,
@@ -179,25 +221,25 @@ export default function Availability() {
   };
 
   return (
-    <div className="admin-availability-container">
-      <h2 className="admin-title">Availability Manager</h2>
+    <div className="vet-availability-container">
+      <h2 className="vet-title">Availability Manager</h2>
 
       {/* ---------------------- */}
       {/*       CALENDAR         */}
       {/* ---------------------- */}
-      <div className="admin-calendar-panel">
-        <div className="admin-calendar-header">
-          <button onClick={handlePrevMonth} className="admin-month-btn">&lt;</button>
+      <div className="vet-calendar-panel">
+        <div className="vet-calendar-header">
+          <button onClick={handlePrevMonth} className="vet-month-btn">&lt;</button>
           <span>
             {currentDate.toLocaleString("default", { month: "long" })}{" "}
             {currentDate.getFullYear()}
           </span>
-          <button onClick={handleNextMonth} className="admin-month-btn">&gt;</button>
+          <button onClick={handleNextMonth} className="vet-month-btn">&gt;</button>
         </div>
 
-        <div className="admin-calendar-grid">
+        <div className="vet-calendar-grid">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-            <div className="admin-day-name" key={d}>{d}</div>
+            <div className="vet-day-name" key={d}>{d}</div>
           ))}
 
           {Array(startDay === 0 ? 6 : startDay - 1)
@@ -209,39 +251,44 @@ export default function Availability() {
           {daysInMonth.map((day) => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const dateStr = date.toLocaleDateString("en-CA");
+
             const partialTime = hasPartialTime(dateStr);
             const isPast = date < new Date().setHours(0, 0, 0, 0);
-
-            // auto-disable every Wednesday
             const autoWednesday = isWednesday(date);
-
-            // full day blocked
             const fullDayBlocked = isDayBlocked(dateStr);
 
-            // determine if blocked for click
-            const blockedForClick = isPast || autoWednesday || fullDayBlocked;
+            // <--- PLACE IT HERE ---
+            const adminFullDay = adminUnavailableDates.find(d => d.date === dateStr);
+            const adminTimeBlocks = adminUnavailableTimes[dateStr] || [];
+            const blockedForClick = isPast || autoWednesday || fullDayBlocked || adminFullDay;
+
+            let tooltipText = "";
+            if (adminFullDay) {
+              tooltipText = `Admin Full Day: ${adminFullDay.event}`;
+            } else if (adminTimeBlocks.length > 0) {
+              tooltipText = adminTimeBlocks.map(t => `${t.time} (${t.event})`).join(", ");
+            }
+            // -----------------------
 
             const isSelected =
-              selectedDate &&
-              dateStr === selectedDate.toLocaleDateString("en-CA");
+              selectedDate && dateStr === selectedDate.toLocaleDateString("en-CA");
 
             return (
               <div
                 key={day}
-                className={`admin-calendar-day 
-        ${isPast ? "admin-disabled" : ""}
-        ${autoWednesday ? "admin-wednesday" : ""}
-        ${fullDayBlocked ? "admin-blocked" : ""}
-        ${partialTime ? "admin-partial-time" : ""}
-        ${isSelected ? "admin-selected" : ""}
-      `}
+                className={`vet-calendar-day 
+                  ${isPast ? "vet-disabled" : ""}
+                  ${autoWednesday ? "vet-wednesday" : ""}
+                  ${fullDayBlocked || adminFullDay ? "vet-blocked" : ""}
+                  ${partialTime || adminTimeBlocks.length > 0 ? "vet-partial-time" : ""}
+                  ${isSelected ? "vet-selected" : ""}
+                `}
                 onClick={() => {
-                  if (!blockedForClick) {
-                    selectDate(day);
-                  }
+                  if (!blockedForClick) selectDate(day);
                 }}
               >
                 {day}
+                {tooltipText && <span className="vet-tooltip">{tooltipText}</span>}
               </div>
             );
           })}
@@ -251,24 +298,24 @@ export default function Availability() {
       {/* ---------------------- */}
       {/*   Unavailable Lists    */}
       {/* ---------------------- */}
-      <div className="admin-unavailable-section">
-        <h3 className="admin-title">Unavailable Dates & Events</h3>
+      <div className="vet-unavailable-section">
+        <h3 className="vet-title">Unavailable Dates & Events</h3>
 
         {unavailableDates.length === 0 && unavailableTimes.length === 0 ? (
           <p>No events added.</p>
         ) : (
-          <div className="admin-unavailable-list">
+          <div className="vet-unavailable-list">
             {/* Combine full days and time ranges into one list */}
             {[...unavailableDates.map(d => ({ ...d, type: 'fullDay' })),
             ...unavailableTimes.map(t => ({ ...t, type: 'timeRange' }))]
               .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // sort by created_at descending
               .map((item, i) => (
-                <div key={i} className="admin-unavailable-item">
+                <div key={i} className="vet-unavailable-item">
                   <strong>{item.date}</strong> — {item.type === 'fullDay' ? 'Full Day' : `${formatTimeAMPM(item.time_from)} to ${formatTimeAMPM(item.time_to)}`} —
                   <em>{item.event}</em> —
-                  <span className="admin-set-by">Set by: {item.setBy}</span>
+                  <span className="vet-set-by">Set by: {item.setBy}</span>
                   <button
-                    className="admin-delete-btn"
+                    className="vet-delete-btn"
                     onClick={() => item.type === 'fullDay' ? deleteFullDay(item.id) : deleteTimeRange(item.id)}
                   >
                     🗑️
@@ -283,25 +330,25 @@ export default function Availability() {
       {/*         MODAL          */}
       {/* ---------------------- */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="admin-modal-title">Set Unavailability or Event</h3>
+        <div className="vet-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="vet-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="vet-modal-title">Set Unavailability or Event</h3>
 
             <p>
               Selected date:{" "}
               <strong>{selectedDate?.toLocaleDateString("en-CA")}</strong>
             </p>
 
-            <label className="admin-input-label">Event Description:</label>
+            <label className="vet-input-label">Event Description:</label>
             <input
               type="text"
-              className="admin-input-text"
+              className="vet-input-text"
               placeholder="Holiday, Meeting, etc..."
               value={eventText}
               onChange={(e) => setEventText(e.target.value)}
             />
 
-            <label className="admin-checkbox-label">
+            <label className="vet-checkbox-label">
               <input
                 type="checkbox"
                 checked={disableFullDay}
@@ -312,29 +359,29 @@ export default function Availability() {
 
             {!disableFullDay && (
               <>
-                <label className="admin-input-label">From:</label>
+                <label className="vet-input-label">From:</label>
                 <input
                   type="time"
-                  className="admin-input-time"
+                  className="vet-input-time"
                   value={timeFrom}
                   onChange={(e) => setTimeFrom(e.target.value)}
                 />
 
-                <label className="admin-input-label">To:</label>
+                <label className="vet-input-label">To:</label>
                 <input
                   type="time"
-                  className="admin-input-time"
+                  className="vet-input-time"
                   value={timeTo}
                   onChange={(e) => setTimeTo(e.target.value)}
                 />
               </>
             )}
 
-            <div className="admin-modal-actions">
-              <button className="admin-save-btn" onClick={saveUnavailable}>
+            <div className="vet-modal-actions">
+              <button className="vet-save-btn" onClick={saveUnavailable}>
                 Save
               </button>
-              <button className="admin-cancel-btn" onClick={() => {
+              <button className="vet-cancel-btn" onClick={() => {
                 resetForm();
                 setShowModal(false);
               }}>

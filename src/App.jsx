@@ -67,6 +67,7 @@ import VetSecurity from "./Veterinarian/Security/Security";
 import VetConsultation from "./Veterinarian/OnlineConsultation/OnlineConsultation";
 import VetProfile from "./Veterinarian/Profile/Profile";
 import VetReports from "./Veterinarian/Reports/VetReports";
+import VetAvailability from "./Veterinarian/AvailabilityDateTime/Availability";
 
 
 // Verified Account
@@ -150,7 +151,7 @@ export default function App() {
           path="/veterinarian"
           element={
             <ProtectedRoute>
-              <div className="vet-app" style={{ display: 'flex' }}>
+              <div className="vet-app" style={{ display: 'flex', height: '100vh' }}>
                 <VetSidebar />  {/* Add sidebar here */}
                 <main className="main-content" style={{ flexGrow: 1 }}>
                   <Outlet />
@@ -161,6 +162,7 @@ export default function App() {
         >
           <Route index element={<VetDashboard />} />
           <Route path="appointments" element={<VetAppointments />} />
+          <Route path="vet-availability-date-time" element={<VetAvailability />} />
           <Route path="medical-records" element={<VetMedicalRecords />} />
           <Route path="inventory" element={<VetInventory />} />
           <Route path="reports" element={<VetReports />} /> 

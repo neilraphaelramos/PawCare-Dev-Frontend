@@ -67,14 +67,11 @@
 .admin-calendar-day.admin-disabled {
   background: #eee;
   color: #aaa;
-  cursor: not-allowed;
-  pointer-events: none;
 }
 
 .admin-calendar-day.admin-fully-booked {
   background-color: #ffcccc;
   color: #a10000;
-  border: 1px solid #ff8888;
 }
 
 .admin-tooltip {

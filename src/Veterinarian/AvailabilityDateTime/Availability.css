@@ -1,14 +1,15 @@
 /* ============================
    MAIN CONTAINER
 ============================ */
-.admin-availability-container {
+.vet-availability-container {
   max-width: 1100px;
   margin: 30px auto;
   padding: 20px;
   font-family: "Inter", sans-serif;
+  
 }
 
-.admin-title {
+.vet-title {
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -16,7 +17,7 @@
 /* ============================
    CALENDAR PANEL
 ============================ */
-.admin-calendar-panel {
+.vet-calendar-panel {
   background: #ffffff;
   padding: 20px;
   border-radius: 14px;
@@ -24,14 +25,14 @@
   margin-bottom: 25px;
 }
 
-.admin-calendar-header {
+.vet-calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
 }
 
-.admin-calendar-header button {
+.vet-calendar-header button {
   background: #32b2b2;
   color: white;
   border: none;
@@ -41,11 +42,11 @@
   font-size: 16px;
 }
 
-.admin-calendar-header button:hover {
+.vet-calendar-header button:hover {
   background: #299b9b;
 }
 
-.admin-calendar-header span {
+.vet-calendar-header span {
   font-size: 18px;
   font-weight: 600;
 }
@@ -53,20 +54,20 @@
 /* ============================
    CALENDAR GRID
 ============================ */
-.admin-calendar-grid {
+.vet-calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
 }
 
-.admin-day-name {
+.vet-day-name {
   font-weight: 600;
   text-align: center;
   padding: 5px;
   color: #444;
 }
 
-.admin-calendar-day {
+.vet-calendar-day {
   padding: 12px;
   background: #f5f5f5;
   text-align: center;
@@ -77,39 +78,39 @@
   position: relative;
 }
 
-.admin-calendar-day:hover {
+.vet-calendar-day:hover {
   background: #ebebeb;
 }
 
 /* Past dates */
-.admin-calendar-day.admin-disabled {
+.vet-calendar-day.vet-disabled {
   background: #e2e2e2;
   color: #999;
   cursor: not-allowed;
 }
 
 /* Days marked unavailable */
-.admin-calendar-day.admin-blocked {
+.vet-calendar-day.vet-blocked {
   background: #ffb3b3;
   color: #8a0000;
   font-weight: 600;
 }
 
-.admin-calendar-day.admin-blocked:hover {
+.vet-calendar-day.vet-blocked:hover {
   background: #ff9f9f;
 }
 
 /* ============================
    UNAVAILABLE DATE LIST
 ============================ */
-.admin-unavailable-section {
+.vet-unavailable-section {
   background: #ffffff;
   padding: 20px;
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.admin-unavailable-item {
+.vet-unavailable-item {
   padding: 10px 14px;
   background: #f3f3f3;
   border-radius: 10px;
@@ -120,11 +121,11 @@
   align-items: center;
 }
 
-.admin-unavailable-item strong {
+.vet-unavailable-item strong {
   font-weight: 600;
 }
 
-.admin-unavailable-list {
+.vet-unavailable-list {
   max-height: 215px; /* adjust as needed */
   overflow-y: auto;
   margin-top: 10px;
@@ -132,23 +133,23 @@
 }
 
 /* Optional: add scrollbar styling for webkit browsers */
-.admin-unavailable-list::-webkit-scrollbar {
+.vet-unavailable-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.admin-unavailable-list::-webkit-scrollbar-thumb {
+.vet-unavailable-list::-webkit-scrollbar-thumb {
   background-color: rgba(0,0,0,0.2);
   border-radius: 3px;
 }
 
-.admin-unavailable-list::-webkit-scrollbar-track {
+.vet-unavailable-list::-webkit-scrollbar-track {
   background: transparent;
 }
 
 /* ============================
    MODAL OVERLAY
 ============================ */
-.admin-modal-overlay {
+.vet-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -164,16 +165,16 @@
 /* ============================
    MODAL WINDOW
 ============================ */
-.admin-modal {
+.vet-modal {
   background: #ffffff;
   padding: 25px;
   border-radius: 16px;
   width: 350px;
-  animation: admin-popup 0.25s ease;
+  animation: vet-popup 0.25s ease;
   box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
-@keyframes admin-popup {
+@keyframes vet-popup {
   from {
     transform: scale(0.85);
     opacity: 0;
@@ -184,18 +185,18 @@
   }
 }
 
-.admin-modal-title {
+.vet-modal-title {
   font-size: 22px;
   margin-bottom: 10px;
 }
 
-.admin-modal label {
+.vet-modal label {
   font-size: 15px;
   display: block;
   margin-bottom: 10px;
 }
 
-.admin-modal input[type="time"] {
+.vet-modal input[type="time"] {
   width: 100%;
   padding: 8px 10px;
   margin-bottom: 12px;
@@ -207,13 +208,13 @@
 /* ============================
    MODAL ACTION BUTTONS
 ============================ */
-.admin-modal-actions {
+.vet-modal-actions {
   display: flex;
   justify-content: space-between;
   margin-top: 15px;
 }
 
-.admin-modal-actions button {
+.vet-modal-actions button {
   padding: 10px 16px;
   border-radius: 8px;
   border: none;
@@ -221,31 +222,31 @@
   font-weight: 600;
 }
 
-.admin-modal-actions .admin-save-btn {
+.vet-modal-actions .vet-save-btn {
   background: #32b2b2;
   color: white;
 }
 
-.admin-modal-actions .admin-save-btn:hover {
+.vet-modal-actions .vet-save-btn:hover {
   background: #299b9b;
 }
 
-.admin-modal-actions .admin-cancel-btn {
+.vet-modal-actions .vet-cancel-btn {
   background: #e4e4e4;
 }
 
-.admin-modal-actions .admin-cancel-btn:hover {
+.vet-modal-actions .vet-cancel-btn:hover {
   background: #d6d6d6;
 }
 
-.admin-selected {
+.vet-selected {
   background: #32b2b2 !important;
   color: white !important;
   font-weight: 700;
   border: 2px solid #299b9b;
 }
 
-.admin-delete-btn {
+.vet-delete-btn {
   background: transparent;
   border: none;
   color: #d10000;
@@ -253,7 +254,7 @@
   font-size: 18px;
 }
 
-.admin-input-text {
+.vet-input-text {
   width: 100%;
   padding: 10px;
   margin-bottom: 12px;
@@ -261,19 +262,30 @@
   border: 1px solid #ccc;
 }
 
-.admin-unavailable-item em {
+.vet-unavailable-item em {
   color: #444;
   font-style: italic;
 }
 
-.admin-wednesday {
+.vet-wednesday {
   background-color: #e2e2e2 !important;
   border: 1px solid #ccc !important;
   color: #999 !important;
   cursor: not-allowed !important;
 }
 
-.admin-calendar-day.admin-partial-time {
+.vet-calendar-day.vet-partial-time {
   background-color: #fff3cd; /* light yellow */
   border: 2px solid #ffc107; /* optional accent */
+}
+
+.vet-admin-blocked {
+  background-color: #ffd6d6; /* light red */
+  cursor: not-allowed;
+}
+
+.vet-tooltip {
+  display: block;
+  font-size: 0.7rem;
+  color: #a00;
 }
