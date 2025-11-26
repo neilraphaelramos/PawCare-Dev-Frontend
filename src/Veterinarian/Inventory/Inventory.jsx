@@ -13,6 +13,15 @@ const generateItemCode = (group = 'X') => {
   return `${prefix}${randomDigits}`;
 };
 
+function formatDateLocal(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // CSV export helper (unchanged)
 function exportToCSV(data) {
   const headers = ['Item Code', 'Item Name', 'Item Group', 'Last Purchase', 'Expiration', 'Price', 'Stocks'];
@@ -180,6 +189,7 @@ export default function InventoryTable() {
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showExpiringOnly, setShowExpiringOnly] = useState(false);
   const { user } = useContext(UserContext);
 
   const logVetAction = async (action) => {
@@ -218,19 +228,30 @@ export default function InventoryTable() {
   };
 
   const mapRowToUIItem = (row) => {
+    const expirationDate = row.date_expiration ? new Date(row.date_expiration) : null;
+    const today = new Date();
+    let expirationStatus = "";
+    if (expirationDate) {
+      const diffDays = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) expirationStatus = "expired";
+      else if (diffDays <= 30) expirationStatus = "warning";
+      else expirationStatus = "normal";
+    }
+
     return {
       id: row.product_ID,
       code: row.item_code,
       photo: row.photo || "",
       name: row.name || "",
       group: row.item_group || "",
-      date: row.date_purchase ? new Date(row.date_purchase).toISOString().split("T")[0] : "",
-      expiration: row.date_expiration ? new Date(row.date_expiration).toISOString().split("T")[0] : "",
+      date: formatDateLocal(row.date_purchase),
+      expiration: formatDateLocal(row.date_expiration),
       amount: row.amount || "",
       price: row.price ? `₱ ${Number(row.price).toFixed(2)}` : "",
       unit: row.unit || "",
       stock: row.stock ?? 0,
       low: row.stock !== null && row.stock < 5,
+      expirationStatus,
     };
   };
 
@@ -337,11 +358,10 @@ export default function InventoryTable() {
       (item.code || '').toLowerCase().includes(term) ||
       (item.group || '').toLowerCase().includes(term);
 
-    const matchesDate = filterDate
-      ? item.date === filterDate
-      : true;
+    const matchesDate = filterDate ? item.date === filterDate : true;
+    const matchesExpiring = showExpiringOnly ? item.expirationStatus === "warning" || item.expirationStatus === "expired" : true;
 
-    return matchesSearch && matchesDate;
+    return matchesSearch && matchesDate && matchesExpiring;
   });
 
   const totalEntries = filteredData.length;
@@ -571,6 +591,11 @@ export default function InventoryTable() {
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
         />
+
+        <label style={{ marginLeft: "10px" }}>
+          <input type="checkbox" checked={showExpiringOnly} onChange={(e) => setShowExpiringOnly(e.target.checked)} />
+          Show expiring items only
+        </label>
       </div>
 
       <table className="inventory-table">
@@ -622,7 +647,11 @@ export default function InventoryTable() {
                 <td>{item.name}</td>
                 <td>{item.group}</td>
                 <td>{item.date}</td>
-                <td>{item.expiration}</td>
+                <td style={{ color: item.expirationStatus === "expired" ? "red" : item.expirationStatus === "warning" ? "orange" : "black", fontWeight: item.expirationStatus === "expired" ? "bold" : "normal" }}>
+                  {item.expiration}
+                  {item.expirationStatus === "expired" && " ⚠ Expired"}
+                  {item.expirationStatus === "warning" && " ⚠ Soon"}
+                </td>
                 <td>{item.price}</td>
                 <td>
                   {item.stock}

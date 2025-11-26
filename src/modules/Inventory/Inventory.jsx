@@ -101,8 +101,15 @@ function exportToPDF(data) {
   doc.save("inventory_report.pdf");
 }
 
-const API_BASE = "/server-api";
-
+// Convert a date string from database to YYYY-MM-DD in local time
+function formatDateLocal(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function InventoryTable() {
   const [inventoryData, setInventoryData] = useState([]);
@@ -118,22 +125,14 @@ export default function InventoryTable() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [newItem, setNewItem] = useState({
-    id: undefined,      // for edits
-    code: '',
-    photo: '',
-    name: '',
-    group: '',
-    date: '',
-    expiration: '',
-    amount: '',
-    stock: '',
-    price: '',
-    unit: '',
+    id: undefined, code: '', photo: '', name: '', group: '', date: '',
+    expiration: '', amount: '', stock: '', price: '', unit: '',
   });
   const [messageModal, setMessageModal] = useState('');
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showExpiringOnly, setShowExpiringOnly] = useState(false);
 
   const getPhotoUrl = (photo) => {
     if (!photo) return "";
@@ -142,19 +141,30 @@ export default function InventoryTable() {
   };
 
   const mapRowToUIItem = (row) => {
+    const expirationDate = row.date_expiration ? new Date(row.date_expiration) : null;
+    const today = new Date();
+    let expirationStatus = "";
+    if (expirationDate) {
+      const diffDays = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) expirationStatus = "expired";
+      else if (diffDays <= 30) expirationStatus = "warning";
+      else expirationStatus = "normal";
+    }
+
     return {
       id: row.product_ID,
       code: row.item_code,
       photo: row.photo || "",
       name: row.name || "",
       group: row.item_group || "",
-      date: row.date_purchase ? new Date(row.date_purchase).toISOString().split("T")[0] : "",
-      expiration: row.date_expiration ? new Date(row.date_expiration).toISOString().split("T")[0] : "",
+      date: formatDateLocal(row.date_purchase),
+      expiration: formatDateLocal(row.date_expiration),
       amount: row.amount || "",
       price: row.price ? `₱ ${Number(row.price).toFixed(2)}` : "",
       unit: row.unit || "",
       stock: row.stock ?? 0,
       low: row.stock !== null && row.stock < 5,
+      expirationStatus,
     };
   };
 
@@ -170,35 +180,14 @@ export default function InventoryTable() {
     } catch (err) {
       console.error("Error fetching inventory:", err);
       setInventoryData([]);
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
+  useEffect(() => { fetchInventory(); }, []);
 
-
-  // ---- UI handlers (keep your design/UX) ----
   const handleEdit = (item) => {
-    const priceInput = typeof item.price === "string"
-      ? item.price.replace(/[₱,\s]/g, "")
-      : item.price;
-
-    setNewItem({
-      id: item.id,
-      code: item.code,
-      photo: item.photo,
-      name: item.name,
-      group: item.group,
-      date: item.date,
-      expiration: item.expiration,
-      amount: item.amount,
-      stock: item.stock,
-      unit: item.unit,
-      price: priceInput,
-    });
+    const priceInput = typeof item.price === "string" ? item.price.replace(/[₱,\s]/g, "") : item.price;
+    setNewItem({ ...item, price: priceInput });
     setEditingIndex(item.id);
     setShowAddModal(true);
   };
@@ -211,38 +200,26 @@ export default function InventoryTable() {
 
   const confirmDelete = async () => {
     if (!selectedInventoryId) return;
-
     setIsProcessing(true);
     try {
       await axios.delete(`${process.env.REACT_APP_API_URL}/inventory/delete/${selectedInventoryId}`);
       await fetchInventory();
-    } catch (err) {
-      console.error("Error deleting inventory:", err);
-    } finally {
-      setIsProcessing(false);
-      setShowConfirmModal(false);
-    }
+    } catch (err) { console.error("Error deleting inventory:", err); }
+    finally { setIsProcessing(false); setShowConfirmModal(false); }
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setNewItem((prev) => ({ ...prev, photoFile: file }));
-
+    setNewItem(prev => ({ ...prev, photoFile: file }));
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewItem((prev) => ({ ...prev, photoPreview: reader.result }));
-    };
+    reader.onloadend = () => setNewItem(prev => ({ ...prev, photoPreview: reader.result }));
     reader.readAsDataURL(file);
   };
 
   useEffect(() => {
     if (showAddModal && newItem.group) {
-      setNewItem((prev) => ({
-        ...prev,
-        code: prev.code || generateItemCode(prev.group),
-      }));
+      setNewItem(prev => ({ ...prev, code: prev.code || generateItemCode(prev.group) }));
     }
   }, [showAddModal, newItem.group]);
 
@@ -253,47 +230,35 @@ export default function InventoryTable() {
       (item.code || '').toLowerCase().includes(term) ||
       (item.group || '').toLowerCase().includes(term);
 
-    const matchesDate = filterDate
-      ? item.date === filterDate
-      : true;
+    const matchesDate = filterDate ? item.date === filterDate : true;
+    const matchesExpiring = showExpiringOnly ? item.expirationStatus === "warning" || item.expirationStatus === "expired" : true;
 
-    return matchesSearch && matchesDate;
+    return matchesSearch && matchesDate && matchesExpiring;
   });
 
-  const totalEntries = filteredData.length;
-  const totalPages = Math.ceil(totalEntries / rowsPerPage);
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (!a.expiration) return 1;
+    if (!b.expiration) return -1;
+    return new Date(a.expiration) - new Date(b.expiration);
+  });
 
+  const totalEntries = sortedData.length;
+  const totalPages = Math.ceil(totalEntries / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalEntries);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const goToPage = (page) => { if (page >= 1 && page <= totalPages) setCurrentPage(page); };
 
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleRowsPerPageChange = (e) => {
-    setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
+  const handleRowsPerPageChange = (e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    setNewItem((prev) => {
+    setNewItem(prev => {
       const updated = { ...prev, [name]: value };
-
-      // When group is changed, regenerate the item code (keep your behavior)
-      if (name === 'group' && value && !prev.code) {
-        updated.code = generateItemCode(value);
-      }
-
+      if (name === 'group' && value && !prev.code) updated.code = generateItemCode(value);
       return updated;
     });
   };
-
   const sanitizeNumber = (val) => {
     if (val === '' || val === null || val === undefined) return '';
     const cleaned = String(val).replace(/[₱,\s]/g, '');
@@ -302,14 +267,10 @@ export default function InventoryTable() {
   };
 
   const handleAddItem = async () => {
-    if (
-      newItem.code && newItem.name && newItem.group &&
-      newItem.date && newItem.stock && newItem.price
-    ) {
+    if (newItem.code && newItem.name && newItem.group && newItem.date && newItem.stock && newItem.price) {
       setIsProcessing(true);
       const quantity = sanitizeNumber(newItem.stock);
       const price = sanitizeNumber(newItem.price);
-
       const formData = new FormData();
       formData.append('item_code', newItem.code);
       formData.append('name', newItem.name);
@@ -320,10 +281,7 @@ export default function InventoryTable() {
       formData.append('stock', quantity === '' ? 0 : quantity);
       formData.append('price', price === '' ? 0 : price);
       formData.append('unit', newItem.unit);
-
-      if (!editingIndex || newItem.photoFile instanceof File) {
-        formData.append('photo', newItem.photoFile);
-      }
+      if (!editingIndex || newItem.photoFile instanceof File) formData.append('photo', newItem.photoFile);
 
       try {
         if (editingIndex !== null) {
@@ -337,20 +295,8 @@ export default function InventoryTable() {
           });
           setMessageModal("Item added successfully!");
         }
-
         await fetchInventory();
-        setNewItem({
-          id: undefined,
-          code: '',
-          photoFile: null,
-          name: '',
-          group: '',
-          date: '',
-          expiration: '',
-          stock: '',
-          price: '',
-          unit: '',
-        });
+        setNewItem({ id: undefined, code: '', photoFile: null, name: '', group: '', date: '', expiration: '', stock: '', price: '', unit: '', amount: '' });
         setEditingIndex(null);
         setShowAddModal(false);
         setShowMessageModal(true);
@@ -358,9 +304,7 @@ export default function InventoryTable() {
         console.error("Error saving inventory:", err);
         setMessageModal("There was an error saving the item. Please try again.");
         setShowMessageModal(true);
-      } finally {
-        setIsProcessing(false);
-      }
+      } finally { setIsProcessing(false); }
     } else {
       setMessageModal("Please fill all fields");
       setShowMessageModal(true);
@@ -369,7 +313,6 @@ export default function InventoryTable() {
 
   const handleExport = (type) => {
     let exportData = [...inventoryData];
-
     if (filterMonth) {
       const [year, month] = filterMonth.split("-");
       exportData = exportData.filter(item => {
@@ -378,12 +321,8 @@ export default function InventoryTable() {
         return itemYear === year && itemMonth === month;
       });
     }
-
-    if (type === 'csv') {
-      exportToCSV(exportData);
-    } else if (type === 'pdf') {
-      exportToPDF(exportData);
-    }
+    if (type === 'csv') exportToCSV(exportData);
+    else if (type === 'pdf') exportToPDF(exportData);
   };
 
   return (
@@ -472,6 +411,11 @@ export default function InventoryTable() {
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
         />
+
+        <label style={{ marginLeft: "10px" }}>
+          <input type="checkbox" checked={showExpiringOnly} onChange={(e) => setShowExpiringOnly(e.target.checked)} />
+          Show expiring items only
+        </label>
       </div>
 
       <table className="inventory-table">
@@ -523,7 +467,11 @@ export default function InventoryTable() {
                 <td>{item.name}</td>
                 <td>{item.group}</td>
                 <td>{item.date}</td>
-                <td>{item.expiration}</td>
+                <td style={{ color: item.expirationStatus === "expired" ? "red" : item.expirationStatus === "warning" ? "orange" : "black", fontWeight: item.expirationStatus === "expired" ? "bold" : "normal" }}>
+                  {item.expiration}
+                  {item.expirationStatus === "expired" && " ⚠ Expired"}
+                  {item.expirationStatus === "warning" && " ⚠ Soon"}
+                </td>
                 <td>{item.price}</td>
                 <td>
                   {item.stock}

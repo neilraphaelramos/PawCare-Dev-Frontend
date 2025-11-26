@@ -232,34 +232,43 @@ const Appointment = () => {
           {[...Array(startDay === 0 ? 6 : startDay - 1)].map((_, i) => <div key={i}></div>)}
           {daysInMonth.map(day => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-            const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+            const dateStr = date.toLocaleDateString('en-CA');
 
             const isPast = date < new Date().setHours(0, 0, 0, 0);
             const isSelected =
               selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
 
             const isWednesday = date.getDay() === 3;
-            const isFullyBooked = fullyBookedDates.includes(dateStr); // just for display
-            const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
-            const isUnavailable = !!fullDateInfo;  // fully disabled
-            const tooltipText = fullDateInfo?.event || "Unavailable";
 
-            const isDisabled = isPast || isWednesday || isUnavailable;
+            const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
+            const isUnavailable = !!fullDateInfo;
+
+            // FULLY BOOKED ONLY applies red background if NOT a past date
+            const isFullyBooked =
+              !isPast && (fullyBookedDates.includes(dateStr));
+
+            const isDisabled = isPast || isWednesday || isUnavailable || isFullyBooked;
+
+            // Tooltip assignment
+            let tooltipText = "";
+            if (isUnavailable) tooltipText = fullDateInfo.event;
+            else if (isFullyBooked) tooltipText = "This date is fully booked";
+            else if (isWednesday) tooltipText = "Closed (Wednesday)";
+            else if (isPast) tooltipText = "Unavailable";
 
             return (
               <div
                 key={day}
-                className={`user-calendar-day 
-                  ${isFullyBooked ? 'fully-booked' : ''} 
-                  ${isDisabled ? 'disabled' : ''} 
-                  ${isSelected ? 'selected' : ''}`
-                }
+                className={`
+                  user-calendar-day
+                  ${isFullyBooked ? "fully-booked" : ""}
+                  ${isDisabled ? "disabled" : ""}
+                  ${isSelected ? "selected" : ""}
+                `}
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}
-                {isFullyBooked && <span className="tooltip">This date is fully booked</span>}
-                {isUnavailable && <span className="tooltip">{tooltipText}</span>}
-                {isWednesday && <span className="tooltip">Closed (Wednesday)</span>}
+                {tooltipText && <span className="tooltip">{tooltipText}</span>}
               </div>
             );
           })}

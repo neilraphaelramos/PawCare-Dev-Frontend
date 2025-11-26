@@ -156,8 +156,8 @@ body {
 }
 
 .user-calendar-day.fully-booked {
-  background-color: #f8d7da;
-  color: #a94442;
+  background-color: #f8d7da !important;
+  color: #a94442 !important;
 }
 
 .user-calendar-day.fully-booked:hover {
