@@ -37,6 +37,22 @@ export default function VetAvailability() {
 
   const adminName = `${user.firstName}, ${user.lastName}`;
 
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user?.id,
+          vetName: `${user?.firstName} ${user?.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✅ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err.response?.data || err);
+    }
+  };
+
   const isWednesday = (dateObj) => {
     return dateObj.getDay() === 3;
   };
@@ -73,6 +89,7 @@ export default function VetAvailability() {
 
         // Full-day admin unavailable dates
         const fullDates = fullDays.map(d => ({
+          role: d.role,
           date: d.date,
           event: d.event || "Unavailable"
         }));
@@ -83,6 +100,7 @@ export default function VetAvailability() {
         times.forEach(t => {
           if (!timeMap[t.date]) timeMap[t.date] = [];
           timeMap[t.date].push({
+            role: t.role,
             time: `${formatTimeAMPM(t.time_from)} - ${formatTimeAMPM(t.time_to)}`,
             event: t.event || "Unavailable"
           });
@@ -157,6 +175,8 @@ export default function VetAvailability() {
           role: user.role,
           setBy: adminName,
         });
+
+        logVetAction(`Marked full day unavailable on ${dateStr}: ${eventText}`);
       } else {
         if (!timeFrom || !timeTo) {
           setMessageModal("Please enter a valid time range.");
@@ -172,6 +192,8 @@ export default function VetAvailability() {
           role: user.role,
           setBy: adminName,
         });
+
+        logVetAction(`Marked unavailable from ${timeFrom} to ${timeTo} on ${dateStr}: ${eventText}`);
       }
 
       await loadUnavailable(); // refresh list
@@ -195,19 +217,29 @@ export default function VetAvailability() {
   /* ---------------------- */
   /*  Delete Unavailability */
   /* ---------------------- */
-  const deleteFullDay = async (id) => {
+  const deleteFullDay = async (item) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/availability/delete-full-day/${id}`);
+      // Capture info before deletion
+      const { date, event } = item;
+
+      await axios.delete(`${process.env.REACT_APP_API_URL}/availability/delete-full-day/${item.id}`);
       await loadUnavailable();
+
+      logVetAction(`Deleted full day unavailability on ${date}: ${event}`);
     } catch (err) {
       console.error("Error deleting full day", err);
     }
   };
 
-  const deleteTimeRange = async (id) => {
+  const deleteTimeRange = async (item) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/availability/delete-time/${id}`);
+      // Capture info before deletion
+      const { date, time_from, time_to, event } = item;
+
+      await axios.delete(`${process.env.REACT_APP_API_URL}/availability/delete-time/${item.id}`);
       await loadUnavailable();
+
+      logVetAction(`Deleted unavailable time from ${time_from} to ${time_to} on ${date}: ${event}`);
     } catch (err) {
       console.error("Error deleting time range", err);
     }
@@ -263,11 +295,18 @@ export default function VetAvailability() {
             const blockedForClick = isPast || autoWednesday || fullDayBlocked || adminFullDay;
 
             let tooltipText = "";
+
             if (adminFullDay) {
-              tooltipText = `Admin Full Day: ${adminFullDay.event}`;
+              // Use the role from this specific entry
+              if (adminFullDay.role === 'Admin') {
+                tooltipText = `Admin Full Day: ${adminFullDay.event}`;
+              } else {
+                tooltipText = `Vet Full Day: ${adminFullDay.event}`;
+              }
             } else if (adminTimeBlocks.length > 0) {
               tooltipText = adminTimeBlocks.map(t => `${t.time} (${t.event})`).join(", ");
             }
+
             // -----------------------
 
             const isSelected =
@@ -316,7 +355,7 @@ export default function VetAvailability() {
                   <span className="vet-set-by">Set by: {item.setBy}</span>
                   <button
                     className="vet-delete-btn"
-                    onClick={() => item.type === 'fullDay' ? deleteFullDay(item.id) : deleteTimeRange(item.id)}
+                    onClick={() => item.type === 'fullDay' ? deleteFullDay(item) : deleteTimeRange(item)}
                   >
                     🗑️
                   </button>

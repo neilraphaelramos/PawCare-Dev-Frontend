@@ -50,6 +50,9 @@ const Appointment = () => {
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   const startDay = startOfMonth.getDay();
 
+  const [unavailableDates, setUnavailableDates] = useState([]);
+  const [unavailableTimes, setUnavailableTimes] = useState([]);
+
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
@@ -93,6 +96,31 @@ const Appointment = () => {
         console.table(res.data || [])
       })
       .catch(err => console.error("Error fetching fully booked dates:", err));
+  }, []);
+
+  useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/availability/user-only`) // <-- admin-only API
+      .then((res) => {
+        const { fullDays, times } = res.data;
+
+        // Save full day disabled dates
+        setUnavailableDates(fullDays); // [{ date: '2025-01-10', event:'xyz' }]
+
+        // Save partial times
+        const timeMap = {};
+        times.forEach((t) => {
+          if (!timeMap[t.date]) timeMap[t.date] = [];
+          timeMap[t.date].push({
+            from: t.time_from,
+            to: t.time_to,
+            event: t.event,
+          });
+        });
+
+        setUnavailableTimes(timeMap); // { '2025-01-08': [ { from:'09:00', to:'10:00'} ] }
+      })
+      .catch((err) => console.error("Error fetching availability:", err));
   }, []);
 
   useEffect(() => {
@@ -204,32 +232,34 @@ const Appointment = () => {
           {[...Array(startDay === 0 ? 6 : startDay - 1)].map((_, i) => <div key={i}></div>)}
           {daysInMonth.map(day => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-
-            const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+            const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
 
             const isPast = date < new Date().setHours(0, 0, 0, 0);
-            const isWednesday = date.getDay() === 3;
-            const isFullyBooked = !isPast && fullyBookedDates.includes(dateStr);
-
-            const isDisabled = isPast || isWednesday || isFullyBooked;
-
             const isSelected =
-              selectedDate?.getDate() === day &&
-              selectedDate?.getMonth() === currentDate.getMonth();
+              selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth();
+
+            const isWednesday = date.getDay() === 3;
+            const isFullyBooked = fullyBookedDates.includes(dateStr); // just for display
+            const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
+            const isUnavailable = !!fullDateInfo;  // fully disabled
+            const tooltipText = fullDateInfo?.event || "Unavailable";
+
+            const isDisabled = isPast || isWednesday || isUnavailable;
 
             return (
               <div
                 key={day}
-                className={`calendar-day 
-                  ${isDisabled ? (isFullyBooked ? 'fully-booked' : 'disabled') : ''} 
-                  ${isSelected ? 'selected' : ''}`}
+                className={`user-calendar-day 
+                  ${isFullyBooked ? 'fully-booked' : ''} 
+                  ${isDisabled ? 'disabled' : ''} 
+                  ${isSelected ? 'selected' : ''}`
+                }
                 onClick={() => !isDisabled && selectDate(day)}
               >
                 {day}
-
-                {isFullyBooked && (
-                  <span className="tooltip">This date is full booked</span>
-                )}
+                {isFullyBooked && <span className="tooltip">This date is fully booked</span>}
+                {isUnavailable && <span className="tooltip">{tooltipText}</span>}
+                {isWednesday && <span className="tooltip">Closed (Wednesday)</span>}
               </div>
             );
           })}
@@ -247,31 +277,51 @@ const Appointment = () => {
         <div className="time-grid">
           {(() => {
             const availableSlots = (isAM ? am : pm).filter((slot) => {
+              if (!selectedDate) return false;
+
               const slotStart = new Date(selectedDate);
-              const [startTime] = slot.split(" - "); // e.g. "08:00 AM"
-              const [time, meridian] = startTime.split(" ");
-              const [hourStr, minuteStr] = time.split(":");
+              const [slotStartStr, slotEndStr] = slot.split(" - "); // e.g. "08:00 AM - 08:45 AM"
 
-              let hours = parseInt(hourStr, 10);
-              const minutes = parseInt(minuteStr, 10);
+              // Parse start
+              const [startTime, startMeridian] = slotStartStr.split(" ");
+              let [startHour, startMinute] = startTime.split(":").map(Number);
+              if (startMeridian === "PM" && startHour !== 12) startHour += 12;
+              if (startMeridian === "AM" && startHour === 12) startHour = 0;
 
-              // Convert to 24-hour format
-              if (meridian === "PM" && hours !== 12) hours += 12;
-              if (meridian === "AM" && hours === 12) hours = 0;
+              // Parse end
+              const [endTime, endMeridian] = slotEndStr.split(" ");
+              let [endHour, endMinute] = endTime.split(":").map(Number);
+              if (endMeridian === "PM" && endHour !== 12) endHour += 12;
+              if (endMeridian === "AM" && endHour === 12) endHour = 0;
 
-              slotStart.setHours(hours, minutes, 0, 0);
+              slotStart.setHours(startHour, startMinute, 0, 0);
+              const slotEnd = new Date(selectedDate);
+              slotEnd.setHours(endHour, endMinute, 0, 0);
 
               const now = new Date();
-              const isToday =
-                selectedDate &&
-                now.toDateString() === selectedDate.toDateString();
-
+              const isToday = selectedDate.toDateString() === now.toDateString();
               const isPast = isToday && slotStart <= now;
 
+              // Check if slot overlaps with unavailable time ranges
+              const dateStr = selectedDate.toLocaleDateString("en-CA");
+              const blockedRanges = unavailableTimes[dateStr] || [];
+              const isBlocked = blockedRanges.some(range => {
+                const [bStartHour, bStartMinute] = range.from.split(":").map(Number);
+                const [bEndHour, bEndMinute] = range.to.split(":").map(Number);
+
+                const blockedStart = new Date(selectedDate);
+                blockedStart.setHours(bStartHour, bStartMinute, 0, 0);
+                const blockedEnd = new Date(selectedDate);
+                blockedEnd.setHours(bEndHour, bEndMinute, 0, 0);
+
+                return slotStart < blockedEnd && slotEnd > blockedStart; // overlap check
+              });
+
+              // Check if already booked
               const isBooked = bookedTimes.includes(slot);
 
-              // Hide if past or booked
-              return !isPast && !isBooked;
+              // Hide if past, blocked, or booked
+              return !isPast && !isBlocked && !isBooked;
             });
 
             if (availableSlots.length === 0) {
@@ -381,7 +431,6 @@ const Appointment = () => {
           </div>
         </div>
       )}
-
 
       {showModal && (
         <div className="AppointMessage-overlay" onClick={handleCloseMessageModal}>

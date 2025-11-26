@@ -225,16 +225,31 @@ export default function Availability() {
               selectedDate &&
               dateStr === selectedDate.toLocaleDateString("en-CA");
 
+            // -------------------------
+            // TOOLTIP LOGIC
+            // -------------------------
+            const fullDay = unavailableDates.find(d => d.date === dateStr);
+            const timeBlocks = unavailableTimes.filter(t => t.date === dateStr);
+
+            let tooltipText = "";
+            if (fullDay) {
+              tooltipText = `${fullDay.event}`; // show role if available
+            } else if (timeBlocks.length > 0) {
+              tooltipText = timeBlocks
+                .map(t => `${formatTimeAMPM(t.time_from)}-${formatTimeAMPM(t.time_to)} (${t.event})`)
+                .join(", ");
+            }
+
             return (
               <div
                 key={day}
                 className={`admin-calendar-day 
-        ${isPast ? "admin-disabled" : ""}
-        ${autoWednesday ? "admin-wednesday" : ""}
-        ${fullDayBlocked ? "admin-blocked" : ""}
-        ${partialTime ? "admin-partial-time" : ""}
-        ${isSelected ? "admin-selected" : ""}
-      `}
+                  ${isPast ? "admin-disabled" : ""}
+                  ${autoWednesday ? "admin-wednesday" : ""}
+                  ${fullDayBlocked ? "admin-blocked" : ""}
+                  ${partialTime ? "admin-partial-time" : ""}
+                  ${isSelected ? "admin-selected" : ""}
+                `}
                 onClick={() => {
                   if (!blockedForClick) {
                     selectDate(day);
@@ -242,6 +257,7 @@ export default function Availability() {
                 }}
               >
                 {day}
+                {tooltipText && <span className="admin-tooltip">{tooltipText}</span>}
               </div>
             );
           })}

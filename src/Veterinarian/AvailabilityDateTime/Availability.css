@@ -284,8 +284,31 @@
   cursor: not-allowed;
 }
 
-.vet-tooltip {
-  display: block;
-  font-size: 0.7rem;
-  color: #a00;
+.vet-calendar-day {
+  position: relative;
+  cursor: pointer;
 }
+
+.vet-tooltip {
+  display: none;
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none; 
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.vet-calendar-day:hover .vet-tooltip {
+  display: block;
+  opacity: 1;
+}
+

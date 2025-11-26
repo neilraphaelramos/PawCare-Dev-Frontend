@@ -127,43 +127,40 @@ body {
 }
 
 .day-name,
-.calendar-day {
+.user-calendar-day {
   text-align: center;
   font-size: 14px;
   padding: 0.5rem 0;
   color: #444;
 }
 
-.calendar-day {
+.user-calendar-day {
   background: #f1f1f1;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.calendar-day:hover {
+.user-calendar-day:hover {
   background: #cfd8dc;
 }
 
-.calendar-day.selected {
+.user-calendar-day.selected {
   background: #32b2b2;
   color: #fff;
 }
 
-.calendar-day.disabled {
-  background: #eee;
-  color: #aaa;
-  pointer-events: none;
+.user-calendar-day.disabled {
+  background: #eee !important;
+  color: #aaa !important;
 }
 
-.calendar-day.fully-booked {
+.user-calendar-day.fully-booked {
   background-color: #f8d7da;
   color: #a94442;
-  cursor: not-allowed;
-  border: 1px solid #f5c2c7;
 }
 
-.calendar-day.fully-booked:hover {
+.user-calendar-day.fully-booked:hover {
   background-color: #f5c6cb;
 }
 
@@ -403,7 +400,7 @@ body {
   background: #289999;
 }
 
-.calendar-day {
+.user-calendar-day {
   position: relative;
   cursor: pointer;
 }
@@ -415,16 +412,18 @@ body {
   bottom: 120%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #333;
+  background: #333;
   color: #fff;
-  padding: 5px 8px;
+  padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
   white-space: nowrap;
-  transition: opacity 0.2s ease;
   z-index: 10;
+  transition: opacity 0.25s ease-in-out;
+  pointer-events: none;
 }
 
+/* Arrow */
 .tooltip::after {
   content: "";
   position: absolute;
@@ -436,7 +435,8 @@ body {
   border-color: #333 transparent transparent transparent;
 }
 
-.calendar-day.fully-booked:hover .tooltip {
+/* Show tooltip on hover */
+.user-calendar-day:hover .tooltip {
   visibility: visible;
   opacity: 1;
 }
