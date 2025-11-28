@@ -132,6 +132,15 @@ const UserInventory = () => {
           type_notify: 'order',
           details,
         });
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: user.id,
+          type: "Order",
+          title: title,
+          message: details,
+          mess1: 'Request Received',
+          mess2: 'we have received your Order request'
+        });
       } catch (notifyErr) {
         console.error("Notification error:", notifyErr.response?.data || notifyErr);
       }

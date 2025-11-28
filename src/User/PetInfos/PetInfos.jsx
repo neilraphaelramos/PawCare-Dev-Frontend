@@ -111,6 +111,18 @@ export default function PetInfos() {
                 console.error("Notification error:", notifyErr);
             };
 
+            try {
+                await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+                    UID: user.id,
+                    type: "Pet Info",
+                    title: "New Pet Added",
+                    message: `You added a new pet named ${petName} to your pet records.`,
+                    mess2: 'You made added your pet'
+                });
+            } catch (emailErr) {
+                console.error("Email notification error:", emailErr);
+            }
+
             if (res.data.success) {
                 setIsNotify(true);
                 setMessage("✅ Pet added successfully!");

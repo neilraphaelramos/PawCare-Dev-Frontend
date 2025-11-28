@@ -118,6 +118,15 @@ const Appointment = () => {
         details,
       });
 
+      await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+        UID: uid,
+        type: "Appointment",
+        title: `Appointment ${status}`,
+        message: details,
+        mess:  'Request Received',
+        mess2: 'we have received your Appointment request'
+      });
+
       fetchAppoint(selectedDate);
     } catch (error) {
       console.error(error)

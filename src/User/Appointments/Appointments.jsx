@@ -181,6 +181,19 @@ const Appointment = () => {
         console.error("Notification error:", NErr);
       }
 
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: user.id,
+          type: "Appointment",
+          title: `Appointment Reserved`,
+          message: `You have successfully reserved an appointment on ${readableDate} at ${selectedTime}. Please wait for confirmation.`,
+          mess1: 'Status',
+          mess2: 'We receive your Appointment request, please wait to review your request'
+        });
+      } catch (notifyErr) {
+        console.error("Notification error:", notifyErr);
+      }
+
       setShowModal(true);
       setMessageModal(`Appointment reserved on ${res.data.message}`)
       setSelectedDate(null);

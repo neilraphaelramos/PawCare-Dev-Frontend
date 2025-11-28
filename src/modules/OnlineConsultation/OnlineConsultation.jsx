@@ -186,7 +186,7 @@ const VetConsultationAdmin = () => {
     fetchOnlineConsult();
   };
 
-  const handleUpdateStatus = async (consultID, newStatus) => {
+  const handleUpdateStatus = async (consultID, newStatus, date, time) => {
     try {
       const res = await axios.patch(
         `${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`,
@@ -196,11 +196,29 @@ const VetConsultationAdmin = () => {
       if (res.data.success) {
         const userId = res.data.user_id;
 
+        // 2️⃣ Prepare readable date/time for approved consultations
+        let detailsMessage = `Your online consultation request has been ${newStatus}.`;
+        if (newStatus === "Approved" && date && time) {
+          const readableDate = new Date(date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          detailsMessage = `Your online consultation on ${readableDate} at ${time} has been approved.`;
+        }
+
         await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
           UID: userId,
           title_notify: `Consultation ${newStatus}`,
           type_notify: "Consultation",
-          details: `Your online consultation request has been ${newStatus}.`,
+          details: detailsMessage,
+        });
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: userId,
+          type: "Consultation",
+          title: `Consultation ${newStatus}`,
+          message: detailsMessage,
         });
 
         fetchOnlineConsult();
@@ -231,6 +249,15 @@ const VetConsultationAdmin = () => {
           title_notify: "Consultation Declined",
           type_notify: "Consultation",
           details: `Your online consultation request has been declined. Reason: ${declineReason}`,
+        });
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: userId,
+          type: "Consultation",
+          title: `Consultation Declined`,
+          message: `Your online consultation request has been declined. Reason: ${declineReason}`,
+          mess1: 'Request Received',
+          mess2: 'we have received your Consultation request'
         });
 
         // Clean up modal
@@ -360,7 +387,7 @@ const VetConsultationAdmin = () => {
                     <div className='btn-container-footer'>
                       <button
                         className='approve-btn-admin'
-                        onClick={() => handleUpdateStatus(req.channelConsult, 'Approved')}
+                        onClick={() => handleUpdateStatus(req.channelConsult, 'Approved', req.setDate, req.setTime)}
                       >
                         Approved
                       </button>

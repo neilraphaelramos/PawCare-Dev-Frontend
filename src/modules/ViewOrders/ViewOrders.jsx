@@ -225,6 +225,7 @@ const ViewOrders = () => {
           if (!grouped[row.id_order]) {
             grouped[row.id_order] = {
               id: row.id_order,
+              customer_id: row.uid,
               customer: row.customer_name,
               address: row.customer_address,
               date: row.order_date,
@@ -496,13 +497,58 @@ const ViewOrders = () => {
                       value={order.status}
                       onChange={async (e) => {
                         const newStatus = e.target.value;
-                        await axios.put(
-                          `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
-                          { status: newStatus }
-                        );
-                        fetchOrders();
+                        try {
+                          // 1️⃣ Update status in backend
+                          await axios.put(
+                            `${process.env.REACT_APP_API_URL}/orders/update_status/${order.id}`,
+                            { status: newStatus }
+                          );
+
+                          // 2️⃣ Send notification if status is Shipped or Delivery
+                          if (["Shipped", "Delivery"].includes(newStatus)) {
+                            const message = `Your order #${order.id} has been ${newStatus.toLowerCase()}.`;
+
+                            await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+                              UID: order.customer_id, // make sure you have customer ID here
+                              title_notify: `Order ${newStatus}`,
+                              type_notify: "Order",
+                              details: message,
+                            });
+
+                            let notificationMessage = '';
+                            let mess2Text = '';
+
+                            if (newStatus === "Shipped") {
+                              notificationMessage = `Hello ${order.customer}, your order #${order.id} has been shipped.`;
+                              mess2Text = `Your order is on the way! Please track it and be ready to receive it.`;
+                            } else if (newStatus === "Delivery") {
+                              notificationMessage = `Hello ${order.customer}, your order #${order.id} has been delivered.`;
+                              mess2Text = `Your order has arrived! Thank you for choosing Rivera Veterinary Clinic and Grooming Services.`;
+                            } else {
+                              notificationMessage = `Hello ${order.customer}, your order #${order.id} status has been updated to ${newStatus}.`;
+                              mess2Text = `Your order has been ${newStatus.toLowerCase()}.`;
+                            }
+
+                            await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+                              UID: order.customer_id,
+                              type: "Order",
+                              title: `Order ${newStatus}`,
+                              message: notificationMessage,
+                              mess1: 'Status Update',
+                              mess2: mess2Text
+                            });
+
+                          }
+
+                          // 3️⃣ Refresh orders
+                          fetchOrders();
+                        } catch (err) {
+                          console.error("Error updating order status:", err);
+                          setMessageModal("Failed to update status.");
+                          setShowMessageModal(true);
+                        }
                       }}
-                      className={`badge ${order.status.toLowerCase()}`} // maintains badge color
+                      className={`badge ${order.status.toLowerCase()}`}
                     >
                       <option value="Pending">Pending</option>
                       <option value="Delivery">Delivery</option>

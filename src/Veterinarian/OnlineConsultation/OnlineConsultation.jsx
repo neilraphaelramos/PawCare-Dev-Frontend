@@ -202,7 +202,7 @@ const VetConsultationAdmin = () => {
     fetchOnlineConsult();
   };
 
-  const handleUpdateStatus = async (consultID, newStatus) => {
+  const handleUpdateStatus = async (consultID, newStatus, date, time) => {
     try {
       const res = await axios.patch(
         `${process.env.REACT_APP_API_URL}/online_consult/update-status/${consultID}`,
@@ -212,16 +212,35 @@ const VetConsultationAdmin = () => {
       if (res.data.success) {
         const userId = res.data.user_id;
 
-        logVetAction(`Online Consultation set ${newStatus} from ConsultID: ${consultIDData}`);
+        let detailsMessage = `Your online consultation request has been ${newStatus}.`;
+        if (newStatus === "Approved" && date && time) {
+          const readableDate = new Date(date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          detailsMessage = `Your online consultation on ${readableDate} at ${time} has been approved.`;
+        }
 
-        fetchOnlineConsult();
-
-        axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api`, {
           UID: userId,
           title_notify: `Consultation ${newStatus}`,
           type_notify: "Consultation",
-          details: `Your online consultation request has been ${newStatus}.`,
-        }).catch(err => console.error("Notification failed", err));
+          details: detailsMessage,
+        });
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: userId,
+          type: "Consultation",
+          title: `Consultation Declined`,
+          message: `Your online consultation request has been declined. Reason: ${declineReason}`,
+          mess1: 'Request Received',
+          mess2: 'we have received your Consultation request'
+        });
+
+        logVetAction(`Online Consultation set ${newStatus} from ConsultID: ${consultIDData}`);
+
+        fetchOnlineConsult();
       }
     } catch (err) {
       console.error("Error updating status:", err);
@@ -256,6 +275,13 @@ const VetConsultationAdmin = () => {
           type_notify: "Consultation",
           details: `Your online consultation request has been declined. Reason: ${declineReason}`,
         }).catch(err => console.error("Notification failed", err));
+
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: userId,
+          type: "Consultation",
+          title: `Consultation Declined`,
+          message: `Your online consultation request has been declined. Reason: ${declineReason}`,
+        });
       }
     } catch (err) {
       console.error("Error declining consultation:", err);
@@ -379,7 +405,7 @@ const VetConsultationAdmin = () => {
                       <button
                         className='approve-btn-vet'
                         onClick={() => {
-                          handleUpdateStatus(req.channelConsult, 'Approved');
+                          handleUpdateStatus(req.channelConsult, 'Approved', req.setDate, req.setTime);
                           setConsultIDData(req.id);
                         }}
                       >

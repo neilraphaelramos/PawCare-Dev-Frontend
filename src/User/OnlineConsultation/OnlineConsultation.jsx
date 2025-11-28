@@ -117,6 +117,20 @@ const OnlineConsultation = () => {
       }
 
       try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/notifications/api/send-notification`, {
+          UID: user.id,
+          type: "Online Consultation",
+          title: `Submit Request Successfully`,
+          message: `Thank you for submitting the Online Consultation Request. 
+                    Please wait for our veterinarian to review your request.`,
+          mess1: 'Status',
+          mess2: 'We receive your Online Consultation request'
+        });
+      } catch (notifyErr) {
+        console.error("Notification error:", notifyErr);
+      }
+
+      try {
         await axios.post(`${process.env.REACT_APP_API_URL}/notifications/vetadminapi/post`, {
           UID: user.id,
           title_notify: "Requested Online Consultation",
