@@ -72,6 +72,7 @@ import VetAvailability from "./Veterinarian/AvailabilityDateTime/Availability";
 
 // Verified Account
 import VerifyPage from "./User/Auth/verified/VerifyPage";
+import UnlockAccount from "./User/Auth/unlockAccount/UnlockAccount";
 
 import "./App.css";
 import "./modal/modal_design.css"
@@ -89,6 +90,8 @@ export default function App() {
         <Route path="/reset-password-request" element={<ResetRequestForm />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/reset-password-verify" element={<VerifyReset />} />
+        <Route path="/unlock-account/:userId" element={<UnlockAccount />} />
+
 
         {/* Admin Panel Routes */}
         <Route

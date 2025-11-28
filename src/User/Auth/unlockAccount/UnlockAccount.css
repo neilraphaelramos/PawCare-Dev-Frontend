@@ -1,0 +1,23 @@
+/* Main Button */
+.unlock-btn {
+  width: 100%;
+  background: #26a0a0;
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.unlock-btn:hover {
+  background: #1d7f7f;
+  transform: scale(1.02);
+}
+
+.unlock-btn:active {
+  transform: scale(0.98);
+}

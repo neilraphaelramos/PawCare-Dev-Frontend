@@ -77,7 +77,21 @@ export default function Login() {
         setIsLoggingIn(false);
       }
     } catch (error) {
-      openModal(error.response?.data?.error || "Login failed.");
+      const errMsg = error.response?.data?.error;
+
+      // 🔐 If account is locked after 3 failed attempts
+      if (errMsg?.includes("Account locked") || errMsg?.includes("Too many failed attempts")) {
+        openModal(
+          "Your account has been locked due to multiple incorrect password attempts. Please check your email to unlock your account.",
+          ""
+        );
+      }
+
+      // ⛔ Incorrect password or other errors
+      else {
+        openModal(errMsg || "Login failed.");
+      }
+
       setIsLoggingIn(false);
     }
   };
