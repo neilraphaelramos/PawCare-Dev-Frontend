@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./DateTimeModal.css";
+import axios from 'axios';
 
 const generateTimeSlots = (isToday = false) => {
     const start = new Date();
@@ -42,6 +43,9 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const startDay = startOfMonth.getDay();
 
+    const [unavailableDates, setUnavailableDates] = useState([]);
+    const [unavailableTimes, setUnavailableTimes] = useState([]);
+
     const handlePrevMonth = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     };
@@ -72,6 +76,34 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
         onClose();
     };
 
+    useEffect(() => {
+        axios
+            .get(`${process.env.REACT_APP_API_URL}/availability/user-only`) // <-- admin-only API
+            .then((res) => {
+                const { fullDays, times } = res.data;
+
+                // Save full day disabled dates
+                setUnavailableDates(fullDays); // [{ date: '2025-01-10', event:'xyz' }]
+
+                // Save partial times
+                const timeMap = {};
+                times.forEach((t) => {
+                    if (!timeMap[t.date]) timeMap[t.date] = [];
+                    timeMap[t.date].push({
+                        from: t.time_from,
+                        to: t.time_to,
+                        event: t.event,
+                    });
+                });
+
+                setUnavailableTimes(timeMap); // { '2025-01-08': [ { from:'09:00', to:'10:00'} ] }
+
+                console.log(timeMap);
+                console.log(fullDays)
+            })
+            .catch((err) => console.error("Error fetching availability:", err));
+    }, []);
+
 
     if (!isOpen) return null;
 
@@ -97,22 +129,35 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                     {[...Array(startDay === 0 ? 6 : startDay - 1)].map((_, i) => <div key={i}></div>)}
                     {daysInMonth.map(day => {
                         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                        const dateStr = date.toLocaleDateString('en-CA');
+
                         const isPast = date < new Date().setHours(0, 0, 0, 0);
                         const isWednesday = date.getDay() === 3;
-                        const isDisabled = isPast || isWednesday;
+
+                        const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
+                        const isUnavailable = !!fullDateInfo;
+
+                        const isFullyBooked = false; // replace if you have fullyBookedDates array
+                        const isDisabled = isPast || isWednesday || isUnavailable || isFullyBooked;
 
                         const isSelected =
                             selectedDate?.getDate() === day &&
                             selectedDate?.getMonth() === currentDate.getMonth();
 
+                        let tooltipText = "";
+                        if (isUnavailable) tooltipText = fullDateInfo.event;
+                        else if (isFullyBooked) tooltipText = "This date is fully booked";
+                        else if (isWednesday) tooltipText = "Closed (Wednesday)";
+                        else if (isPast) tooltipText = "Unavailable";
+
                         return (
                             <div
-                                type="button"
                                 key={day}
-                                className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                                className={`datetime-calendar-day ${isDisabled ? "disabled" : ""} ${isSelected ? "selected" : ""}`}
                                 onClick={() => !isDisabled && selectDate(day)}
                             >
                                 {day}
+                                {tooltipText && <span className="datetime-tooltip">{tooltipText}</span>}
                             </div>
                         );
                     })}
@@ -136,29 +181,52 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                 </div>
 
                 <div className="time-grid">
-                    {(isAM ? am : pm)
-                        ?.filter((slot) => {
-                            if (!selectedDate) return false;
+                    {(() => {
+                        if (!selectedDate) return <div className="no-slots">Please select a date first</div>;
+
+                        const availableSlots = (isAM ? am : pm).filter((slot) => {
                             const slotStart = new Date(selectedDate);
-                            const [startTime] = slot.split(" - ");
-                            const [time, meridian] = startTime.split(" ");
-                            const [hourStr, minuteStr] = time.split(":");
+                            const [slotStartStr, slotEndStr] = slot.split(" - ");
 
-                            let hours = parseInt(hourStr, 10);
-                            const minutes = parseInt(minuteStr, 10);
+                            const [startTime, startMeridian] = slotStartStr.split(" ");
+                            let [startHour, startMinute] = startTime.split(":").map(Number);
+                            if (startMeridian === "PM" && startHour !== 12) startHour += 12;
+                            if (startMeridian === "AM" && startHour === 12) startHour = 0;
+                            slotStart.setHours(startHour, startMinute, 0, 0);
 
-                            if (meridian === "PM" && hours !== 12) hours += 12;
-                            if (meridian === "AM" && hours === 12) hours = 0;
-
-                            slotStart.setHours(hours, minutes, 0, 0);
+                            const slotEnd = new Date(selectedDate);
+                            const [endTime, endMeridian] = slotEndStr.split(" ");
+                            let [endHour, endMinute] = endTime.split(":").map(Number);
+                            if (endMeridian === "PM" && endHour !== 12) endHour += 12;
+                            if (endMeridian === "AM" && endHour === 12) endHour = 0;
+                            slotEnd.setHours(endHour, endMinute, 0, 0);
 
                             const now = new Date();
-                            const isToday = selectedDate && now.toDateString() === selectedDate.toDateString();
+                            const isToday = selectedDate.toDateString() === now.toDateString();
                             const isPast = isToday && slotStart <= now;
 
-                            return !isPast;
-                        })
-                        .map((slot, i) => (
+                            const dateStr = selectedDate.toLocaleDateString("en-CA");
+                            const blockedRanges = unavailableTimes[dateStr] || [];
+                            const isBlocked = blockedRanges.some(range => {
+                                const [bStartH, bStartM] = range.from.split(":").map(Number);
+                                const [bEndH, bEndM] = range.to.split(":").map(Number);
+
+                                const blockedStart = new Date(selectedDate);
+                                blockedStart.setHours(bStartH, bStartM, 0, 0);
+                                const blockedEnd = new Date(selectedDate);
+                                blockedEnd.setHours(bEndH, bEndM, 0, 0);
+
+                                return slotStart < blockedEnd && slotEnd > blockedStart;
+                            });
+
+                            return !isPast && !isBlocked;
+                        });
+
+                        if (availableSlots.length === 0) {
+                            return <div className="no-slots">No available time slots</div>;
+                        }
+
+                        return availableSlots.map((slot, i) => (
                             <button
                                 type="button"
                                 key={i}
@@ -167,7 +235,8 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                             >
                                 {slot}
                             </button>
-                        ))}
+                        ));
+                    })()}
                 </div>
 
                 <div className="datetime-actions">

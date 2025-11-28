@@ -94,3 +94,58 @@
 .datetime-btn.confirm:hover {
   background: #258383;
 }
+
+.datetime-calendar-day {
+  text-align: center;
+  font-size: 14px;
+  padding: 0.5rem;
+  border-radius: 8px;
+  position: relative;
+}
+
+.datetime-calendar-day {
+  background: #f1f1f1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.datetime-calendar-day:hover {
+  background: #cfd8dc;
+}
+
+.datetime-calendar-day.disabled {
+  background: #eee;
+  color: #aaa;
+  
+}
+
+.datetime-calendar-day:hover .datetime-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Tooltip */
+.datetime-tooltip {
+  visibility: hidden;
+  width: max-content;
+  max-width: 150px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 110%; /* show above the day */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.datetime-calendar-day:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
