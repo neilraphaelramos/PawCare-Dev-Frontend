@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { FaPlus, FaEdit } from "react-icons/fa";
 import "./PetInfos.css";
+import '../../modal/modal_design.css';
 import { UserContext } from "../../hook/authContext";
 import axios from "axios";
 
@@ -506,8 +507,28 @@ export default function PetInfos() {
                     </div>
                 </div>
             )}
+            {isNotify && (
+                <div className="All-Message-modal-overlay">
+                    <div className="All-Message-modal">
+                        <div className="All-Message-modal-header">
+                            <h2>Alert Message</h2>
+                        </div>
 
-            {isNotify && <div className="petinfo-toast">{message}</div>}
+                        <div className="All-Message-modal-body">
+                            <p>{message}</p>
+                        </div>
+
+                        <div className="All-Message-modal-footer">
+                            <button
+                                className="All-Message-close-btn"
+                                onClick={() => setIsNotify(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

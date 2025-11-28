@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import "./Profile.css";
 import { UserContext } from "../../hook/authContext";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(true);
@@ -9,6 +10,9 @@ export default function Profile() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: user.firstName || "",
@@ -325,35 +329,58 @@ export default function Profile() {
             <h4>Change Password</h4>
           </div>
           <div className="pf-profile__card-body pf-profile__card-body--two-columns">
-            <div className="pf-profile__input-group">
+            <div className="pf-profile__input-group vet-password-wrapper">
               <label className="pf-profile__label">Current Password</label>
               <input
                 className="pf-profile__input"
-                type="password"
+                type={showCurrentPassword ? "text" : "password"}
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
               />
+              <button
+                type="button"
+                className="vet-password-toggle"
+                onClick={() => setShowCurrentPassword(prev => !prev)}
+              >
+                {showCurrentPassword ? <EyeClosed /> : <Eye />}
+              </button>
             </div>
-            <div className="pf-profile__input-group">
+
+            <div className="pf-profile__input-group vet-password-wrapper">
               <label className="pf-profile__label">New Password</label>
               <input
                 className="pf-profile__input"
-                type="password"
+                type={showNewPassword ? "text" : "password"}
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
               />
+              <button
+                type="button"
+                className="vet-password-toggle"
+                onClick={() => setShowNewPassword(prev => !prev)}
+              >
+                {showNewPassword ? <EyeClosed /> : <Eye />}
+              </button>
             </div>
-            <div className="pf-profile__input-group pf-profile__input-group--full-width">
+
+            <div className="pf-profile__input-group pf-profile__input-group--full-width vet-password-wrapper">
               <label className="pf-profile__label">Confirm New Password</label>
               <input
                 className="pf-profile__input"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
+              <button
+                type="button"
+                className="vet-password-toggle"
+                onClick={() => setShowConfirmPassword(prev => !prev)}
+              >
+                {showConfirmPassword ? <EyeClosed /> : <Eye />}
+              </button>
             </div>
           </div>
         </div>

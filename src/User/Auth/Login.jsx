@@ -5,6 +5,7 @@ import axios from "axios";
 import "./Auth.css";
 import { UserContext } from "../../hook/authContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function Login() {
   const { setUser, setTokenData, setLogID } = useContext(UserContext);
@@ -12,7 +13,9 @@ export default function Login() {
   const [showModal, setShowModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
   const [nextRoute, setNextRoute] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -139,15 +142,26 @@ export default function Login() {
               value={form.email}
               onChange={handleChange}
               required
+              className="res-input"
             />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="password-input"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeClosed /> : <Eye />}
+              </button>
+            </div>
 
             <div className="forgot-password">
               <a href="/reset-password-request">Forgot password?</a>

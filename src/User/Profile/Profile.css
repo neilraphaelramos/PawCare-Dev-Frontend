@@ -365,3 +365,32 @@ html, body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Password field wrapper */
+.user-password-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toggle button inside input */
+.user-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 46%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  padding: 0;
+}
+
+.user-password-toggle:hover {
+  color: #32b2b2;
+}
+
+/* Add padding-right to input to prevent overlap */
+.user-password-wrapper .pf-profile__input {
+  padding-right: 2.5rem; /* space for toggle button */
+}

@@ -3,6 +3,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import './Accounts.css';
 import { UserContext } from '../../hook/authContext';
 import axios from "axios";
+import { Eye, EyeClosed } from 'lucide-react';
 
 const Accounts = () => {
   const { setAllUser, allUser } = useContext(UserContext);
@@ -31,7 +32,7 @@ const Accounts = () => {
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
   const [accountId, setAccountId] = useState('');
   const [messageModal, setMessageModal] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
 
   // 🔹 Fetch all accounts
   const handleAccounts = async () => {
@@ -359,11 +360,11 @@ const Accounts = () => {
             </div>
 
             <div className="accounts-form-grid">
-              {["firstName", "middleName", "lastName", "suffix", "username", "email", "phone", "password"].map(
+              {["firstName", "middleName", "lastName", "suffix", "username", "email", "phone"].map(
                 (field, i) => (
                   <input
                     key={i}
-                    type={field === "email" ? "email" : field === "password" ? "password" : "text"}
+                    type={field === "email" ? "email" : "text"}
                     name={field}
                     placeholder={field.replace(/([A-Z])/g, " $1")}
                     value={newUser[field]}
@@ -371,6 +372,24 @@ const Accounts = () => {
                   />
                 )
               )}
+
+              <div className="admin-password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={newUser.password}
+                  onChange={handleInputChange}
+                />
+                <button
+                  type="button"
+                  className="admin-password-toggle"
+                  onClick={() => setShowPassword(prev => !prev)}
+                >
+                  {showPassword ? <EyeClosed/> : <Eye/>}
+                </button>
+              </div>
+
               <select name="role" value={newUser.role} onChange={handleInputChange}>
                 <option value="">Select Role</option>
                 <option value="Admin">Admin</option>

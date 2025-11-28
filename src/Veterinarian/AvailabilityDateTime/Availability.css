@@ -2,7 +2,6 @@
    MAIN CONTAINER
 ============================ */
 .vet-availability-container {
-  max-width: 1100px;
   margin: 30px auto;
   padding: 20px;
   font-family: "Inter", sans-serif;
@@ -23,6 +22,9 @@
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   margin-bottom: 25px;
+
+  width: 100%; /* fill container */
+  max-width: 100%; /* prevent constraining */
 }
 
 .vet-calendar-header {
@@ -169,7 +171,8 @@
   background: #ffffff;
   padding: 25px;
   border-radius: 16px;
-  width: 350px;
+  width: 90%; /* almost full width */
+  max-width: 500px; /* limit for very large screens */
   animation: vet-popup 0.25s ease;
   box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
@@ -188,6 +191,7 @@
 .vet-modal-title {
   font-size: 22px;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .vet-modal label {

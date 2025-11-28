@@ -5,6 +5,7 @@ import "./Auth.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { UserContext } from "../../hook/authContext";
 import zipCode from "../../data/zipcode.json"
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ export default function Register() {
   const [messageModal, setMessageModal] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isRegister, setIsRegister] = useState(false)
+  const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -208,7 +211,13 @@ export default function Register() {
       }
     } catch (err) {
       console.error(err);
-      openModal("Something went wrong.");
+      if (err.response && err.response.data && err.response.data.error) {
+        openModal(err.response.data.error);
+      } else if (err.response && err.response.data && err.response.data.message) {
+        openModal(err.response.data.message);
+      } else {
+        openModal("Something went wrong. Please try again.");
+      }
       setIsRegister(false);
     }
   };
@@ -249,14 +258,14 @@ export default function Register() {
           <form onSubmit={handleSubmit}>
             <div className="forminfo">
               {/* all input fields */}
-              <input type="text" name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
-              <input type="text" name="middleName" placeholder="Middle Name (Optional)" value={form.middleName} onChange={handleChange} />
-              <input type="text" name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
-              <input type="text" name="suffix" placeholder="Suffix (Optional)" value={form.suffix} onChange={handleChange} />
-              <input type="text" name="username" placeholder="Username" value={form.username} onChange={handleChange} required />
-              <input type="email" name="email" placeholder="Email Address" value={form.email} onChange={handleChange} required />
-              <input type="tel" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} />
-              <input type="text" name="houseNum" placeholder="House Number & Street" value={form.houseNum} onChange={handleChange} required />
+              <input type="text" name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} className="res-input" required />
+              <input type="text" name="middleName" placeholder="Middle Name (Optional)" value={form.middleName} onChange={handleChange} className="res-input" />
+              <input type="text" name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required className="res-input" />
+              <input type="text" name="suffix" placeholder="Suffix (Optional)" value={form.suffix} onChange={handleChange} className="res-input" />
+              <input type="text" name="username" placeholder="Username" value={form.username} onChange={handleChange} required className="res-input" />
+              <input type="email" name="email" placeholder="Email Address" value={form.email} onChange={handleChange} required className="res-input" />
+              <input type="tel" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} className="res-input" />
+              <input type="text" name="houseNum" placeholder="House Number & Street" value={form.houseNum} onChange={handleChange} required className="res-input" />
 
               {/* Province */}
               <select className="input-like" name="province" value={form.province} onChange={handleChange} required>
@@ -282,9 +291,45 @@ export default function Register() {
                 ))}
               </select>
 
-              <input type="text" name="zipCode" placeholder="Zip Code (Optional)" value={form.zipCode} onChange={handleChange} />
-              <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-              <input type="password" name="confirmPassword" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} required />
+              <input type="text" name="zipCode" placeholder="Zip Code (Optional)" value={form.zipCode} onChange={handleChange} className="res-input" />
+              <div className="password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  className="password-input"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeClosed /> : <Eye />}
+                </button>
+              </div>
+
+              <div className="password-wrapper">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  className="password-input"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeClosed /> : <Eye />}
+                </button>
+              </div>
+
               {form.confirmPassword && (
                 <p
                   className={`register-password-match ${isPasswordMatch ? "match" : "no-match"
@@ -301,7 +346,7 @@ export default function Register() {
 
             <div className="terms-container">
               <label className="terms-label">
-                <input type="checkbox" className="terms-input" required checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+                <input type="checkbox" className="terms-input res-input-checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} />
                 <span className="terms-text">
                   I agree to the{" "}
                   <button type="button" className="link-button" onClick={() => setShowTerms(true)}>Terms & Conditions</button>{" "}
@@ -543,7 +588,7 @@ export default function Register() {
             </div>
           </div>
         </div>
-      )};
+      )}
 
       {showModal && (
         <div className="register-modal-overlay">

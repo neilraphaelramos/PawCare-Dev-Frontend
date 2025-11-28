@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import "./AdminReports.css";
 import * as XLSX from "xlsx";
@@ -36,13 +36,16 @@ function AdminReports() {
         ).toLocaleDateString('en-CA')
     );
 
-    new Date().toLocaleDateString('en-CA');
-
     const { user } = useContext(UserContext);
 
     const [selectedReport, setSelectedReport] = useState("All");
     const [reportOpen, setReportOpen] = useState(false);
     const [formatOpen, setFormatOpen] = useState(false);
+
+    // 🔥 FILTER HELPER — SHOW CARD ONLY WHEN SELECTED OR WHEN "ALL"
+    const isVisible = (key) => {
+        return selectedReport === "All" || selectedReport === key;
+    };
 
     useEffect(() => {
         const fetchReports = async () => {
@@ -76,7 +79,6 @@ function AdminReports() {
                     vetLogs: data.details.vet_logs || [],
                 });
 
-                console.log("✅ Monthly Reports Data:", data);
             } catch (err) {
                 console.error("❌ Error fetching monthly reports:", err);
             }
@@ -353,7 +355,9 @@ function AdminReports() {
         <div className="admin-report-container">
             <div className="admin-report-header">
                 <h2>Reports</h2>
+
                 <div className="admin-report-actions">
+                    {/* REPORT TYPE DROPDOWN */}
                     <div className="report-select-dropdown" style={{ position: "relative" }}>
                         <button
                             className="admin-export-btn"
@@ -368,7 +372,8 @@ function AdminReports() {
                                 style={{
                                     position: "absolute",
                                     top: "80%",
-                                    left: -45,
+                                    left: "50%",       // center horizontally
+                                    transform: "translateX(-50%)", // shift left by 50% of ul width
                                     backgroundColor: "#fff",
                                     border: "1px solid #ccc",
                                     borderRadius: "4px",
@@ -381,15 +386,16 @@ function AdminReports() {
                                 }}
                             >
                                 <li
-                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    style={{ padding: 8, cursor: "pointer" }}
                                     onClick={() => { setSelectedReport("All"); setReportOpen(false); }}
                                 >
                                     All
                                 </li>
+
                                 {Object.keys(reports).map((key) => (
                                     <li
                                         key={key}
-                                        style={{ padding: "8px", cursor: "pointer" }}
+                                        style={{ padding: 8, cursor: "pointer" }}
                                         onClick={() => { setSelectedReport(key); setReportOpen(false); }}
                                     >
                                         {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -398,6 +404,8 @@ function AdminReports() {
                             </ul>
                         )}
                     </div>
+
+                    {/* DATE FILTERS */}
                     <div className="admin-report-filters">
                         <label>
                             Start Date:
@@ -416,12 +424,14 @@ function AdminReports() {
                             />
                         </label>
                     </div>
-                    <div className="export-format-dropdown" style={{ position: "relative" }}>
+
+                    {/* EXPORT DROPDOWN */}
+                    <div style={{ position: "relative" }}>
                         <button
                             className="admin-export-btn"
                             onClick={() => setFormatOpen(!formatOpen)}
                             style={{ padding: "8px 12px", cursor: "pointer" }}
-                            disabled={!selectedReport} // optional: disable until a report is selected
+                            disabled={!selectedReport}
                         >
                             Export ▾
                         </button>
@@ -431,7 +441,8 @@ function AdminReports() {
                                 style={{
                                     position: "absolute",
                                     top: "80%",
-                                    left: -15,
+                                    left: "50%",       // center horizontally
+                                    transform: "translateX(-50%)", // shift left by 50% of ul width
                                     backgroundColor: "#fff",
                                     border: "1px solid #ccc",
                                     borderRadius: "4px",
@@ -444,18 +455,19 @@ function AdminReports() {
                                 }}
                             >
                                 <li
-                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    style={{ padding: 8, cursor: "pointer" }}
                                     onClick={() => {
-                                        selectedReport === "All" ? exportToExcel() : exportToExcel(selectedReport);
+                                        exportToExcel(selectedReport === "All" ? "All" : selectedReport);
                                         setFormatOpen(false);
                                     }}
                                 >
                                     Excel
                                 </li>
+
                                 <li
-                                    style={{ padding: "8px", cursor: "pointer" }}
+                                    style={{ padding: 8, cursor: "pointer" }}
                                     onClick={() => {
-                                        selectedReport === "All" ? exportToPDF() : exportToPDF(selectedReport);
+                                        exportToPDF(selectedReport === "All" ? "All" : selectedReport);
                                         setFormatOpen(false);
                                     }}
                                 >
@@ -468,372 +480,348 @@ function AdminReports() {
             </div>
 
             <div className="admin-report-grid">
-                <div className="admin-report-card">
-                    <h3>Order Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Client</th>
-                                    <th>Status</th>
-                                    <th>Payment Status</th>
-                                    <th>Items</th>
-                                    <th>Total</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.orders.details?.length ? (
-                                    reports.orders.details.map((o) => (
-                                        <tr key={o.id_order}>
-                                            <td>{o.id_order}</td>
-                                            <td>{o.customer_name}</td>
-                                            <td>{o.order_status}</td>
-                                            <td>{o.paymentStatus}</td>
-                                            <td>{o.items_purchased}</td>
-                                            <td>₱{o.total}</td>
-                                            <td>{new Date(o.order_date).toLocaleDateString()}</td>
+
+                {isVisible("orders") && (
+                    <div className="admin-report-card">
+                        <h3>Order Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Client</th>
+                                        <th>Status</th>
+                                        <th>Payment Status</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reports.orders.details?.length ? (
+                                        reports.orders.details.map((o) => (
+                                            <tr key={o.id_order}>
+                                                <td>{o.id_order}</td>
+                                                <td>{o.customer_name}</td>
+                                                <td>{o.order_status}</td>
+                                                <td>{o.paymentStatus}</td>
+                                                <td>{o.items_purchased}</td>
+                                                <td>₱{o.total}</td>
+                                                <td>{new Date(o.order_date).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="7" className="empty-row">No orders this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {isVisible("product_solds") && (
+                    <div className="admin-report-card">
+                        <h3>Item Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Item ID</th>
+                                        <th>Name Product</th>
+                                        <th>Total Sold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reports.product_solds?.length ? (
+                                        reports.product_solds.map((item) => (
+                                            <tr key={item.product_id}>
+                                                <td>{item.product_id}</td>
+                                                <td>{item.product_name}</td>
+                                                <td>{item.total_sold}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="3" className="empty-row">No orders this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {isVisible("orders") && (
+                    <div className="admin-report-card">
+                        <h3>Total Order Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Total Orders</th>
+                                        <th>Total Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reports.orders.summary ? (
+                                        <tr>
+                                            <td>{reports.orders.summary.total_orders || 0}</td>
+                                            <td>₱{reports.orders.summary.total_revenue?.toLocaleString() || 0}</td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="7" className="empty-row">
-                                            No orders this month
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        <tr><td colSpan="2" className="empty-row">No orders this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className="admin-report-card">
-                    <h3>Item Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Item ID</th>
-                                    <th>Name Product</th>
-                                    <th>Total Sold</th>
-
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.product_solds?.length ? (
-                                    reports.product_solds.map((item) => (
-                                        <tr key={item.product_id}>
-                                            <td>{item.product_id}</td>
-                                            <td>{item.product_name}</td>
-                                            <td>{item.total_sold}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                {isVisible("pets") && (
+                    <div className="admin-report-card">
+                        <h3>Registered Pet Reports</h3>
+                        <p><strong>Total Pets:</strong> {reports.pets.summary?.total_pets || 0}</p>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="3" className="empty-row">
-                                            No orders this month
-                                        </td>
+                                        <th>Pet Name</th>
+                                        <th>Owner</th>
+                                        <th>Species</th>
+                                        <th>Date Added</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.pets.details?.length ? (
+                                        reports.pets.details.map((p) => (
+                                            <tr key={p.pinfo}>
+                                                <td>{p.pet_name}</td>
+                                                <td>{p.owner_name}</td>
+                                                <td>{p.species}</td>
+                                                <td>{new Date(p.created_At).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="4" className="empty-row">No pets added this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className="admin-report-card">
-                    <h3>Total Order Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Total Orders</th>
-                                    <th>Total Revenue</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.orders.summary ? (
+                {isVisible("totalSpecies") && (
+                    <div className="admin-report-card">
+                        <h3>Pet Types & Species Report</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td>{reports.orders.summary.total_orders || 0}</td>
-                                        <td>₱{reports.orders.summary.total_revenue?.toLocaleString() || 0}</td>
+                                        <th>#</th>
+                                        <th>Species</th>
+                                        <th>Pet Type</th>
+                                        <th>Total Species</th>
                                     </tr>
-                                ) : (
-                                    <tr>
-                                        <td colSpan="2" className="empty-row">No orders this month</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.totalSpecies.details?.length ? (
+                                        reports.totalSpecies.details.map((p, index) => (
+                                            <tr key={index}>
+                                                <td>{index + 1}</td>
+                                                <td>{p.species}</td>
+                                                <td>{p.petType}</td>
+                                                <td>{p.total_species}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="5" className="empty-row">No pets added this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className="admin-report-card">
-                    <h3>Registered Pet Reports</h3>
-                    <p><strong>Total Pets:</strong> {reports.pets.summary?.total_pets || 0}</p>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Pet Name</th>
-                                    <th>Owner</th>
-                                    <th>Species</th>
-                                    <th>Date Added</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.pets.details?.length ? (
-                                    reports.pets.details.map((p) => (
-                                        <tr key={p.pinfo}>
-                                            <td>{p.pet_name}</td>
-                                            <td>{p.owner_name}</td>
-                                            <td>{p.species}</td>
-                                            <td>{new Date(p.created_At).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                {isVisible("visits") && (
+                    <div className="admin-report-card">
+                        <h3>Clinic Visit Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="4" className="empty-row">
-                                            No pets added this month
-                                        </td>
+                                        <th>Visit ID</th>
+                                        <th>Owner</th>
+                                        <th>Pet</th>
+                                        <th>Veterinarian</th>
+                                        <th>Visit Date</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.visits?.length ? (
+                                        reports.visits.map((v) => (
+                                            <tr key={v.id_pet_history}>
+                                                <td>{v.id_pet_history}</td>
+                                                <td>{v.owner_name}</td>
+                                                <td>{v.pet_name}</td>
+                                                <td>Dr. {v.veterinarian_name}</td>
+                                                <td>{new Date(v.date_visit).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="5" className="empty-row">No visits this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className="admin-report-card">
-                    <h3>Pet Types & Species Report</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Species</th>
-                                    <th>Pet Type</th>
-                                    <th>Total Species</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.totalSpecies.details?.length ? (
-                                    reports.totalSpecies.details.map((p, index) => (
-                                        <tr key={index}>
-                                            <td>{index + 1}</td>
-                                            <td>{p.species}</td>
-                                            <td>{p.petType}</td>
-                                            <td>{p.total_species}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                {isVisible("stock") && (
+                    <div className="admin-report-card">
+                        <h3>Inventory Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="5" className="empty-row">
-                                            No pets added this month
-                                        </td>
+                                        <th>Item Name</th>
+                                        <th>Stock In</th>
+                                        <th>Stock Out</th>
+                                        <th>Current Stock</th>
+                                        <th>Date</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.stock.summary?.length ? (
+                                        reports.stock.summary.map((i, index) => (
+                                            <tr key={index}>
+                                                <td>{i.product_name}</td>
+                                                <td>{i.total_stock_in}</td>
+                                                <td>{i.total_stock_out}</td>
+                                                <td>{i.current_stock}</td>
+                                                <td>{new Date(i.last_movement_date).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="5" className="empty-row">No inventory updates this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                {/* Visits */}
-                <div className="admin-report-card">
-                    <h3>Clinic Visit Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Visit ID</th>
-                                    <th>Owner</th>
-                                    <th>Pet</th>
-                                    <th>Veterinarian</th>
-                                    <th>Visit Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.visits?.length ? (
-                                    reports.visits.map((v) => (
-                                        <tr key={v.id_pet_history}>
-                                            <td>{v.id_pet_history}</td>
-                                            <td>{v.owner_name}</td>
-                                            <td>{v.pet_name}</td>
-                                            <td>Dr. {v.veterinarian_name}</td>
-                                            <td>{new Date(v.date_visit).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="empty-row">
-                                            No visits this month
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                {isVisible("appointments") && (
+                    <div className="admin-report-card">
+                        <h3>Appointment Reports</h3>
 
-                {/* Inventory */}
-                <div className="admin-report-card">
-                    <h3>Inventory Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Item Name</th>
-                                    <th>Stock In</th>
-                                    <th>Stock Out</th>
-                                    <th>Current Stock</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.stock.summary?.length ? (
-                                    reports.stock.summary.map((i, index) => (
-                                        <tr key={index}>
-                                            <td>{i.product_name}</td>
-                                            <td>{i.total_stock_in}</td>
-                                            <td>{i.total_stock_out}</td>
-                                            <td>{i.current_stock}</td>
-                                            <td>{new Date(i.last_movement_date).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="empty-row">
-                                            No inventory updates this month
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Appointments */}
-                <div className="admin-report-card">
-                    <h3>Appointment Reports</h3>
-                    <div className="admin-appoint-summary">
-                        <div className="appoint-top">
-                            <div className="admin-appoint-item approved">
-                                <strong>Total Approved:</strong>{" "}
-                                <span>{reports.appointments.summary?.approved || 0}</span>
+                        <div className="admin-appoint-summary">
+                            <div className="appoint-top">
+                                <div className="admin-appoint-item approved">
+                                    <strong>Total Approved:</strong>
+                                    <span>{reports.appointments.summary?.approved || 0}</span>
+                                </div>
+                                <div className="admin-appoint-item pending">
+                                    <strong>Total Pending:</strong>
+                                    <span>{reports.appointments.summary?.pending || 0}</span>
+                                </div>
                             </div>
-                            <div className="admin-appoint-item pending">
-                                <strong>Total Pending:</strong>{" "}
-                                <span>{reports.appointments.summary?.pending || 0}</span>
+
+                            <div className="appoint-bottom">
+                                <div className="admin-appoint-item declined">
+                                    <strong>Total Declined:</strong>
+                                    <span>{reports.appointments.summary?.declined || 0}</span>
+                                </div>
+                                <div className="admin-appoint-item total">
+                                    <strong>Total Appointments:</strong>
+                                    <span>{reports.appointments.summary?.total_appointments || 0}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="appoint-bottom">
-                            <div className="admin-appoint-item declined">
-                                <strong>Total Declined:</strong>{" "}
-                                <span>{reports.appointments.summary?.declined || 0}</span>
-                            </div>
-                            <div className="admin-appoint-item total">
-                                <strong>Total Appointments:</strong>{" "}
-                                <span>
-                                    {reports.appointments.summary?.total_appointments || 0}
-                                </span>
-                            </div>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Owner</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reports.appointments.details?.length ? (
+                                        reports.appointments.details.map((a) => (
+                                            <tr key={a.id_appoint}>
+                                                <td>{a.id_appoint}</td>
+                                                <td>{a.owner_name}</td>
+                                                <td>{new Date(a.set_date).toLocaleDateString()}</td>
+                                                <td>{a.status}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="4" className="empty-row">No appointments this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Owner</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.appointments.details?.length ? (
-                                    reports.appointments.details.map((a) => (
-                                        <tr key={a.id_appoint}>
-                                            <td>{a.id_appoint}</td>
-                                            <td>{a.owner_name}</td>
-                                            <td>{new Date(a.set_date).toLocaleDateString()}</td>
-                                            <td>{a.status}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="empty-row">
-                                            No appointments this month
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                )}
 
-                {/* Pet Services */}
-                <div className="admin-report-card">
-                    <h3>Pet Service Reports</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Service</th>
-                                    <th>Used Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.servicesUsage?.length ? (
-                                    reports.servicesUsage.map((s) => (
-                                        <tr key={s.service_id}>
-                                            <td>{s.service_title}</td>
-                                            <td>{s.usage_count || 0}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                {isVisible("servicesUsage") && (
+                    <div className="admin-report-card">
+                        <h3>Pet Service Reports</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="3" className="empty-row">
-                                            No service usage this month
-                                        </td>
+                                        <th>Service</th>
+                                        <th>Used Count</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.servicesUsage?.length ? (
+                                        reports.servicesUsage.map((s) => (
+                                            <tr key={s.service_id}>
+                                                <td>{s.service_title}</td>
+                                                <td>{s.usage_count || 0}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="3" className="empty-row">No service usage this month</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                {/* User Logs */}
-                <div className="admin-report-card">
-                    <h3>Veterinarian Logs</h3>
-                    <div className="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Time</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports.vetLogs?.length ? (
-                                    reports.vetLogs.map((log) => (
-                                        <tr key={log.log_ID}>
-                                            <td>{log.vetName}</td>
-                                            <td>{new Date(log.time_In).toLocaleString()}</td>
-                                            <td>{log.action_vet}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+                {isVisible("vetLogs") && (
+                    <div className="admin-report-card">
+                        <h3>Veterinarian Logs</h3>
+                        <div className="table-container">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="6" className="empty-row">
-                                            No user logs available
-                                        </td>
+                                        <th>Name</th>
+                                        <th>Time</th>
+                                        <th>Action</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {reports.vetLogs?.length ? (
+                                        reports.vetLogs.map((log) => (
+                                            <tr key={log.log_ID}>
+                                                <td>{log.vetName}</td>
+                                                <td>{new Date(log.time_In).toLocaleString()}</td>
+                                                <td>{log.action_vet}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="6" className="empty-row">No user logs available</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-
+                )}
             </div>
         </div>
     );
