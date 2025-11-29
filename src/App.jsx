@@ -68,6 +68,7 @@ import VetConsultation from "./Veterinarian/OnlineConsultation/OnlineConsultatio
 import VetProfile from "./Veterinarian/Profile/Profile";
 import VetReports from "./Veterinarian/Reports/VetReports";
 import VetAvailability from "./Veterinarian/AvailabilityDateTime/Availability";
+import VetViewOrders from "./Veterinarian/ViewOrders/ViewOrders";
 
 
 // Verified Account
@@ -168,11 +169,12 @@ export default function App() {
           <Route path="vet-availability-date-time" element={<VetAvailability />} />
           <Route path="medical-records" element={<VetMedicalRecords />} />
           <Route path="inventory" element={<VetInventory />} />
-          <Route path="reports" element={<VetReports />} /> 
+          <Route path="reports" element={<VetReports />} />
           <Route path="notifications" element={<VetNotifications />} />
           <Route path="security" element={<VetSecurity />} />
           <Route path="online-consultation" element={<VetConsultation />} />
           <Route path="profile" element={<VetProfile />} />
+          <Route path="orders" element={<VetViewOrders />} />
         </Route>
       </Routes>
 

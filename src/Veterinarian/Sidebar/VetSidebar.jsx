@@ -60,6 +60,7 @@ const VetSidebar = () => {
           <NavLink to="medical-records" className={({ isActive }) => isActive ? "active" : ""}>Medical Records</NavLink>
           <NavLink to="inventory" className={({ isActive }) => isActive ? "active" : ""}>Inventory</NavLink>
           <NavLink to="reports" className={({ isActive }) => isActive ? "active" : ""}>Manage Reports</NavLink>
+          <NavLink to="orders" className={({ isActive }) => isActive ? "active" : ""}>Manage Orders</NavLink>
           <NavLink to="online-consultation" className={({ isActive }) => isActive ? "active" : ""}>Online Consultations</NavLink>
           <NavLink to="notifications" className={({ isActive }) => isActive ? "active" : ""}>Notifications</NavLink>
           <NavLink to="vet-availability-date-time" className={({ isActive }) => isActive ? "active" : ""}>Set Availability</NavLink>
