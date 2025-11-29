@@ -104,6 +104,23 @@ export default function Dashboard() {
     allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
   );
 
+  const logVetAction = async (action) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/logs-vet/set-action-in`,
+        {
+          UID: user?.id,
+          vetName: `${user?.firstName} ${user?.lastName}`,
+          action_vet: action
+        }
+      );
+      console.log("✅ Vet action logged:", action);
+    } catch (err) {
+      console.error("❌ Failed to log vet action:", err.response?.data || err);
+    }
+  };
+
+
   const handleChange = (e) => {
     const value = e.target.value.toLowerCase();
     setQuery(value);
@@ -320,6 +337,7 @@ export default function Dashboard() {
               appt.id === id ? { ...appt, isDone: newStatus } : appt
             )
           );
+          logVetAction(`Updated appointment ID ${id} status to ${newStatus}`);
         } else {
           console.error("Failed to update appointment status:", res.data.error);
         }
@@ -335,6 +353,7 @@ export default function Dashboard() {
               consult.id === id ? { ...consult, isDone: newStatus } : consult
             )
           );
+          logVetAction(`Updated online consultation ID ${id} status to ${newStatus}`);
         } else {
           console.error("Failed to update consultation status:", res.data.error);
         }
@@ -358,6 +377,7 @@ export default function Dashboard() {
             reservation.id === id ? { ...reservation, status: action } : reservation
           )
         );
+        logVetAction(`Updated reservation ID ${id} status to ${action}`);
       } else {
         console.error("Failed to update reservation status:", res.data);
       }

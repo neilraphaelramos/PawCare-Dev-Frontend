@@ -38,6 +38,8 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [isAM, setIsAM] = useState(true); // default AM
     const { am, pm } = generateTimeSlots();
+    const [bookedTimes, setBookedTimes] = useState([]);
+    const [fullyBookedDates, setFullyBookedDates] = useState([]);
 
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -60,6 +62,25 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
             setSelectedDate(newDate);
         }
     };
+
+    useEffect(() => {
+        if (selectedDate) {
+            const dateStr = selectedDate.toLocaleDateString('en-CA');
+            axios.get(`${process.env.REACT_APP_API_URL}/online_consult/${dateStr}`)
+                .then(res => {
+                    setBookedTimes(res.data);
+                })
+                .catch(err => console.error("Error fetching booked times:", err));
+        }
+    }, [selectedDate]);
+
+    useEffect(() => {
+        axios.get(`${process.env.REACT_APP_API_URL}/online_consult/fully-booked`)
+            .then(res => {
+                setFullyBookedDates(res.data || []);
+            })
+            .catch(err => console.error("Error fetching fully booked dates:", err));
+    }, []);
 
     const handleConfirm = () => {
         if (!selectedDate || !selectedTime) {
@@ -97,9 +118,6 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                 });
 
                 setUnavailableTimes(timeMap); // { '2025-01-08': [ { from:'09:00', to:'10:00'} ] }
-
-                console.log(timeMap);
-                console.log(fullDays)
             })
             .catch((err) => console.error("Error fetching availability:", err));
     }, []);
@@ -137,7 +155,8 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                         const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
                         const isUnavailable = !!fullDateInfo;
 
-                        const isFullyBooked = false; // replace if you have fullyBookedDates array
+                        const isFullyBooked =
+                            !isPast && (fullyBookedDates.includes(dateStr));
                         const isDisabled = isPast || isWednesday || isUnavailable || isFullyBooked;
 
                         const isSelected =
@@ -219,7 +238,9 @@ const DateTimeModal = ({ isOpen, onClose, onConfirm }) => {
                                 return slotStart < blockedEnd && slotEnd > blockedStart;
                             });
 
-                            return !isPast && !isBlocked;
+                            const isBooked = bookedTimes.includes(slot);
+
+                            return !isPast && !isBlocked && !isBooked;
                         });
 
                         if (availableSlots.length === 0) {
