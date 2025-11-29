@@ -352,7 +352,7 @@ const UserInventory = () => {
 
   const fetchInventory = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/inventory/fetch`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/inventory/fetch/set-display`);
       if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map(mapRowToUIItem);
         setItems(mapped);

@@ -370,12 +370,11 @@
 
 /* Modal Box */
 .proof-modal {
-  background: #fff;
+  background: #7e7e7e;
   border-radius: 12px;
   padding: 1rem;
   position: relative;
-  width: 80%;
-  max-width: 500px;
+  width: 100%;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
   animation: popIn 0.3s ease-out;
 }
@@ -401,13 +400,14 @@
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
-  color: #555;
+  color: #ffffff;
 }
 
 .proof-image {
   width: 100%;
+  max-height: 570px;
   border-radius: 8px;
-  object-fit: contain;
+  object-fit: fill;
 }
 
 .proof-unknown {

@@ -173,9 +173,11 @@ export default function InventoryTable() {
   const [filterMonth, setFilterMonth] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [newItem, setNewItem] = useState({
-    id: undefined,      // for edits
+    id: undefined,
     code: '',
     photo: '',
+    photoFile: null,
+    photoPreview: '',
     name: '',
     group: '',
     date: '',
@@ -184,6 +186,7 @@ export default function InventoryTable() {
     stock: '',
     price: '',
     unit: '',
+    showOnline: 0
   });
   const [messageModal, setMessageModal] = useState('');
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
@@ -252,6 +255,7 @@ export default function InventoryTable() {
       stock: row.stock ?? 0,
       low: row.stock !== null && row.stock < 5,
       expirationStatus,
+      showOnline: row.show_online
     };
   };
 
@@ -295,6 +299,7 @@ export default function InventoryTable() {
       stock: item.stock,
       unit: item.unit,
       price: priceInput,
+      showOnline: item.showOnline,
     });
     setEditingIndex(item.id);
     setShowAddModal(true);
@@ -384,13 +389,15 @@ export default function InventoryTable() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, type, checked, value } = e.target;
 
-    setNewItem((prev) => {
-      const updated = { ...prev, [name]: value };
+    setNewItem(prev => {
+      const updated = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value
+      };
 
-      // When group is changed, regenerate the item code (keep your behavior)
-      if (name === 'group' && value && !prev.code) {
+      if (name === "group" && value && !prev.code) {
         updated.code = generateItemCode(value);
       }
 
@@ -424,7 +431,7 @@ export default function InventoryTable() {
       formData.append('amount', newItem.amount);
       formData.append('price', price === '' ? 0 : price);
       formData.append('unit', newItem.unit);
-
+      formData.append("show_online", newItem.showOnline ? 1 : 0);
       if (!editingIndex || newItem.photoFile instanceof File) {
         formData.append('photo', newItem.photoFile);
       }
@@ -469,6 +476,7 @@ export default function InventoryTable() {
           stock: '',
           price: '',
           unit: '',
+          showOnline: 0
         });
         setEditingIndex(null);
         setShowAddModal(false);
@@ -795,6 +803,22 @@ export default function InventoryTable() {
                     <option value="can">can</option>
                     <option value="pouch">pouch</option>
                   </select>
+                </div>
+
+                <div className="admin-inventory-form-group">
+                  <label>Visible in Online Shop</label>
+
+                  <div className="admin-checkbox-container">
+                    <input
+                      type="checkbox"
+                      id="showOnline"
+                      name="showOnline"
+                      checked={newItem.showOnline}
+                      onChange={handleInputChange}
+                      className="admin-inventory-checkbox"
+                    />
+                    <label htmlFor="showOnline">Show Online</label>
+                  </div>
                 </div>
               </div>
 

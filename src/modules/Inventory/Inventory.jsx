@@ -125,9 +125,22 @@ export default function InventoryTable() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [newItem, setNewItem] = useState({
-    id: undefined, code: '', photo: '', name: '', group: '', date: '',
-    expiration: '', amount: '', stock: '', price: '', unit: '',
+    id: undefined,
+    code: '',
+    photo: '',
+    photoFile: null,
+    photoPreview: '',
+    name: '',
+    group: '',
+    date: '',
+    expiration: '',
+    amount: '',
+    stock: '',
+    price: '',
+    unit: '',
+    showOnline: 0
   });
+
   const [messageModal, setMessageModal] = useState('');
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -165,6 +178,7 @@ export default function InventoryTable() {
       stock: row.stock ?? 0,
       low: row.stock !== null && row.stock < 5,
       expirationStatus,
+      showOnline: row.show_online
     };
   };
 
@@ -252,13 +266,22 @@ export default function InventoryTable() {
 
   const handleRowsPerPageChange = (e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); };
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, type, checked, value } = e.target;
+
     setNewItem(prev => {
-      const updated = { ...prev, [name]: value };
-      if (name === 'group' && value && !prev.code) updated.code = generateItemCode(value);
+      const updated = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value
+      };
+
+      if (name === "group" && value && !prev.code) {
+        updated.code = generateItemCode(value);
+      }
+
       return updated;
     });
   };
+
   const sanitizeNumber = (val) => {
     if (val === '' || val === null || val === undefined) return '';
     const cleaned = String(val).replace(/[₱,\s]/g, '');
@@ -281,6 +304,7 @@ export default function InventoryTable() {
       formData.append('stock', quantity === '' ? 0 : quantity);
       formData.append('price', price === '' ? 0 : price);
       formData.append('unit', newItem.unit);
+      formData.append("show_online", newItem.showOnline ? 1 : 0);
       if (!editingIndex || newItem.photoFile instanceof File) formData.append('photo', newItem.photoFile);
 
       try {
@@ -296,7 +320,22 @@ export default function InventoryTable() {
           setMessageModal("Item added successfully!");
         }
         await fetchInventory();
-        setNewItem({ id: undefined, code: '', photoFile: null, name: '', group: '', date: '', expiration: '', stock: '', price: '', unit: '', amount: '' });
+        setNewItem({
+          id: undefined,
+          code: '',
+          photo: '',
+          photoFile: null,
+          photoPreview: '',
+          name: '',
+          group: '',
+          date: '',
+          expiration: '',
+          amount: '',
+          stock: '',
+          price: '',
+          unit: '',
+          showOnline: 0
+        });
         setEditingIndex(null);
         setShowAddModal(false);
         setShowMessageModal(true);
@@ -616,6 +655,23 @@ export default function InventoryTable() {
                     <option value="pouch">pouch</option>
                   </select>
                 </div>
+
+                <div className="admin-inventory-form-group">
+                  <label>Visible in Online Shop</label>
+
+                  <div className="admin-checkbox-container">
+                    <input
+                      type="checkbox"
+                      id="showOnline"
+                      name="showOnline"
+                      checked={newItem.showOnline}
+                      onChange={handleInputChange}
+                      className="admin-inventory-checkbox"
+                    />
+                    <label htmlFor="showOnline">Show Online</label>
+                  </div>
+                </div>
+
               </div>
 
               <div className="admin-inventory-modal-actions">
