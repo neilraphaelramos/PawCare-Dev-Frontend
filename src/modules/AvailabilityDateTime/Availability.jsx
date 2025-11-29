@@ -132,6 +132,14 @@ export default function Availability() {
         });
       }
 
+      await axios.post(`${process.env.REACT_APP_API_URL}/availability/sent-unavailable-message`, {
+        date: dateStr,
+        event: eventText,
+        time_from: timeFrom,
+        time_to: timeTo,
+        name: `${adminName}(Admin)`
+      });
+
       await loadUnavailable(); // refresh list
       setDisableFullDay(false);
       setTimeFrom("");

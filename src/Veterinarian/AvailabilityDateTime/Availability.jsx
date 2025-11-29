@@ -193,6 +193,14 @@ export default function VetAvailability() {
           setBy: adminName,
         });
 
+        await axios.post(`${process.env.REACT_APP_API_URL}/availability/sent-unavailable-message`, {
+          date: dateStr,
+          event: eventText,
+          time_from: timeFrom,
+          time_to: timeTo,
+          name: `${adminName}`
+        });
+
         logVetAction(`Marked unavailable from ${timeFrom} to ${timeTo} on ${dateStr}: ${eventText}`);
       }
 

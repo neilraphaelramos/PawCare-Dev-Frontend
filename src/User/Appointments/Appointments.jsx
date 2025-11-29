@@ -286,6 +286,22 @@ const Appointment = () => {
             );
           })}
         </div>
+        <div className='user-container-indicator'>
+          <div className="user-appointment-indicator">
+            <h5>Status Reference</h5>
+            <ul className="user-indicator-list-vertical">
+              <li>
+                <span className="user-dot fully-booked"></span> Fully Booked
+              </li>
+              <li>
+                <span className="user-dot not-available"></span> Not Available Slot
+              </li>
+              <li>
+                <span className="user-dot available"></span> Available Slot
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div className="time-panel">
