@@ -177,7 +177,7 @@ const VetViewOrders = () => {
   const [receiptData, setReceiptData] = useState(null);
   const receiptRef = useRef(null);
   const { user } = useContext(UserContext);
-  
+
   // ✅ Format date from yyyy-mm-dd → dd/mm/yyyy
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -688,15 +688,98 @@ const VetViewOrders = () => {
         </div>
       )}
 
-      {showReceipt && receiptData && (
-        <div className="admin-receipt-modal-overlay">
-          <div className="admin-receipt-modal" id="admin-receipt-content" ref={receiptRef}>
-            <h2>Payment Receipt</h2>
-            <p><strong>Date:</strong> {new Date(receiptData.date_order).toLocaleString()}</p>
-            <p><strong>Order Reference:</strong> {receiptData.order_ref}</p>
-            <p><strong>Customer:</strong> {receiptData.customer_name}</p>
+      {showMessageModal && (
+        <div className="All-Message-modal-overlay">
+          <div className="All-Message-modal">
+            <div className="All-Message-modal-header">
+              <h2>Alert Message</h2>
+            </div>
 
-            <table className="admin-receipt-table">
+            <div className="All-Message-modal-body">
+              <p>{messageModal}</p>
+            </div>
+
+            <div className="All-Message-modal-footer">
+              <button
+                className="All-Message-close-btn"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReceipt && receiptData && (
+        <div className="receipt-modal-overlay">
+          <div
+            className="receipt-modal"
+            id="receipt-content"
+            ref={receiptRef}
+            style={{
+              fontFamily:
+                "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            }}
+          >
+            {/* Success Icon */}
+            <div style={{ textAlign: "center", marginBottom: "15px" }}>
+              <div
+                style={{
+                  width: "70px",
+                  height: "70px",
+                  margin: "0 auto",
+                  background: "#d7f9d9",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <span style={{ fontSize: "38px", color: "#2ecc71" }}>✔</span>
+              </div>
+              <h2 style={{ marginTop: "10px", fontSize: "22px" }}>
+                Order Receipt
+              </h2>
+            </div>
+
+            <hr
+              style={{
+                border: "none",
+                borderTop: "1px dashed #bbb",
+                margin: "20px 0"
+              }}
+            />
+
+            {/* Order Details */}
+            <h3 style={{ fontSize: "18px", marginBottom: "5px" }}>
+              Order Details
+            </h3>
+            <div style={{ fontSize: "14px", marginBottom: "10px" }}>
+              <p>
+                <strong>Date:</strong>{" "}
+                {new Date(receiptData.date_order).toLocaleString()}
+              </p>
+              <p>
+                <strong>Order Reference:</strong> {receiptData.order_ref}
+              </p>
+              <p>
+                <strong>Customer:</strong> {receiptData.customer_name}
+              </p>
+            </div>
+
+            <hr
+              style={{
+                border: "none",
+                borderTop: "1px dashed #bbb",
+                margin: "20px 0"
+              }}
+            />
+
+            {/* Items Table */}
+            <h3 style={{ fontSize: "18px", marginBottom: "5px" }}>Items</h3>
+
+            <table className="receipt-table">
               <thead>
                 <tr>
                   <th>Item</th>
@@ -705,25 +788,40 @@ const VetViewOrders = () => {
                   <th>Total</th>
                 </tr>
               </thead>
+
               <tbody>
                 {receiptData.items.map((item, i) => (
                   <tr key={i}>
                     <td>{item.product_name}</td>
                     <td>{item.qty}</td>
                     <td>₱{item.price}</td>
-                    <td>₱{(item.price * item.qty)}</td>
+                    <td>₱{item.price * item.qty}</td>
                   </tr>
                 ))}
               </tbody>
+
               <tfoot>
                 <tr>
-                  <td colSpan="3" style={{ textAlign: "right" }}><strong>Total:</strong></td>
-                  <td><strong>₱{receiptData.total}</strong></td>
+                  <td colSpan="3" style={{ textAlign: "right" }}>
+                    <strong>Total:</strong>
+                  </td>
+                  <td>
+                    <strong>₱{receiptData.total}</strong>
+                  </td>
                 </tr>
               </tfoot>
             </table>
 
-            <div className="admin-receipt-actions">
+            <hr
+              style={{
+                border: "none",
+                borderTop: "1px dashed #bbb",
+                margin: "20px 0"
+              }}
+            />
+
+            {/* Buttons */}
+            <div className="receipt-actions">
               <button onClick={() => setShowReceipt(false)}>Close</button>
               <button onClick={handlePrintReceipt}>Print Receipt</button>
             </div>

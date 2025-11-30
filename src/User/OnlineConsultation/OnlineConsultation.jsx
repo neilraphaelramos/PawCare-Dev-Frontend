@@ -172,7 +172,7 @@ const OnlineConsultation = () => {
         }
         setSelectedDateTime(null);
         setPaymentStatus('Idle');
-        
+
       }
     } catch (err) {
       console.error("Error requesting consultation:", err);
@@ -386,36 +386,62 @@ const OnlineConsultation = () => {
             // 🔥 Generate Receipt HTML
             // =======================================
             const receiptDiv = document.createElement("div");
+            receiptDiv.style.width = "360px";
             receiptDiv.style.padding = "20px";
-            receiptDiv.style.border = "2px solid #333";
-            receiptDiv.style.width = "400px";
-            receiptDiv.style.fontFamily = "Arial, sans-serif";
+            receiptDiv.style.borderRadius = "16px";
+            receiptDiv.style.background = "#fff";
+            receiptDiv.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            receiptDiv.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            receiptDiv.style.margin = "0 auto";
+            receiptDiv.style.textAlign = "center";
 
+            // Header Icon + Title
             receiptDiv.innerHTML = `
-              <h2>Online Consultation Receipt</h2>
-              <p><strong>Reference ID:</strong> ${data.payment_intent_id}</p>
-              <p><strong>Owner:</strong> ${processName}</p>
-              <p><strong>Consultation Type:</strong> ${fillUp.consult_type}</p>
-              <p><strong>Pet Name:</strong> ${fillUp.pet_name}</p>
-              <p><strong>Amount Paid:</strong> ${amount} PHP</p>
-              <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-              <p>Thank you for your payment!</p>
+              <div style="margin-bottom: 15px;">
+                <div style="
+                  width: 70px;
+                  height: 70px;
+                  margin: 0 auto;
+                  background: #d7f9d9;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;">
+                  <span style="font-size: 38px; color: #2ecc71;">✔</span>
+                </div>
+                <h2 style="margin-top: 10px; font-size: 20px;">Payment Successful</h2>
+              </div>
+
+              <hr style="border: none; border-top: 1px dashed #ccc; margin: 20px 0;">
+
+              <h3 style="text-align: left; font-size: 16px;">Payment Details</h3>
+              <div style="font-size: 14px; text-align: left; margin-top: 8px;">
+                <p><strong>Reference No:</strong> ${data.payment_intent_id}</p>
+                <p><strong>Owner:</strong> ${processName}</p>
+                <p><strong>Status:</strong> Successful</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+
+              <hr style="border: none; border-top: 1px dashed #ccc; margin: 20px 0;">
+
+              <h3 style="text-align: left; font-size: 16px;">Consultation Details</h3>
+              <div style="font-size: 14px; text-align: left; margin-top: 8px;">
+                <p><strong>Consultation Type:</strong> ${fillUp.consult_type}</p>
+                <p><strong>Pet Name:</strong> ${fillUp.pet_name}</p>
+                <p><strong>Amount Paid:</strong> ${amount} PHP</p>
+              </div>
             `;
 
             document.body.appendChild(receiptDiv);
 
             html2canvas(receiptDiv).then((canvas) => {
               canvas.toBlob((blob) => {
-                const file = new File([blob], "receipt.png", {
-                  type: "image/png",
-                });
+                const file = new File([blob], "receipt.png", { type: "image/png" });
 
                 setFillUp(prev => ({ ...prev, file_payment: file }));
                 console.log("Receipt PNG created!", file);
 
                 document.body.removeChild(receiptDiv);
-
-                // 👉 OPEN RECEIPT MODAL HERE
                 setShowReceiptModal(true);
               });
             });
