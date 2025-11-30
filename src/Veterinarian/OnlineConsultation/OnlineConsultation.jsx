@@ -376,7 +376,7 @@ const VetConsultationAdmin = () => {
                     <p><strong>Pet Type:</strong> {req.petType}</p>
                     <p><strong>Owner:</strong> {req.ownerName}</p>
                     <p>
-                      <strong>Payment Proof:</strong>{' '}
+                      <strong>Payment Receipt:</strong>{' '}
                       <a
                         className="vet-view-proof-btn"
                         onClick={() =>{
