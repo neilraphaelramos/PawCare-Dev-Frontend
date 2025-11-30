@@ -379,7 +379,10 @@ const VetConsultationAdmin = () => {
                       <strong>Payment Proof:</strong>{' '}
                       <a
                         className="vet-view-proof-btn"
-                        onClick={() => openProofModal(req.paymentProof)}
+                        onClick={() =>{
+                          logVetAction(`View the receipt from Consult ID: ${req.id}`);
+                          openProofModal(req.paymentProof);
+                        }}
                       >
                         View Proof
                       </a>

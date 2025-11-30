@@ -6,7 +6,8 @@ import axios from 'axios';
 import JitsiWrapper from './component/jitsiApi';
 import { io } from 'socket.io-client';
 import DateTimeModal from './component/DateTimeModal';
-import { fi } from 'date-fns/locale';
+import '../../modal/modal_design.css';
+import html2canvas from 'html2canvas';
 
 const OnlineConsultation = () => {
   const { user } = useContext(UserContext);
@@ -51,6 +52,12 @@ const OnlineConsultation = () => {
   const [petList, setPetList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrImageUrl, setQrImageUrl] = useState('');
+  const [paymentIntentId, setPaymentIntentId] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState("Idle");
+  const [showReceipt, setShowReceipt] = useState(true);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const mergeWithBot = (msgs) => [...defaultBotMessages, ...msgs];
 
@@ -158,13 +165,58 @@ const OnlineConsultation = () => {
           file_payment: '',
         });
 
+        setPetList([]);
+
         if (fileInputRef.current) {
           fileInputRef.current.value = null;
         }
         setSelectedDateTime(null);
+        setPaymentStatus('Idle');
+        
       }
     } catch (err) {
       console.error("Error requesting consultation:", err);
+    }
+  };
+
+  const handleCancelPayment = async () => {
+    if (!paymentIntentId) {
+      console.warn("⚠️ No payment intent to cancel.");
+      setShowQrModal(false);
+      return;
+    }
+
+    try {
+      console.log("🟡 Cancelling payment intent:", paymentIntentId);
+
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/online_consult/cancel_payment_intent`, {
+        payment_intent_id: paymentIntentId,
+      });
+
+      if (res.data.success) {
+
+        console.log("🛑 Payment intent canceled successfully.");
+        setMessageModal("Payment canceled successfully.");
+        setPaymentStatus('Cancelled');
+        setTimeout(() => {
+          setPaymentStatus('Idle');
+        }, 3000);
+      } else {
+        console.warn("⚠️ Payment cancel request failed:", res.data.message);
+        setMessageModal("Failed to cancel payment. Please try again.");
+        setPaymentStatus('Error');
+        setTimeout(() => {
+          setPaymentStatus('Idle');
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("❌ Error canceling payment intent:", err);
+      setMessageModal("Server error while canceling payment.");
+    } finally {
+      setShowQrModal(false);
+      setQrImageUrl("");
+      setPaymentIntentId("");
+      setShowModal(true);
     }
   };
 
@@ -176,6 +228,25 @@ const OnlineConsultation = () => {
     setFormSubmitted(isSubmitted);
     setStartCall(dataSetCall);
   }, []);
+
+  useEffect(() => {
+    if (paymentStatus === "Cancelled") {
+      // Remove all stored payment data
+      sessionStorage.removeItem("paymentIntentId");
+      sessionStorage.removeItem("paymentStatus");
+      sessionStorage.removeItem("qrImageUrl");
+      sessionStorage.removeItem("paymentStarted");
+
+      // Reset UI states
+      setPaymentIntentId(null);
+      setQrImageUrl(null);
+      setShowQrModal(false);
+
+      // Optional: show a message
+      setShowModal(true);
+      setMessageModal("Payment was cancelled.");
+    }
+  }, [paymentStatus]);
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -239,6 +310,159 @@ const OnlineConsultation = () => {
     setMessages(prev => mergeWithBot([...prev.slice(defaultBotMessages.length), msgObj]));
     setMessage('');
   };
+
+  const handleStart = async () => {
+    if (
+      !fillUp ||
+      !fillUp.consult_type ||
+      !fillUp.pet_name ||
+      !fillUp.concern_description
+    ) {
+      setShowModal(true);
+      setMessageModal("Please complete the consultation form before continuing.");
+      return;
+    }
+
+    let amount = 0;
+
+    if (fillUp.consult_type === "regular") {
+      amount = 1;
+    } else if (fillUp.consult_type === "urgent") {
+      amount = 2;
+    } else {
+      setShowModal(true);
+      setMessageModal("Invalid consultation type selected.");
+      return;
+    }
+
+    try {
+      setPaymentStatus("pending");
+
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API_URL}/online_consult/create_payment_intent`,
+        {
+          amount,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          phone: user.phone,
+        }
+      );
+
+      if (!data.success) {
+        setShowModal(true);
+        setMessageModal("Failed to create payment. Please try again.");
+        return;
+      }
+
+      setQrImageUrl(data.qrImageBase64);
+      setPaymentIntentId(data.payment_intent_id);
+      setShowQrModal(true);
+      setShowModal(false);
+
+      // FIXED ❗ MUST be false initially
+      let receiptCreated = false;
+
+      // ===============================
+      // 🔥 Auto Payment Checker
+      // ===============================
+      const autoCheckPayment = async () => {
+        try {
+          const res = await axios.get(
+            `${process.env.REACT_APP_API_URL}/online_consult/check_payment_status/${data.payment_intent_id}`
+          );
+
+          const status = res.data.status;
+          console.log("🔍 Payment Status:", status);
+
+          // PayMongo success status = "succeeded"
+          if (status === "succeeded" && !receiptCreated) {
+            receiptCreated = true;
+            setPaymentStatus("Paid");
+
+            // Auto close QR modal
+            setTimeout(() => setShowQrModal(false), 700);
+
+            // =======================================
+            // 🔥 Generate Receipt HTML
+            // =======================================
+            const receiptDiv = document.createElement("div");
+            receiptDiv.style.padding = "20px";
+            receiptDiv.style.border = "2px solid #333";
+            receiptDiv.style.width = "400px";
+            receiptDiv.style.fontFamily = "Arial, sans-serif";
+
+            receiptDiv.innerHTML = `
+              <h2>Online Consultation Receipt</h2>
+              <p><strong>Reference ID:</strong> ${data.payment_intent_id}</p>
+              <p><strong>Owner:</strong> ${processName}</p>
+              <p><strong>Consultation Type:</strong> ${fillUp.consult_type}</p>
+              <p><strong>Pet Name:</strong> ${fillUp.pet_name}</p>
+              <p><strong>Amount Paid:</strong> ${amount} PHP</p>
+              <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+              <p>Thank you for your payment!</p>
+            `;
+
+            document.body.appendChild(receiptDiv);
+
+            html2canvas(receiptDiv).then((canvas) => {
+              canvas.toBlob((blob) => {
+                const file = new File([blob], "receipt.png", {
+                  type: "image/png",
+                });
+
+                setFillUp(prev => ({ ...prev, file_payment: file }));
+                console.log("Receipt PNG created!", file);
+
+                document.body.removeChild(receiptDiv);
+
+                // 👉 OPEN RECEIPT MODAL HERE
+                setShowReceiptModal(true);
+              });
+            });
+
+            return;
+          }
+
+
+          // ❌ Cancelled
+          if (status === "cancelled") {
+            setPaymentStatus("failed");
+            setShowQrModal(false);
+            setShowModal(true);
+            setMessageModal("❌ Payment was cancelled.");
+            return;
+          }
+
+          // Keep checking every 5 seconds
+          setTimeout(autoCheckPayment, 1000);
+
+        } catch (err) {
+          console.error("Payment check error:", err);
+          setTimeout(autoCheckPayment, 7000);
+        }
+      };
+
+      autoCheckPayment();
+    } catch (err) {
+      console.error("Error creating payment intent:", err);
+      setShowModal(true);
+      setMessageModal("Server error while creating payment intent.");
+    }
+  };
+
+  useEffect(() => {
+    const savedIntent = sessionStorage.getItem("paymentIntentId");
+    const savedStatus = sessionStorage.getItem("paymentStatus");
+    const savedQR = sessionStorage.getItem("qrImageUrl");
+    const savedStarted = sessionStorage.getItem("paymentStarted");
+
+    if (savedStarted === "true" && savedIntent && savedQR) {
+      setPaymentIntentId(savedIntent);
+      setPaymentStatus(savedStatus || "pending");
+      setQrImageUrl(savedQR);
+      setShowQrModal(true); // reopen QR modal
+    }
+  }, []);
 
   // Fetch messages only from DB, but always prepend the 2 default bot messages
   useEffect(() => {
@@ -364,6 +588,7 @@ const OnlineConsultation = () => {
             <label>Concern Description</label>
             <textarea
               name='concern_description'
+              value={fillUp.concern_description}
               onChange={handleInputChange}
               required
               rows="4"
@@ -374,7 +599,7 @@ const OnlineConsultation = () => {
 
           <div className="form-group">
             <label>Consultation Type</label>
-            <select name='consult_type' onChange={handleInputChange} required>
+            <select name='consult_type' onChange={handleInputChange} required value={fillUp.consult_type}>
               <option value="">Select type</option>
               <option value="regular">Regular (300 pesos)</option>
               <option value="urgent">Urgent (500 pesos)</option>
@@ -400,22 +625,29 @@ const OnlineConsultation = () => {
           </div>
 
           <div className="form-group">
-            <label>Payment Proof (Screenshot or Receipt)</label>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={handleFileUpload}
-              required
-              ref={fileInputRef}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Where to Pay:</label>
-            <div className="payment-instructions">
-              <p><strong>GCash:</strong> 0917-123-4567 (PawCare Clinic)</p>
-              <p><strong>Bank Transfer:</strong> BPI - Account No. 1234-5678-90</p>
-              <p><strong>Note:</strong> Please include your name and pet's name in the reference.</p>
+            <label>Payment</label>
+            <div className='payment-form-group'>
+              <button
+                type="button"
+                className="payment-primary-btn"
+                onClick={() => handleStart()}
+              >
+                Start the Payment(via QRPH)
+              </button>
+              <p className="payment-status-label">
+                <strong>
+                  Status: {paymentStatus}
+                </strong>
+              </p>
+              {paymentStatus === "Paid" && fillUp.file_payment && (
+                <button
+                  type="button"
+                  className="payment-primary-btn"
+                  onClick={() => setShowReceiptModal(true)}
+                >
+                  Show Receipt
+                </button>
+              )}
             </div>
           </div>
 
@@ -520,6 +752,62 @@ const OnlineConsultation = () => {
           </div>
         </div>
       )}
+
+      {showQrModal && (
+        <div className="messOrd-modal-overlay">
+          <div className="messOrd-modal">
+            <div className="messOrd-modal-header align-center-adjust">
+              <h2>Scan to Pay (QR Ph)</h2>
+            </div>
+
+            <div className="messOrd-modal-body-qrph">
+              <img src={qrImageUrl} alt="QR Payment" className='messOrd-qr-image' />
+            </div>
+
+            <div className="messOrd-modal-footer">
+              <button
+                className='messOrd-close-btn'
+                onClick={() => {
+                  handleCancelPayment(paymentIntentId);
+                  setShowQrModal(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReceiptModal && (
+        <div className="pay-modal-overlay">
+          <div className="pay-modal-content" style={{ textAlign: "center" }}>
+            <h2>Payment Receipt</h2>
+
+            {/* Show auto-generated PNG */}
+            {fillUp.file_payment && (
+              <img
+                src={URL.createObjectURL(fillUp.file_payment)}
+                alt="Receipt"
+                style={{
+                  maxWidth: "350px",
+                  border: "1px solid #ccc",
+                  borderRadius: "6px",
+                  marginBottom: "15px"
+                }}
+              />
+            )}
+
+            <button
+              className="payment-primary-btn"
+              onClick={() => setShowReceiptModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

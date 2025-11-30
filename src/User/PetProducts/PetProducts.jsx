@@ -7,7 +7,6 @@ import axios from 'axios';
 import { UserContext } from '../../hook/authContext'
 import { useLocation } from 'react-router-dom';
 import html2canvas from 'html2canvas';
-import { tr } from 'date-fns/locale';
 
 const UserInventory = () => {
   const [search, setSearch] = useState('');
