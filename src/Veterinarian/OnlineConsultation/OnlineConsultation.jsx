@@ -384,7 +384,7 @@ const VetConsultationAdmin = () => {
                           openProofModal(req.paymentProof);
                         }}
                       >
-                        View Proof
+                        View Receipt
                       </a>
                     </p>
                     <p><strong>Concern:</strong> {req.concern}</p>
