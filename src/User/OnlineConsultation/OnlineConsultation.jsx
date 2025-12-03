@@ -94,6 +94,14 @@ const OnlineConsultation = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+
+    if (paymentStatus !== "Paid") {
+      setShowModal(true);
+      setMessageModal("You must complete the payment before submitting your consultation request.");
+      setIsSubmitted(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("owner_name", fillUp.owner_name);
