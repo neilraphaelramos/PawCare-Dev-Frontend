@@ -176,6 +176,7 @@ const Appointment = () => {
           title_notify: "Appointment Reserved",
           type_notify: "Appointment",
           details: `${owner_name} has reserved an appointment on ${readableDate} at ${selectedTime}.`,
+          displaySet: 'All',
         });
       } catch (NErr) {
         console.error("Notification error:", NErr);

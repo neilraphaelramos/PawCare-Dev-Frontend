@@ -151,6 +151,7 @@ const OnlineConsultation = () => {
           title_notify: "Requested Online Consultation",
           type_notify: "Online Consultation",
           details: `${fillUp.owner_name} has requested an online consultation. On date of ${selectedDateTime?.date.toLocaleDateString('en-CA')} at ${selectedDateTime?.time}.`,
+          displaySet: 'All',
         });
       } catch (NErr) {
         console.error("Notification error:", NErr);
