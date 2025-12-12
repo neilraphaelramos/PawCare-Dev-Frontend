@@ -45,15 +45,29 @@ export default function PetInfos() {
                 setSpeciesOptions([]);
                 return;
             }
+
             setLoading(true);
+
             try {
                 const url =
                     type === "Dog"
                         ? "https://api.thedogapi.com/v1/breeds"
                         : "https://api.thecatapi.com/v1/breeds";
+
                 const res = await fetch(url);
                 const data = await res.json();
-                setSpeciesOptions(data.map((b) => ({ id: b.id, name: b.name })));
+
+                let options = data.map((b) => ({ id: b.id, name: b.name }));
+
+                if (type === "Dog") {
+                    options.push({ id: "aspin", name: "Aspin / Asong Pinoy" });
+                } else if (type === "Cat") {
+                    options.push({ id: "puspin", name: "Puspin / Puspin Pinoy" });
+                }
+
+                options.sort((a, b) => a.name.localeCompare(b.name));
+
+                setSpeciesOptions(options);
             } catch (err) {
                 console.error("Failed to load species", err);
             } finally {
@@ -61,6 +75,7 @@ export default function PetInfos() {
                 setSpecies("");
             }
         }
+
         fetchBreeds();
     }, [type]);
 
