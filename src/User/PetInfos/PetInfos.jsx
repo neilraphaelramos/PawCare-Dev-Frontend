@@ -62,7 +62,7 @@ export default function PetInfos() {
                 if (type === "Dog") {
                     options.push({ id: "aspin", name: "Aspin / Asong Pinoy" });
                 } else if (type === "Cat") {
-                    options.push({ id: "puspin", name: "Puspin / Puspin Pinoy" });
+                    options.push({ id: "puspin", name: "Puspin / Pusang  Pinoy" });
                 }
 
                 options.sort((a, b) => a.name.localeCompare(b.name));
