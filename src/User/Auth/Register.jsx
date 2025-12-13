@@ -20,6 +20,7 @@ export default function Register() {
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [regions, setRegions] = useState([]);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -50,32 +51,50 @@ export default function Register() {
 
   useEffect(() => {
     axios
-      .get("https://psgc.gitlab.io/api/provinces.json")
-      .then((res) => setProvinces(res.data))
-      .catch((err) => console.error("Error loading provinces:", err));
+      .get("https://psgc.gitlab.io/api/regions.json")
+      .then(res => setRegions(res.data))
+      .catch(err => console.error("Error loading regions:", err));
   }, []);
 
+  /* ===================== LOAD PROVINCES (BY REGION) ===================== */
   useEffect(() => {
-    if (form.provinceCode) {
-      axios
-        .get(`https://psgc.gitlab.io/api/provinces/${form.provinceCode}/cities-municipalities.json`)
-        .then((res) => setMunicipalities(res.data))
-        .catch((err) => console.error("Error loading municipalities:", err));
-    } else {
+    if (!form.regionCode) {
+      setProvinces([]);
       setMunicipalities([]);
       setBarangays([]);
+      return;
     }
+
+    axios
+      .get(`https://psgc.gitlab.io/api/regions/${form.regionCode}/provinces.json`)
+      .then(res => setProvinces(res.data))
+      .catch(err => console.error("Error loading provinces:", err));
+  }, [form.regionCode]);
+
+  /* ===================== LOAD MUNICIPALITIES ===================== */
+  useEffect(() => {
+    if (!form.provinceCode) {
+      setMunicipalities([]);
+      setBarangays([]);
+      return;
+    }
+
+    axios
+      .get(`https://psgc.gitlab.io/api/provinces/${form.provinceCode}/cities-municipalities.json`)
+      .then(res => setMunicipalities(res.data))
+      .catch(err => console.error("Error loading municipalities:", err));
   }, [form.provinceCode]);
 
+  /* ===================== LOAD BARANGAYS ===================== */
   useEffect(() => {
-    if (form.municipalityCode) {
-      axios
-        .get(`https://psgc.gitlab.io/api/cities-municipalities/${form.municipalityCode}/barangays.json`)
-        .then((res) => setBarangays(res.data))
-        .catch((err) => console.error("Error loading barangays:", err));
-    } else {
+    if (!form.municipalityCode) {
       setBarangays([]);
+      return;
     }
+    axios
+      .get(`https://psgc.gitlab.io/api/cities-municipalities/${form.municipalityCode}/barangays.json`)
+      .then(res => setBarangays(res.data))
+      .catch(err => console.error("Error loading barangays:", err));
   }, [form.municipalityCode]);
 
   const openModal = (message) => {
@@ -95,38 +114,51 @@ export default function Register() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "province") {
-      const selected = provinces.find((p) => p.name === value);
-      setForm((prev) => ({
+    if (name === "region") {
+      const selected = regions.find(r => r.name === value);
+      setForm(prev => ({
+        ...prev,
+        region: value,
+        regionCode: selected?.code || "",
+        province: "",
+        provinceCode: "",
+        municipality: "",
+        municipalityCode: "",
+        barangay: "",
+        zipCode: "",
+      }));
+
+    } else if (name === "province") {
+      const selected = provinces.find(p => p.name === value);
+      setForm(prev => ({
         ...prev,
         province: value,
         provinceCode: selected?.code || "",
         municipality: "",
         municipalityCode: "",
         barangay: "",
-        zipCode: "" // reset ZIP when province changes
+        zipCode: "",
       }));
-    } else if (name === "municipality") {
-      const selected = municipalities.find((m) => m.name === value);
 
-      // find matching ZIP code based on province + municipality
+    } else if (name === "municipality") {
+      const selected = municipalities.find(m => m.name === value);
+
       const zipEntry = zipCode.find(
-        (z) =>
+        z =>
           z.location.toLowerCase() === form.province.toLowerCase() &&
           z.municipality.toLowerCase() === value.toLowerCase()
       );
 
-      console.log("Zip entry found:", zipEntry);
-
-      setForm((prev) => ({
+      setForm(prev => ({
         ...prev,
         municipality: value,
         municipalityCode: selected?.code || "",
         barangay: "",
-        zipCode: zipEntry ? zipEntry.post_code.toString() : ""
+        zipCode: zipEntry ? zipEntry.post_code.toString() : "",
       }));
+
     } else {
-      setForm((prev) => ({
+      setForm(prev => ({
         ...prev,
         [name]: value,
       }));
@@ -267,8 +299,16 @@ export default function Register() {
               <input type="tel" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} className="res-input" />
               <input type="text" name="houseNum" placeholder="House Number & Street" value={form.houseNum} onChange={handleChange} required className="res-input" />
 
+              {/* Region */}
+              <select className="input-like" name="region" value={form.region} onChange={handleChange} required>
+                <option value="">Select Region</option>
+                {regions.map(r => (
+                  <option key={r.code} value={r.name}>{r.name}</option>
+                ))}
+              </select>
+
               {/* Province */}
-              <select className="input-like" name="province" value={form.province} onChange={handleChange} required>
+              <select className="input-like" name="province" value={form.province} onChange={handleChange} disabled={!form.region} required>
                 <option value="">Select Province</option>
                 {provinces.map((prov) => (
                   <option key={prov.code} value={prov.name}>{prov.name}</option>
