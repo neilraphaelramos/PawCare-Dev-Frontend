@@ -20,6 +20,16 @@ export default function PetInfos() {
     const [ageValue, setAgeValue] = React.useState("");
     const [ageUnit, setAgeUnit] = React.useState("months");
     const [isNotify, setIsNotify] = useState(false);
+    const [customSpecies, setCustomSpecies] = useState("");
+
+    const resetPetForm = () => {
+        setType("");
+        setSpecies("");
+        setCustomSpecies("");
+        setAgeValue("");
+        setAgeUnit("months");
+        setIsProcessing(false);
+    };
 
     const fetchPets = async () => {
         try {
@@ -67,12 +77,13 @@ export default function PetInfos() {
 
                 options.sort((a, b) => a.name.localeCompare(b.name));
 
+                options.push({ id: "other", name: "Other (Please specify)" });
+
                 setSpeciesOptions(options);
             } catch (err) {
                 console.error("Failed to load species", err);
             } finally {
                 setLoading(false);
-                setSpecies("");
             }
         }
 
@@ -146,6 +157,7 @@ export default function PetInfos() {
                     setIsNotify(false);
                 }, 3000);
                 setAddPetInfo(false);
+                resetPetForm();
                 fetchPets();
             } else {
                 setMessage("Failed to add pet.");
@@ -180,10 +192,15 @@ export default function PetInfos() {
 
         const combinedAge = `${ageValue} ${ageUnit}`;
 
+        const finalSpecies =
+            form.species.value === "Other (Please specify)"
+                ? customSpecies
+                : form.species.value;
+
         if (form.photo.files[0]) formData.append("photo", form.photo.files[0]);
         formData.append("petName", form.name.value);
         formData.append("petType", form.type.value);
-        formData.append("species", form.species.value);
+        formData.append("species", finalSpecies);
         formData.append("petAge", combinedAge);
         formData.append("petGender", form.gender.value);
 
@@ -202,6 +219,7 @@ export default function PetInfos() {
                     setIsNotify(false);
                 }, 3000);
                 setEditPet(null);
+                resetPetForm();
                 fetchPets();
             } else {
                 setMessage("Failed to update pet.");
@@ -228,6 +246,13 @@ export default function PetInfos() {
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
     );
+
+    useEffect(() => {
+        if (editPet) {
+            setType(editPet.petType);      // triggers breed fetch
+            setSpecies(editPet.species);   // auto-selects species
+        }
+    }, [editPet]);
 
     return (
         <div className="petinfo-wrapper">
@@ -304,7 +329,7 @@ export default function PetInfos() {
                     <div className="petinfo-modal">
                         <button
                             className="petinfo-close-btn"
-                            onClick={() => setAddPetInfo(false)}
+                            onClick={() => { setAddPetInfo(false); resetPetForm(); }}
                         >
                             ×
                         </button>
@@ -340,7 +365,12 @@ export default function PetInfos() {
                                 <select
                                     name="species"
                                     value={species}
-                                    onChange={(e) => setSpecies(e.target.value)}
+                                    onChange={(e) => {
+                                        setSpecies(e.target.value);
+                                        if (e.target.value !== "Other (Please specify)") {
+                                            setCustomSpecies("");
+                                        }
+                                    }}
                                     required
                                     disabled={!type || loading}
                                 >
@@ -353,6 +383,15 @@ export default function PetInfos() {
                                         </option>
                                     ))}
                                 </select>
+                                {species === "Other (Please specify)" && (
+                                    <input
+                                        type="text"
+                                        placeholder="Please specify species"
+                                        value={customSpecies}
+                                        onChange={(e) => setCustomSpecies(e.target.value)}
+                                        required
+                                    />
+                                )}
                             </div>
 
                             <div className="petinfo-form-group">
@@ -409,7 +448,7 @@ export default function PetInfos() {
                     <div className="petinfo-modal">
                         <button
                             className="petinfo-close-btn"
-                            onClick={() => setEditPet(null)}
+                            onClick={() => { setEditPet(null); resetPetForm(); }}
                         >
                             ×
                         </button>
@@ -455,17 +494,36 @@ export default function PetInfos() {
                                 <label>Species</label>
                                 <select
                                     name="species"
-                                    value={species || editPet.species}
-                                    onChange={(e) => setSpecies(e.target.value)}
+                                    value={species}
+                                    onChange={(e) => {
+                                        setSpecies(e.target.value);
+                                        if (e.target.value !== "Other (Please specify)") {
+                                            setCustomSpecies("");
+                                        }
+                                    }}
                                     required
+                                    disabled={!type || loading}
                                 >
-                                    <option value={editPet.species}>{editPet.species}</option>
+                                    <option value="">
+                                        {loading ? "Loading species..." : "Select species"}
+                                    </option>
+
                                     {speciesOptions.map((s) => (
                                         <option key={s.id} value={s.name}>
                                             {s.name}
                                         </option>
                                     ))}
                                 </select>
+                                {(species === "Other (Please specify)") && (
+                                    <input
+                                        type="text"
+                                        placeholder="Please specify species"
+                                        className="petinfo-custom-species"
+                                        value={customSpecies}
+                                        onChange={(e) => setCustomSpecies(e.target.value)}
+                                        required
+                                    />
+                                )}
                             </div>
 
                             <div className="petinfo-form-group">

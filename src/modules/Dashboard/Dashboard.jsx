@@ -69,6 +69,7 @@ export default function Dashboard() {
   const [unMess, setUnMess] = useState(0);
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+  const [announcements, setAnnouncements] = useState([]);
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -95,19 +96,6 @@ export default function Dashboard() {
     "Vaccine",
     "Supplies"
   ];
-  const allServices = [
-    "Grooming",
-    "Vaccination",
-    "Consultation",
-    "Deworming",
-    "Surgery",
-    "Confinement",
-    "Laboratories",
-    "Home Service",
-  ];
-  const [servicesData, setServicesData] = useState(
-    allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
-  );
 
   const handleChange = (e) => {
     const value = e.target.value.toLowerCase();
@@ -128,6 +116,23 @@ export default function Dashboard() {
     setSuggestions([]);
     navigate(path);
   };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/announcements/fetch`);
+      if (res.data.success) {
+        setAnnouncements(res.data.data);
+      } else {
+        console.error("Error fetching announcements:", err);
+      }
+    } catch (err) {
+      console.error("Error fetching announcements:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
   const [appointmentSummaryData, setAppointmentSummaryData] = useState({
     labels: [
@@ -228,32 +233,6 @@ export default function Dashboard() {
 
   function OrdersByCategoryChart() {
     return <Bar data={categoryChartData} options={categoryChartOptions} />;
-  }
-
-  const servicesChartData = {
-    labels: servicesData.map(d => d.service_type),
-    datasets: [
-      {
-        label: 'Service Demand',
-        data: servicesData.map(d => d.demand_count),
-        backgroundColor: '#32b2b2',
-      },
-    ],
-  };
-
-  const servicesChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Service Demand (Current Month)', font: { size: 18 } },
-    },
-    scales: { y: { beginAtZero: true } },
-  };
-
-  function ServicesChart() {
-    return (
-      <Bar data={servicesChartData} options={servicesChartOptions} />
-    );
   }
 
   const handleUpcomingAppointmentsFetch = async () => {
@@ -447,12 +426,6 @@ export default function Dashboard() {
                     className={activeTab === "category" ? "active" : ""}
                   >
                     Orders
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("services")}
-                    className={activeTab === "services" ? "active" : ""}
-                  >
-                    Services
                   </button>
                 </div>
 
@@ -654,40 +627,18 @@ export default function Dashboard() {
 
         <div className="vet-dashboard-card vet-dashboard-reminders">
           <h3 style={{ marginBottom: "0.5rem", color: "#32b2b2", marginTop: "5px" }}>
-            Reminders</h3>
+            Announcements
+          </h3>
           <ul style={{ listStyle: "none", padding: 0, maxHeight: 150, overflowY: "auto" }}>
-            <li style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-
-              Submit monthly report
-            </li>
-            <li style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-
-              Review lab test results
-            </li>
-            <li style={{ padding: "0.5rem 0" }}>
-
-              Staff meeting at 4 PM
-            </li>
-          </ul>
-        </div>
-
-        {/* Activities */}
-        <div className="vet-dashboard-card vet-dashboard-recent-activities">
-          <h3 style={{ marginBottom: "0.5rem", color: "#32b2b2" }}>
-            Recent Activities</h3>
-          <ul style={{ listStyle: "none", padding: 0, maxHeight: 150, overflowY: "auto" }}>
-            <li style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-
-              Marked appointment with Buddy as done
-            </li>
-            <li style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-
-              Added new colleague Dr. Smith
-            </li>
-            <li style={{ padding: "0.5rem 0" }}>
-
-              Confirmed reservation for Luna
-            </li>
+            {announcements.length === 0 ? (
+              <li>No announcements at the moment.</li>
+            ) : (
+              announcements.map((item, index) => (
+                <li key={index} style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
+                  {item.title}
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </aside>

@@ -207,6 +207,7 @@
     border: 1px solid #ccc;
     outline: none;
     transition: 0.2s;
+    margin-bottom: 5px;
 }
 
 .petinfo-age-row {
@@ -245,6 +246,8 @@
     gap: 20px;
     margin-top: 5px;
 }
+
+
 
 .petinfo-gender label {
     display: flex;
