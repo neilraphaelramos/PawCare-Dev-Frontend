@@ -92,6 +92,22 @@ export default function Dashboard() {
   ];
   const [announcements, setAnnouncements] = useState([]);
 
+  const formatPromoPeriod = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    const options = { month: "long" };
+    const month = startDate.toLocaleDateString("en-US", options);
+
+    if (startDate.getMonth() === endDate.getMonth()) {
+      return `${month} ${startDate.getDate()}–${endDate.getDate()}, ${endDate.getFullYear()}`;
+    }
+
+    const startStr = startDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    const endStr = endDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    return `${startStr}–${endStr}`;
+  };
+
   const logVetAction = async (action) => {
     try {
       await axios.post(
@@ -639,22 +655,98 @@ export default function Dashboard() {
           <Calendar value={date} onChange={setDate} />
         </div>
 
-        <div className="vet-dashboard-card vet-dashboard-reminders">
-          <h3 style={{ marginBottom: "0.5rem", color: "#32b2b2", marginTop: "5px" }}>
+        <div
+          className="vet-dashboard-card vet-dashboard-reminders"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "1rem",
+            background: "#f8fafc",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            maxHeight: "495px", // total max height of the card
+          }}
+        >
+          <h3 style={{ marginBottom: "1rem", color: "#32b2b2", fontSize: "1.2rem" }}>
             Announcements
           </h3>
-          <ul style={{ listStyle: "none", padding: 0, maxHeight: 150, overflowY: "auto" }}>
-            {announcements.length === 0 ? (
-              <li>No announcements at the moment.</li>
-            ) : (
-              announcements.map((item, index) => (
-                <li key={index} style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-                  {item.title}
-                </li>
-              ))
-            )}
-          </ul>
+
+          {announcements.length === 0 ? (
+            <div
+              style={{
+                padding: "1rem",
+                background: "#e2e8f0",
+                borderRadius: "6px",
+                textAlign: "center",
+                color: "#475569",
+              }}
+            >
+              No announcements at the moment.
+            </div>
+          ) : (
+            <>
+              {/* Latest Announcement */}
+              <div
+                style={{
+                  padding: "1rem",
+                  background: "#ffffff",
+                  borderLeft: "5px solid #32b2b2",
+                  borderRadius: "6px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                  marginBottom: "1rem",
+                }}
+              >
+                <h4 style={{ margin: 0, marginBottom: "0.5rem", fontSize: "1rem", color: "#1e293b" }}>
+                  📢 Announcement: {announcements[0].title}
+                </h4>
+                {announcements[0].content && (
+                  <p style={{ margin: 0, marginBottom: "0.5rem", color: "#475569", fontSize: "0.9rem", lineHeight: "1.4" }}>
+                    {announcements[0].content}
+                  </p>
+                )}
+                {announcements[0].date_posted && (
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}>
+                    📅 Promo Period: {formatPromoPeriod(announcements[0].date_posted, announcements[0].expiration_date)}
+                  </p>
+                )}
+              </div>
+
+              {/* Previous Announcements */}
+              {announcements.length > 1 && (
+                <div
+                  style={{
+                    flex: 1, // take remaining space
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                    borderRadius: "6px",
+                  }}
+                >
+                  {announcements.slice(1).map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "0.8rem",
+                        background: "#e2e8f0",
+                        borderRadius: "6px",
+                        fontSize: "0.85rem",
+                        color: "#475569",
+                      }}
+                    >
+                      <strong>{item.title}</strong>
+                      {item.content && <p style={{ margin: "0.2rem 0 0 0" }}>{item.content}</p>}
+                      <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                        {formatPromoPeriod(item.date_posted, item.expiration_date)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
+
       </aside>
     </div>
   );
