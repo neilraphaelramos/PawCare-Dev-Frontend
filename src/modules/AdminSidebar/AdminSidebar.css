@@ -24,6 +24,14 @@
   object-fit: contain;
 }
 
+.admin-dashboard-nav {
+  max-height: 600px;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #bac1c7 transparent;
+}
 
 .admin-dashboard-nav a {
   display: block;

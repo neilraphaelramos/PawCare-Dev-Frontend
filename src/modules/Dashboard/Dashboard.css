@@ -237,10 +237,6 @@ body {
   box-sizing: border-box;
 }
 
-
-
-
-
 /* ─────────────────────────── Chart + Calendar ─────────────────────────── */
 .graph-box h3,
 .calendar-box h3 {
@@ -374,9 +370,6 @@ body {
   .admin-dashboard {
     flex-direction: column;
   }
-
-  
-
 
   .admin-dashboard-metrics {
   display: flex;
