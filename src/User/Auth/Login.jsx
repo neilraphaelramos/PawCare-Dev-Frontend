@@ -142,7 +142,7 @@ export default function Login() {
               value={form.email}
               onChange={handleChange}
               required
-              className="res-input"
+              className="res-input set-height-input"
             />
             <div className="password-wrapper">
               <input

@@ -269,6 +269,7 @@ body {
   color: #32b2b2;
   cursor: pointer;
   transition: 0.2s;
+  position: relative;
 }
 
 .user-dashboard-date:hover,
@@ -374,9 +375,44 @@ body {
 .user-dashboard-day.disabled .user-dashboard-date {
   background: #eee;
   color: #aaa;
+  opacity: 1;
   cursor: not-allowed;
+}
+
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  transition: opacity 0.25s ease-in-out;
   pointer-events: none;
-  opacity: 0.6;
+}
+
+/* Arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+/* Show tooltip on hover */
+.user-dashboard-date:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 .user-dashboard-calendar-grid .disabled-day {

@@ -49,6 +49,8 @@ const Dashboard = () => {
     { name: "Profile", keyword: "profile", path: "/users/profile" },
   ];
 
+  const [unavailableDates, setUnavailableDates] = useState([]);
+
   const scrollRef = useRef(null);
 
   const scrollLeft = () => {
@@ -79,6 +81,11 @@ const Dashboard = () => {
     navigate(path);
   };
 
+  const isUnavailableDate = (dateObj) => {
+    const dateStr = dateObj.toLocaleDateString("en-CA");
+    return unavailableDates.some(d => d.date === dateStr);
+  };
+
   const getWeekDates = (refDate) => {
     const start = new Date(refDate);
     start.setDate(start.getDate() - start.getDay());
@@ -92,6 +99,17 @@ const Dashboard = () => {
   useEffect(() => {
     setWeekDates(getWeekDates(selectedDate));
   }, [selectedDate]);
+
+  useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/availability/user-only`) // <-- admin-only API
+      .then((res) => {
+        const { fullDays } = res.data;
+
+        setUnavailableDates(fullDays || []);
+      })
+      .catch((err) => console.error("Error fetching availability:", err));
+  }, []);
 
   const handlePrevWeek = () => {
     const newDate = new Date(selectedDate);
@@ -245,6 +263,7 @@ const Dashboard = () => {
         <section className="user-dashboard-schedule user-dashboard-card">
           <div className="user-dashboard-section-header">
             <h3>Upcoming Online Consultation</h3>
+
             <div className="user-dashboard-schedule-controls">
               <span>
                 {selectedDate.toLocaleString("default", {
@@ -263,29 +282,42 @@ const Dashboard = () => {
           <div className="user-dashboard-calendar-dates">
             {weekDates.map((dateObj, index) => {
               const isWednesday = dateObj.getDay() === 3; // skip Wednesdays
+              const isUnavailable = isUnavailableDate(dateObj);
+
+              // Find info if available
+              const dateStr = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+              const fullDateInfo = unavailableDates.find(d => d.date === dateStr);
+
+              // Tooltip text
+              let tooltipText = "";
+              if (isUnavailable) tooltipText = fullDateInfo?.event || "Special event / Unavailable";
+              else if (isWednesday) tooltipText = "Closed (Wednesday)";
+
               return (
                 <div
-                  className={`user-dashboard-day ${isWednesday ? "disabled" : ""}`}
+                  className={`user-dashboard-day ${isWednesday || isUnavailable ? "disabled" : ""}`}
                   key={index}
                 >
                   <div className="user-dashboard-weekday">
                     {dateObj.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
                   </div>
+
                   <div
-                    className={`user-dashboard-date ${dateObj.toDateString() === selectedDate.toDateString()
-                      ? "user-dashboard-active"
-                      : ""
-                      }`}
+                    className={`user-dashboard-date ${selectedDate.toDateString() === dateObj.toDateString() ? "user-dashboard-active" : ""}`}
                     onClick={() => {
-                      if (!isWednesday) setSelectedDate(dateObj);
+                      if (!isWednesday && !isUnavailable) setSelectedDate(dateObj);
                     }}
                   >
                     {dateObj.getDate()}
+
+                    {/* Tooltip */}
+                    {tooltipText && <span className="tooltip">{tooltipText}</span>}
                   </div>
                 </div>
               );
             })}
           </div>
+
 
           {/* Filtered consultations by selected date */}
           <div className="user-dashboard-doctor-cards">
