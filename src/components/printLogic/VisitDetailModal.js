@@ -275,7 +275,6 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                         </div>
                         <div className="all-detail-field">
                             <div className="all-detail-label">Care Plan:</div>
-                            <div className="all-detail-value">{selectedVisit.carePlan}</div>
                             {isSwitch ? (
                                 <div className="all-detail-value">{selectedVisit.carePlan || 'N/A'}</div>
                             ) : (
