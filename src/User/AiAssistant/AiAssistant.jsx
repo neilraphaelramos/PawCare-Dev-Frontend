@@ -11,7 +11,7 @@ const frequentQuestions = [
 
 const AiChatBox = ({ onClose }) => {
   const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! I’m Dr. Paws, your AI pet guide. I’m here to answer your questions about your pet." }
+    { sender: "ai", text: "Hello! I’m Dr. Paws, your AI pet guide.\n\nI can help answer pet-related questions and guide you on how to use the system. Please note that I am not a replacement for a licensed veterinarian." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

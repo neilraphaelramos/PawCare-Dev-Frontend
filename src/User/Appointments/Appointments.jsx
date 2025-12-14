@@ -35,7 +35,7 @@ const Appointment = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState('');
-  const [isAM, setIsAM] = useState(false);
+  const [isAM, setIsAM] = useState(true);
   const { am, pm } = generateTimeSlots();
   const { user } = useContext(UserContext);
   const [bookedTimes, setBookedTimes] = useState([]);
