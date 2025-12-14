@@ -1,5 +1,5 @@
 // src/modules/Dashboard/Dashboard.jsx
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo, memo } from "react";
 import axios from "axios";
 import {
   FaStethoscope,
@@ -7,9 +7,7 @@ import {
   FaPills,
   FaEnvelope,
   FaCalendarAlt,
-  FaBell,
   FaClipboardList,
-  FaUserClock,
   FaClipboardCheck,
   FaVideo,
 
@@ -17,8 +15,6 @@ import {
 import Calendar from "react-calendar";
 import { Bar } from "react-chartjs-2";
 import "react-calendar/dist/Calendar.css";
-// Rename Recharts' Bar to BarRecharts
-import { BarChart, Bar as BarRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import "./Dashboard.css";
 import { useNavigate } from "react-router-dom";
 import {
@@ -55,8 +51,15 @@ const buttonStyles = {
   },
 };
 
+const OrdersByCategoryChart = memo(({ data, options }) => {
+  return <Bar data={data} options={options} />;
+});
+
+const ServicesChart = memo(({ data, options }) => {
+  return <Bar data={data} options={options} />;
+});
+
 export default function Dashboard() {
-  const [date, setDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState("appointments");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [appointments, setAppointments] = useState([]);
@@ -105,7 +108,9 @@ export default function Dashboard() {
     allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
   );
 
-  const [announcements, setAnnouncements] = useState([]);
+  const [latestAnnouncement, setLatestAnnouncement] = useState(null);
+  const [previousAnnouncements, setPreviousAnnouncements] = useState([]);
+  const [showLatestDetails, setShowLatestDetails] = useState(false);
 
   const formatPromoPeriod = (start, end) => {
     const startDate = new Date(start);
@@ -142,10 +147,29 @@ export default function Dashboard() {
   const fetchAnnouncements = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/announcements/fetch`);
+
       if (res.data.success) {
-        setAnnouncements(res.data.data);
-      } else {
-        console.error("Error fetching announcements:", err);
+        const today = new Date();
+
+        const validAnnouncements = res.data.data || [];
+
+        const active = validAnnouncements.filter(a =>
+          a.expiration_date && new Date(a.expiration_date) >= today
+        );
+
+        const expired = validAnnouncements.filter(a =>
+          a.expiration_date && new Date(a.expiration_date) < today
+        );
+
+        active.sort((a, b) => new Date(b.date_posted) - new Date(a.date_posted));
+
+        setLatestAnnouncement(active.length > 0 ? active[0] : null);
+
+
+        setPreviousAnnouncements([
+          ...active.slice(1),
+          ...expired
+        ]);
       }
     } catch (err) {
       console.error("Error fetching announcements:", err);
@@ -243,7 +267,7 @@ export default function Dashboard() {
     fetchSummary();
   }, []);
 
-  const categoryChartData = {
+  const categoryChartData = useMemo(() => ({
     labels: allCategories,
     datasets: [
       {
@@ -255,7 +279,7 @@ export default function Dashboard() {
         backgroundColor: "#32b2b2",
       },
     ],
-  };
+  }), [categoryData]);
 
   const categoryChartOptions = {
     responsive: true,
@@ -273,20 +297,16 @@ export default function Dashboard() {
     },
   };
 
-  function OrdersByCategoryChart() {
-    return <Bar data={categoryChartData} options={categoryChartOptions} />;
-  }
-
-  const servicesChartData = {
+  const servicesChartData = useMemo(() => ({
     labels: servicesData.map(d => d.service_type),
     datasets: [
       {
-        label: 'Service Demand',
+        label: "Service Demand",
         data: servicesData.map(d => d.demand_count),
-        backgroundColor: '#32b2b2',
+        backgroundColor: "#32b2b2",
       },
     ],
-  };
+  }), [servicesData]);
 
   const servicesChartOptions = {
     responsive: true,
@@ -515,8 +535,19 @@ export default function Dashboard() {
                       <Bar data={appointmentSummaryData} />
                     </div>
                   )}
-                  {activeTab === "category" && <OrdersByCategoryChart />}
-                  {activeTab === "services" && <ServicesChart />}
+                  {activeTab === "category" && (
+                    <OrdersByCategoryChart
+                      data={categoryChartData}
+                      options={categoryChartOptions}
+                    />
+                  )}
+
+                  {activeTab === "services" && (
+                    <ServicesChart
+                      data={servicesChartData}
+                      options={servicesChartOptions}
+                    />
+                  )}
                 </div>
               </div>
             </section>
@@ -700,7 +731,7 @@ export default function Dashboard() {
       <aside className="vet-dashboard-right-panel">
         <div className="vet-dashboard-calendar-widget-vet-dashboard-card">
           <h4 className="vet-dashboard-widget-title"><FaCalendarAlt /> Calendar</h4>
-          <Calendar value={date} onChange={setDate} />
+          <Calendar value={selectedDate} onChange={setSelectedDate} />
         </div>
 
         <div
@@ -715,11 +746,70 @@ export default function Dashboard() {
             maxHeight: "495px", // total max height of the card
           }}
         >
-          <h3 style={{ marginBottom: "1rem", color: "#32b2b2", fontSize: "1.2rem" }}>
+          <h3
+            style={{
+              marginBottom: "1rem",
+              color: "#32b2b2",
+              fontSize: "1.2rem",
+              cursor: "pointer"
+            }}
+            onClick={() => navigate('/admin/announcements')}
+          >
             Announcements
           </h3>
 
-          {announcements.length === 0 ? (
+          {/* ✅ Latest Announcement */}
+          {latestAnnouncement ? (
+            <div
+              style={{
+                padding: "1rem",
+                background: "#ffffff",
+                borderLeft: "5px solid #32b2b2",
+                borderRadius: "8px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                marginBottom: "1rem",
+                cursor: "pointer"
+              }}
+              onClick={() => setShowLatestDetails(prev => !prev)}
+            >
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: "1rem",
+                  color: "#1e293b",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}
+              >
+                📢 {latestAnnouncement.title}
+                <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                  {showLatestDetails ? "▲" : "▼"}
+                </span>
+              </h4>
+
+              {showLatestDetails && (
+                <>
+                  {latestAnnouncement.content && (
+                    <p style={{
+                      marginTop: "0.5rem",
+                      color: "#475569",
+                      fontSize: "0.9rem",
+                      lineHeight: "1.4"
+                    }}>
+                      {latestAnnouncement.content}
+                    </p>
+                  )}
+                  <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "0.3rem" }}>
+                    📅 {formatPromoPeriod(
+                      latestAnnouncement.date_posted,
+                      latestAnnouncement.expiration_date
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
             <div
               style={{
                 padding: "1rem",
@@ -727,71 +817,47 @@ export default function Dashboard() {
                 borderRadius: "6px",
                 textAlign: "center",
                 color: "#475569",
+                marginBottom: "1rem"
               }}
             >
-              No announcements at the moment.
+              No active announcements.
             </div>
-          ) : (
-            <>
-              {/* Latest Announcement */}
-              <div
-                style={{
-                  padding: "1rem",
-                  background: "#ffffff",
-                  borderLeft: "5px solid #32b2b2",
-                  borderRadius: "6px",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-                  marginBottom: "1rem",
-                }}
-              >
-                <h4 style={{ margin: 0, marginBottom: "0.5rem", fontSize: "1rem", color: "#1e293b" }}>
-                  📢 Announcement: {announcements[0].title}
-                </h4>
-                {announcements[0].content && (
-                  <p style={{ margin: 0, marginBottom: "0.5rem", color: "#475569", fontSize: "0.9rem", lineHeight: "1.4" }}>
-                    {announcements[0].content}
-                  </p>
-                )}
-                {announcements[0].date_posted && (
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}>
-                    📅 Promo Period: {formatPromoPeriod(announcements[0].date_posted, announcements[0].expiration_date)}
-                  </p>
-                )}
-              </div>
+          )}
 
-              {/* Previous Announcements */}
-              {announcements.length > 1 && (
+          {/* ✅ Previous Announcements */}
+          {previousAnnouncements.length > 0 && (
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem"
+              }}
+            >
+              {previousAnnouncements.map((item, index) => (
                 <div
+                  key={index}
                   style={{
-                    flex: 1, // take remaining space
-                    overflowY: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem",
+                    padding: "0.8rem",
+                    background: "#e2e8f0",
                     borderRadius: "6px",
+                    fontSize: "0.85rem",
+                    color: "#475569"
                   }}
                 >
-                  {announcements.slice(1).map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        padding: "0.8rem",
-                        background: "#e2e8f0",
-                        borderRadius: "6px",
-                        fontSize: "0.85rem",
-                        color: "#475569",
-                      }}
-                    >
-                      <strong>{item.title}</strong>
-                      {item.content && <p style={{ margin: "0.2rem 0 0 0" }}>{item.content}</p>}
-                      <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-                        {formatPromoPeriod(item.date_posted, item.expiration_date)}
-                      </span>
-                    </div>
-                  ))}
+                  <strong>{item.title}</strong>
+                  {item.content && (
+                    <p style={{ margin: "0.3rem 0 0 0" }}>
+                      {item.content}
+                    </p>
+                  )}
+                  <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                    {formatPromoPeriod(item.date_posted, item.expiration_date)}
+                  </span>
                 </div>
-              )}
-            </>
+              ))}
+            </div>
           )}
         </div>
 

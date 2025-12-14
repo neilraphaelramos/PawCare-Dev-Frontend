@@ -116,7 +116,6 @@ html, body {
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
-  margin: 2rem auto 0;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
