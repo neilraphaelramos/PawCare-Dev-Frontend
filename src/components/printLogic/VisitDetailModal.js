@@ -402,7 +402,6 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                             <div className="all-detail-label">Medications:</div>
                             <div className="all-detail-value">
                                 <ul style={{ paddingLeft: '1rem', margin: 0 }}>
-                                    <li>{selectedVisit.medications}</li>
                                     {isSwitch ? (
                                         <li>{selectedVisit.medications || "N/A"}</li>
                                     ) : (
