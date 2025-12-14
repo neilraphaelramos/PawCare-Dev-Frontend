@@ -867,7 +867,7 @@ export default function PetRecords() {
                         <div className="checkup-col action-col">
                           <p className="checkup-label">Action</p>
                           <button className="aksi-btn" onClick={() => setSelectedVisit(visit)}>
-                            <FaRegEye size={14} />
+                            <FaEdit size={14} />
                           </button>
                         </div>
                       </div>

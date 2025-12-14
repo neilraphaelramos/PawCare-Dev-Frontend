@@ -90,6 +90,21 @@ export default function Dashboard() {
     "Vaccine",
     "Supplies"
   ];
+
+  const allServices = [
+    "Grooming",
+    "Vaccination",
+    "Consultation",
+    "Deworming",
+    "Surgery",
+    "Confinement",
+    "Laboratories",
+    "Home Service",
+  ];
+  const [servicesData, setServicesData] = useState(
+    allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
+  );
+
   const [announcements, setAnnouncements] = useState([]);
 
   const formatPromoPeriod = (start, end) => {
@@ -260,6 +275,32 @@ export default function Dashboard() {
 
   function OrdersByCategoryChart() {
     return <Bar data={categoryChartData} options={categoryChartOptions} />;
+  }
+
+  const servicesChartData = {
+    labels: servicesData.map(d => d.service_type),
+    datasets: [
+      {
+        label: 'Service Demand',
+        data: servicesData.map(d => d.demand_count),
+        backgroundColor: '#32b2b2',
+      },
+    ],
+  };
+
+  const servicesChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Service Demand (Current Month)', font: { size: 18 } },
+    },
+    scales: { y: { beginAtZero: true } },
+  };
+
+  function ServicesChart() {
+    return (
+      <Bar data={servicesChartData} options={servicesChartOptions} />
+    );
   }
 
   const handleUpcomingAppointmentsFetch = async () => {
@@ -459,6 +500,12 @@ export default function Dashboard() {
                   >
                     Orders
                   </button>
+                  <button
+                    onClick={() => setActiveTab("services")}
+                    className={activeTab === "services" ? "active" : ""}
+                  >
+                    Services
+                  </button>
                 </div>
 
                 <div className="charts-tab-content">
@@ -469,6 +516,7 @@ export default function Dashboard() {
                     </div>
                   )}
                   {activeTab === "category" && <OrdersByCategoryChart />}
+                  {activeTab === "services" && <ServicesChart />}
                 </div>
               </div>
             </section>

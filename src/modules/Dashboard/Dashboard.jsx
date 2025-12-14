@@ -97,6 +97,20 @@ export default function Dashboard() {
     "Supplies"
   ];
 
+  const allServices = [
+    "Grooming",
+    "Vaccination",
+    "Consultation",
+    "Deworming",
+    "Surgery",
+    "Confinement",
+    "Laboratories",
+    "Home Service",
+  ];
+  const [servicesData, setServicesData] = useState(
+    allServices.map(srv => ({ service_type: srv, demand_count: 0 }))
+  );
+
   const formatPromoPeriod = (start, end) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -249,6 +263,32 @@ export default function Dashboard() {
 
   function OrdersByCategoryChart() {
     return <Bar data={categoryChartData} options={categoryChartOptions} />;
+  }
+
+  const servicesChartData = {
+    labels: servicesData.map(d => d.service_type),
+    datasets: [
+      {
+        label: 'Service Demand',
+        data: servicesData.map(d => d.demand_count),
+        backgroundColor: '#32b2b2',
+      },
+    ],
+  };
+
+  const servicesChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Service Demand (Current Month)', font: { size: 18 } },
+    },
+    scales: { y: { beginAtZero: true } },
+  };
+
+  function ServicesChart() {
+    return (
+      <Bar data={servicesChartData} options={servicesChartOptions} />
+    );
   }
 
   const handleUpcomingAppointmentsFetch = async () => {
@@ -442,6 +482,12 @@ export default function Dashboard() {
                     className={activeTab === "category" ? "active" : ""}
                   >
                     Orders
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("services")}
+                    className={activeTab === "services" ? "active" : ""}
+                  >
+                    Services
                   </button>
                 </div>
 
