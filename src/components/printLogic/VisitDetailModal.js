@@ -1,8 +1,23 @@
-import React, { useRef, useState, useEffect, useContext } from "react";
+import React, { useRef, useState, useEffect, useContext, use } from "react";
 import "./VisitDetailModal.css";
+import '../../modal/modal_design.css';
 import { useReactToPrint } from "react-to-print";
 import { UserContext } from "../../hook/authContext";
 import axios from 'axios';
+
+const formatTimeToAMPM = (time) => {
+  if (!time) return "N/A";
+
+  // supports HH:mm or HH:mm:ss
+  const [hourStr, minuteStr] = time.split(":");
+  let hour = parseInt(hourStr, 10);
+  const minute = minuteStr || "00";
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minute} ${ampm}`;
+};
 
 const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName, setSelectedVisit, Saving, processing }) => {
     if (!selectedVisit) return null;
@@ -11,6 +26,8 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
     const { user } = useContext(UserContext);
     const contentRef = useRef(null);
     const actionsRef = useRef(null);
+    const [messageModal, setMessageModal] = useState("");
+    const [showMessageModal, setShowMessageModal] = useState(false);
     const reactToPrint = useReactToPrint({
         contentRef,
         documentTitle: `Visit_${selectedPet?.name}`,
@@ -21,6 +38,41 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
             setIsSwitch(false);
         },
     });
+
+    const previousTimeRef = useRef(selectedVisit?.time || '');
+
+    const handleVisitTimeChange = (e) => {
+        const value = e.target.value;
+        if (!value) return;
+
+        const [hour, minute] = value.split(":").map(Number);
+        const totalMinutes = hour * 60 + minute;
+
+        const minTime = 8 * 60;
+        const maxTime = 17 * 60;
+
+        if (totalMinutes < minTime || totalMinutes > maxTime) {
+            setMessageModal("Time must be between 8:00 AM and 5:00 PM");
+            setShowMessageModal(true);
+
+            setSelectedVisit(prev => ({
+                ...prev,
+                time: previousTimeRef.current
+            }));
+            return;
+        }
+
+        previousTimeRef.current = value;
+        setSelectedVisit(prev => ({
+            ...prev,
+            time: value
+        }));
+    };
+
+    const handleCloseModalMessage = () => {
+        setMessageModal("");
+        setShowMessageModal(false);
+    };
 
     const logVetAction = async (action) => {
         try {
@@ -75,6 +127,12 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
         }
 
     }, [role, printName]);
+
+    useEffect(() => {
+        if (selectedVisit?.time) {
+            previousTimeRef.current = selectedVisit.time;
+        }
+    }, [selectedVisit]);
 
     return (
         <div className="all-visit-detail-modal-overlay">
@@ -225,13 +283,21 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                         <div className="all-detail-field">
                             <div className="all-detail-label">Time Visit:</div>
                             {isSwitch ? (
-                                <div className="all-detail-value">{selectedVisit.time || 'N/A'}</div>
+                                <div className="all-detail-value">
+                                    {selectedVisit.status === "Confinement"
+                                        ? "Under Confinement"
+                                        : selectedVisit.time
+                                            ? formatTimeToAMPM(selectedVisit.time)
+                                            : "N/A"}
+                                </div>
                             ) : (
                                 <input
                                     type="time"
                                     value={selectedVisit.time || ''}
-                                    onChange={(e) => setSelectedVisit({ ...selectedVisit, time: e.target.value })}
+                                    onChange={handleVisitTimeChange}
                                     className="all-editable-input"
+                                    min="08:00"
+                                    max="17:00"
                                 />
                             )}
                         </div>
@@ -435,6 +501,29 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                     <div className="all-print-footer">Print by: {printBy.name}</div>
                 </div>
             </div>
+
+            {showMessageModal && (
+                <div className="All-Message-modal-overlay">
+                    <div className="All-Message-modal">
+                        <div className="All-Message-modal-header">
+                            <h2>Alert Message</h2>
+                        </div>
+
+                        <div className="All-Message-modal-body">
+                            <p>{messageModal}</p>
+                        </div>
+
+                        <div className="All-Message-modal-footer">
+                            <button
+                                className="All-Message-close-btn"
+                                onClick={handleCloseModalMessage}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
