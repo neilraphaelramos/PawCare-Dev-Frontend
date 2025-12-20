@@ -267,7 +267,6 @@ body {
 .edit-pet-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
 .pet-modal h3 {
@@ -946,3 +945,22 @@ body {
   overflow-y: auto;
   flex-grow: 1;
 }
+
+.field-with-label {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.field-with-label label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.field-with-label input {
+  width: 100%;
+}
+
+

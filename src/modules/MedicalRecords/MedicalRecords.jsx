@@ -46,46 +46,52 @@ const ServiceSelector = ({ value, onChange, options }) => {
 
   return (
     <div style={{ position: "relative" }}>
-      <input
-        type="text"
-        value={inputValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        placeholder="Service Type"
-        className="addvisit-input"
-        autoComplete="off"
-      />
-      {showDropdown && filteredOptions.length > 0 && (
-        <ul
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            background: "#fff",
-            border: "1px solid #ccc",
-            maxHeight: 150,
-            overflowY: "auto",
-            zIndex: 10,
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            marginTop: -24,
-          }}
-        >
-          {filteredOptions.map((opt, idx) => (
-            <li
-              key={idx}
-              style={{ padding: "5px 10px", cursor: "pointer" }}
-              onMouseDown={(e) => e.preventDefault()} // prevent blur
-              onClick={() => handleSelect(opt)}
-            >
-              {opt}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="addvisit-input-group">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          className="addvisit-input"
+          autoComplete="off"
+          required
+        />
+        {showDropdown && filteredOptions.length > 0 && (
+          <ul
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              background: "#fff",
+              border: "1px solid #ccc",
+              maxHeight: 150,
+              overflowY: "auto",
+              zIndex: 10,
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              marginTop: -24,
+            }}
+          >
+            {filteredOptions.map((opt, idx) => (
+              <li
+                key={idx}
+                style={{ padding: "5px 10px", cursor: "pointer" }}
+                onMouseDown={(e) => e.preventDefault()} // prevent blur
+                onClick={() => handleSelect(opt)}
+              >
+                {opt}
+              </li>
+            ))}
+          </ul>
+        )}
+        <label htmlFor="service" className="addvisit-label">
+          Service Type
+        </label>
+      </div>
+
     </div>
   );
 };
@@ -149,6 +155,8 @@ export default function PetRecords() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
   const [services, setServices] = useState([]);
+  const [timeVisit, setTimeVisit] = useState("");
+  const previousTimeRef = useRef("");
 
   const formRef = useRef(null);
 
@@ -188,10 +196,13 @@ export default function PetRecords() {
       species: "",
       gender: ""
     });
+
+    setTimeVisit('');
   };
 
   const resetEditForm = () => {
     setEditData(null);
+    setTimeVisit('');
   };
 
   const handleCloseModal = () => {
@@ -229,6 +240,47 @@ export default function PetRecords() {
       console.error("Error fetching user info:", err);
     }
   };
+
+  const handleTimeChange = (e) => {
+    const value = e.target.value;
+
+    if (!value) return;
+
+    const [hour, minute] = value.split(":").map(Number);
+    const totalMinutes = hour * 60 + minute;
+
+    const minTime = 8 * 60;   // 08:00
+    const maxTime = 17 * 60;  // 17:00
+
+    if (totalMinutes < minTime || totalMinutes > maxTime) {
+      setMessageModal("Time must be between 8:00 AM and 5:00 PM");
+      setShowMessageModal(true);
+
+      // ✅ FORCE RESET
+      setTimeVisit(previousTimeRef.current || "");
+
+      if (addingRecord) {
+        setNewRecord(prev => ({
+          ...prev,
+          time: previousTimeRef.current || ""
+        }));
+      }
+
+      return;
+    }
+
+    // ✅ VALID TIME
+    previousTimeRef.current = value;
+    setTimeVisit(value);
+
+    if (addingRecord) {
+      setNewRecord(prev => ({
+        ...prev,
+        time: value
+      }));
+    }
+  };
+
   useEffect(() => {
     if (userInfo && Object.keys(userInfo).length > 0) {
       setNewRecord((prev) => ({
@@ -365,6 +417,13 @@ export default function PetRecords() {
     fetchPets();
   }, []);
 
+  useEffect(() => {
+    if (editData?.timeVisit) {
+      setTimeVisit(editData.timeVisit);
+      previousTimeRef.current = editData.timeVisit; // save original
+    }
+  }, [editData]);
+
   const filteredPets = pets.filter((pet) => {
     const term = searchTerm.toLowerCase();
     return (
@@ -391,7 +450,20 @@ export default function PetRecords() {
 
   const handleNewRecordChange = (e) => {
     const { name, value } = e.target;
-    setNewRecord({ ...newRecord, [name]: value });
+
+    if (name === "status" && value === "Confinement") {
+      setNewRecord(prev => ({
+        ...prev,
+        status: value,
+        completed: ""
+      }));
+      return;
+    }
+
+    setNewRecord(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleNewRecordSubmit = async (e) => {
@@ -645,45 +717,64 @@ export default function PetRecords() {
 
               {addingRecord && (
                 <form className="new-record-form" ref={formRef} onSubmit={handleNewRecordSubmit}>
-                  <input
-                    type="text"
-                    name="ownerEmail"
-                    placeholder="Email"
-                    value={newRecord.ownerEmail}
-                    onChange={handleNewRecordChange}
-                    required
-                    readOnly
-                    className="addvisit-input"
-                  />
-                  <input
-                    type="text"
-                    name="ownerAddress"
-                    placeholder="Address"
-                    value={newRecord.ownerAddress}
-                    readOnly
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <input
-                    type="text"
-                    name="ownerPhoneNum"
-                    placeholder="Phone Number"
-                    value={newRecord.ownerPhoneNum}
-                    readOnly
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <input
-                    type="text"
-                    name="day"
-                    placeholder="Day of Visit (e.g., Monday)"
-                    value={newRecord.day}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="ownerEmail"
+                      value={newRecord.ownerEmail}
+                      onChange={handleNewRecordChange}
+                      required
+                      readOnly
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="ownerEmail" className="addvisit-label">
+                      Owner Email
+                    </label>
+                  </div>
+
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="ownerAddress"
+                      value={newRecord.ownerAddress}
+                      onChange={handleNewRecordChange}
+                      required
+                      readOnly
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="ownerAddress" className="addvisit-label">
+                      Owner Address
+                    </label>
+                  </div>
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="ownerPhoneNum"
+                      value={newRecord.ownerPhoneNum}
+                      onChange={handleNewRecordChange}
+                      required
+                      readOnly
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="ownerPhoneNum" className="addvisit-label">
+                      Owner Phone Number
+                    </label>
+                  </div>
+
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="day"
+                      value={newRecord.day}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="day" className="addvisit-label">
+                      Day of Visit
+                    </label>
+                  </div>
+
                   <div className="addvisit-input-group">
                     <input
                       type="date"
@@ -704,9 +795,11 @@ export default function PetRecords() {
                       type="time"
                       name="time"
                       value={newRecord.time}
-                      onChange={handleNewRecordChange}
+                      onChange={handleTimeChange}
                       required
                       className="addvisit-input"
+                      min="08:00"
+                      max="17:00"
                     />
                     <label htmlFor="time" className="addvisit-label">
                       Time of Visit
@@ -719,33 +812,54 @@ export default function PetRecords() {
                     options={services}
                   />
 
-                  <input
-                    type="text"
-                    name="complaint"
-                    placeholder="Main Complaint"
-                    value={newRecord.complaint}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <input
-                    type="text"
-                    name="diagnosis"
-                    placeholder="Diagnosis"
-                    value={newRecord.diagnosis}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
-                  <input
-                    type="text"
-                    name="status"
-                    placeholder="Treatment Status"
-                    value={newRecord.status}
-                    onChange={handleNewRecordChange}
-                    required
-                    className="addvisit-input"
-                  />
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="complaint"
+                      value={newRecord.complaint}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="complaint" className="addvisit-label">
+                      Main Complaint
+                    </label>
+                  </div>
+
+                  <div className="addvisit-input-group">
+                    <input
+                      type="text"
+                      name="treatment"
+                      value={newRecord.treatment}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    />
+                    <label htmlFor="treatment" className="addvisit-label">
+                      Diagnosis
+                    </label>
+                  </div>
+
+                  <div className="addvisit-input-group">
+                    <select
+                      name="status"
+                      value={newRecord.status}
+                      onChange={handleNewRecordChange}
+                      required
+                      className="addvisit-input"
+                    >
+                      <option value="" disabled>
+                        Select Treatment Status
+                      </option>
+                      <option value="Out Patient">Out Patient</option>
+                      <option value="Confinement">Confinement</option>
+                    </select>
+
+                    <label htmlFor="status" className="addvisit-label">
+                      Treatment Status
+                    </label>
+                  </div>
+
                   <div className="addvisit-input-group">
                     <input
                       type="date"
@@ -753,11 +867,14 @@ export default function PetRecords() {
                       name="completed"
                       value={newRecord.completed}
                       onChange={handleNewRecordChange}
-                      required
                       className="addvisit-input"
+                      required={newRecord.status === "Out Patient"}
+                      disabled={newRecord.status === "Confinement"}
                     />
+
                     <label htmlFor="completed" className="addvisit-label">
                       Completed On
+                      {newRecord.status === "Out Patient" && " *"}
                     </label>
                   </div>
                 </form>
@@ -854,11 +971,11 @@ export default function PetRecords() {
                       </div>
                     ))
                   ) : (
-                    <div className="no-records">No visit records found</div>
+                    <div className="no-records"></div>
                   )}
                 </div>
               ) : (
-                <p>No visit records found.</p>
+                <p></p>
               )}
             </article>
           </div>
@@ -897,86 +1014,92 @@ export default function PetRecords() {
 
               {/* Right Side: Inputs */}
               <div className="add-pet-form-fields">
-                <div className="add-form-group">
-                  <input
-                    name="ownerName"
-                    type="text"
-                    placeholder="Click to select Owner and Pet"
-                    value={
-                      autoFill.ownerName
-                        ? `${autoFill.ownerName}`
-                        : ""
-                    }
-                    readOnly
-                    onClick={() => setShowOwnerSearchModal(true)}
-                    className="clickable-owner-field"
-                    title='Owner Name(Selection Owner And Pet)'
-                  />
 
-                  <input
-                    name="userName"
-                    type="text"
-                    placeholder="Username"
-                    value={autoFill.userName}
-                    readOnly
-                    title='Username'
-                  />
+                <div className="add-form-group">
+                  <div className="field-with-label">
+                    <label>Owner Name</label>
+                    <input
+                      name="ownerName"
+                      type="text"
+                      value={autoFill.ownerName || ""}
+                      readOnly
+                      onClick={() => setShowOwnerSearchModal(true)}
+                      className="clickable-owner-field"
+                      placeholder='Click to select owner'
+                    />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Username</label>
+                    <input
+                      name="userName"
+                      type="text"
+                      value={autoFill.userName}
+                      readOnly
+                    />
+                  </div>
                 </div>
 
                 <div className="add-form-group">
-                  <input
-                    name="name"
-                    type="text"
-                    placeholder="Pet Name"
-                    value={autoFill.name}
-                    readOnly
-                    title="Pet's Name"
-                  />
-                  <input
-                    name="age"
-                    type="text"
-                    placeholder="Age"
-                    value={autoFill.age}
-                    readOnly
-                    title="Pet's Age"
-                  />
+                  <div className="field-with-label">
+                    <label>Pet Name</label>
+                    <input name="name" type="text" value={autoFill.name} readOnly />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Age</label>
+                    <input name="age" type="text" value={autoFill.age} readOnly />
+                  </div>
                 </div>
 
                 <div className="add-form-group">
-                  <input
-                    name="type"
-                    type="text"
-                    placeholder="Pet Type"
-                    value={autoFill.type}
-                    readOnly
-                    title="Pet's Type"
-                  />
-                  <input
-                    name="species"
-                    type="text"
-                    placeholder="Species"
-                    value={autoFill.species}
-                    readOnly
-                    title="Pet's Species"
-                  />
-                  <input
-                    name="gender"
-                    type="text"
-                    placeholder="Gender"
-                    value={autoFill.gender}
-                    readOnly
-                    title="Pet's Gender"
-                  />
+                  <div className="field-with-label">
+                    <label>Pet Type</label>
+                    <input name="type" type="text" value={autoFill.type} readOnly />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Species</label>
+                    <input name="species" type="text" value={autoFill.species} readOnly />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Gender</label>
+                    <input name="gender" type="text" value={autoFill.gender} readOnly />
+                  </div>
                 </div>
 
                 <div className="add-form-group">
-                  <input name="condition" type="text" placeholder="Condition" required title="Pet's Condition" />
-                  <input name="lastVisit" type="date" placeholder="Last Visit" required title='Last Visit' />
-                  <input name="timeVisit" type="time" placeholder="Time Visit" required title='Time Visit' />
+                  <div className="field-with-label">
+                    <label>Condition</label>
+                    <input name="condition" type="text" required />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Last Visit</label>
+                    <input name="lastVisit" type="date" required />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Time Visit</label>
+                    <input
+                      type="time"
+                      name="timeVisit"
+                      value={timeVisit}
+                      onChange={handleTimeChange}
+                      required
+                      className="addvisit-input"
+                      min="08:00"
+                      max="17:00"
+                    />
+                  </div>
                 </div>
 
                 <div className="add-form-group">
-                  <input name="diagnosis" type="text" placeholder="Diagnosis" required title="Pet's Diagnosis" />
+                  <div className="field-with-label">
+                    <label>Diagnosis</label>
+                    <input name="diagnosis" type="text" required />
+                  </div>
                 </div>
 
                 <div className="add-button-row">
@@ -994,7 +1117,9 @@ export default function PetRecords() {
                     Cancel
                   </button>
                 </div>
+
               </div>
+
             </form>
           </div>
         </div>
@@ -1022,107 +1147,145 @@ export default function PetRecords() {
               <div className="edit-pet-form-fields">
 
                 <div className="edit-form-group">
-                  <input
-                    name="ownerName"
-                    type="text"
-                    placeholder="Owner Name"
-                    value={editData?.ownerName || ""}
-                    readOnly
-                    title='Owner Name'
-                  />
-                  <input
-                    name="userName"
-                    type="text"
-                    placeholder="Username"
-                    value={editData?.userName || ""}
-                    readOnly
-                    title='Username'
-                  />
+                  <div className="field-with-label">
+                    <label>Owner Name</label>
+                    <input
+                      name="ownerName"
+                      type="text"
+                      placeholder="Owner Name"
+                      value={editData?.ownerName || ""}
+                      readOnly
+                      title='Owner Name'
+                    />
+                  </div>
+
+                  <div className="field-with-label">
+                    <label>Username</label>
+                    <input
+                      name="userName"
+                      type="text"
+                      placeholder="Username"
+                      value={editData?.userName || ""}
+                      readOnly
+                      title='Username'
+                    />
+                  </div>
                 </div>
 
                 <div className="edit-form-group">
-                  <input
-                    name="name"
-                    type="text"
-                    placeholder="Pet Name"
-                    value={editData?.name || ""}
-                    readOnly
-                    title="Pet's Name"
-                  />
-                  <input
-                    name="age"
-                    type="text"
-                    placeholder="Age"
-                    value={editData?.age || ""}
-                    readOnly
-                    title="Pet's Age"
-                  />
+                  <div className="field-with-label">
+                    <label>Pet Name</label>
+                    <input
+                      name="name"
+                      type="text"
+                      placeholder="Pet Name"
+                      value={editData?.name || ""}
+                      readOnly
+                      title="Pet's Name"
+                    />
+                  </div>
+                  <div className="field-with-label">
+                    <label>Age</label>
+                    <input
+                      name="age"
+                      type="text"
+                      placeholder="Age"
+                      value={editData?.age || ""}
+                      readOnly
+                      title="Pet's Age"
+                    />
+                  </div>
                 </div>
 
                 <div className="edit-form-group">
-                  <input
-                    name="type"
-                    type="text"
-                    placeholder="Pet Type"
-                    value={editData?.petType || ""}
-                    readOnly
-                    title="Pet's Type"
-                  />
-                  <input
-                    name="species"
-                    type="text"
-                    placeholder="Species"
-                    value={editData?.species || ""}
-                    readOnly
-                    title="Pet's Species"
-                  />
-                  <input
-                    name="gender"
-                    type="text"
-                    placeholder="Gender"
-                    value={editData?.gender || ""}
-                    readOnly
-                    title="Pet's Gender"
-                  />
+                  <div className="field-with-label">
+                    <label>Type</label>
+                    <input
+                      name="type"
+                      type="text"
+                      placeholder="Pet Type"
+                      value={editData?.petType || ""}
+                      readOnly
+                      title="Pet's Type"
+                    />
+                  </div>
+                  <div className="field-with-label">
+                    <label>Species</label>
+                    <input
+                      name="species"
+                      type="text"
+                      placeholder="Species"
+                      value={editData?.species || ""}
+                      readOnly
+                      title="Pet's Species"
+                    />
+                  </div>
+                  <div className="field-with-label">
+                    <label>Gender</label>
+                    <input
+                      name="gender"
+                      type="text"
+                      placeholder="Gender"
+                      value={editData?.gender || ""}
+                      readOnly
+                      title="Pet's Gender"
+                    />
+                  </div>
+
                 </div>
 
                 {/* Editable Fields Only */}
                 <div className="edit-form-group">
-                  <input
-                    name="condition"
-                    type="text"
-                    placeholder="Condition"
-                    defaultValue={editData?.condition || ""}
-                    required
-                    title="Pet's Condition"
-                  />
-                  <input
-                    name="lastVisit"
-                    type="date"
-                    placeholder="Last Visit"
-                    defaultValue={editData?.lastVisit || ""}
-                    required
-                    title="Last Visit"
-                  />
-                  <input
-                    name="timeVisit"
-                    type="time"
-                    placeholder="Time Visit"
-                    defaultValue={editData?.timeVisit || ""}
-                    required
-                    title="Time Visit"
-                  />
+                  <div className="field-with-label">
+                    <label>Condition</label>
+                    <input
+                      name="condition"
+                      type="text"
+                      placeholder="Condition"
+                      defaultValue={editData?.condition || ""}
+                      required
+                      title="Pet's Condition"
+                    />
+                  </div>
+                  <div className="field-with-label">
+                    <label>Last Visit</label>
+                    <input
+                      name="lastVisit"
+                      type="date"
+                      placeholder="Last Visit"
+                      defaultValue={editData?.lastVisit || ""}
+                      required
+                      title="Last Visit"
+                    />
+                  </div>
+                  <div className="field-with-label">
+                    <label>Time Visit</label>
+                    <input
+                      name="timeVisit"
+                      type="time"
+                      value={timeVisit}
+                      onChange={handleTimeChange}
+                      required
+                      min="08:00"
+                      max="17:00"
+                    />
+                  </div>
+
                 </div>
 
                 <div className="edit-form-group">
-                  <input
-                    name="diagnosis"
-                    type="text"
-                    placeholder="Diagnosis"
-                    defaultValue={editData?.diagnosis || ""}
-                    required
-                    title="Pet's Diagnosis"
-                  />
+                  <div className="field-with-label">
+                    <label>Diagnosis</label>
+                    <input
+                      name="diagnosis"
+                      type="text"
+                      placeholder="Diagnosis"
+                      defaultValue={editData?.diagnosis || ""}
+                      required
+                      title="Pet's Diagnosis"
+                    />
+                  </div>
+
                 </div>
 
                 <div className="edit-button-row">

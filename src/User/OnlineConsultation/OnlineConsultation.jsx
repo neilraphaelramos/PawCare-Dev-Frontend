@@ -188,6 +188,10 @@ const OnlineConsultation = () => {
     }
   };
 
+  useEffect(() => {   
+    console.log(fillUp);
+  }, [fillUp]);
+
   const handleCancelPayment = async () => {
     if (!paymentIntentId) {
       console.warn("⚠️ No payment intent to cancel.");

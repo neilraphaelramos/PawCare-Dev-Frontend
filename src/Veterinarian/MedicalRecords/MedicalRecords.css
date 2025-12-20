@@ -287,7 +287,7 @@ body {
 .edit-pet-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0px;
 }
 
 .pet-modal h3 {
@@ -780,6 +780,11 @@ body {
   box-sizing: border-box;
 }
 
+.addvisit-input:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
 .addvisit-input:focus {
   border-color: #4a90e2;
   box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
@@ -788,23 +793,16 @@ body {
 
 .addvisit-label {
   position: absolute;
-  top: 50%;
   left: 14px;
-  color: #aaa;
-  transform: translateY(-50%);
+  font-size: 11pt;
+  color: #29b374;
   pointer-events: none;
-  transition: 0.2s ease all;
+  top: -12px;
+  background-color: white;
 }
 
-/* Float label on focus or when filled */
-.addvisit-input:focus+.addvisit-label,
-.addvisit-input:not(:placeholder-shown)+.addvisit-label,
-.addvisit-input:valid+.addvisit-label {
-  top: 6px;
-  font-size: 12px;
-  color: #4a90e2;
-  background-color: white;
-  padding: 0 4px;
+.addvisit-label:disabled {
+  color: #aaa;
 }
 
 .addvisit-input[type="date"]::-webkit-inner-spin-button,
