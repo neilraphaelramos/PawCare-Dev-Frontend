@@ -497,6 +497,8 @@ export default function PetRecords() {
         veterinarian_name: "Admin"
       });
 
+      console.log(res);
+
       if (res.data.success) {
         // ✅ Refetch updated history
         const history = await axios.get(`${APIENDPOINT}/pet_medical_records/fetch/visit_history/${selectedPet.id}`);
