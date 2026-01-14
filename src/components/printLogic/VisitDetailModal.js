@@ -261,7 +261,7 @@ const VisitDetailModal = ({ selectedVisit, selectedPet, onClose, role, printName
                             ) : (
                                 <input
                                     type="text"
-                                    value={selectedVisit.diagnosis}
+                                    value={selectedVisit.ownerEmail}
                                     onChange={(e) => setSelectedVisit({ ...selectedVisit, ownerEmail: e.target.value })}
                                     className="all-editable-input"
                                 />
