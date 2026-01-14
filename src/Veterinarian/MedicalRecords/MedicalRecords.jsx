@@ -154,6 +154,7 @@ export default function PetRecords() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
   const [services, setServices] = useState([]);
+  const [timeVisit, setTimeVisit] = useState("");
 
   const formRef = useRef(null);
 
@@ -1084,7 +1085,7 @@ export default function PetRecords() {
                       type="time"
                       name="timeVisit"
                       value={timeVisit}
-                      onChange={handleTimeChange}
+                      onChange={handleVisitTimeChange}
                       required
                       className="addvisit-input"
                       min="08:00"
@@ -1262,7 +1263,7 @@ export default function PetRecords() {
                       name="timeVisit"
                       type="time"
                       value={timeVisit}
-                      onChange={handleTimeChange}
+                      onChange={handleVisitTimeChange}
                       required
                       min="08:00"
                       max="17:00"
