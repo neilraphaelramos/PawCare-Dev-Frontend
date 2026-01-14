@@ -154,8 +154,6 @@ export default function PetRecords() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModal, setMessageModal] = useState("");
   const [services, setServices] = useState([]);
-  const [timeVisit, setTimeVisit] = useState("");
-  const previousTimeRef = useRef("");
 
   const formRef = useRef(null);
 
@@ -253,45 +251,28 @@ export default function PetRecords() {
     }
   };
 
-  const handleTimeChange = (e) => {
+  const handleVisitTimeChange = (e) => {
     const value = e.target.value;
-
     if (!value) return;
 
     const [hour, minute] = value.split(":").map(Number);
     const totalMinutes = hour * 60 + minute;
 
-    const minTime = 8 * 60;   // 08:00
-    const maxTime = 17 * 60;  // 17:00
+    const min = 8 * 60;   // 08:00
+    const max = 17 * 60;  // 17:00
 
-    if (totalMinutes < minTime || totalMinutes > maxTime) {
+    if (totalMinutes < min || totalMinutes > max) {
       setMessageModal("Time must be between 8:00 AM and 5:00 PM");
       setShowMessageModal(true);
-
-      // ✅ FORCE RESET
-      setTimeVisit(previousTimeRef.current || "");
-
-      if (addingRecord) {
-        setNewRecord(prev => ({
-          ...prev,
-          time: previousTimeRef.current || ""
-        }));
-      }
-
       return;
     }
 
-    // ✅ VALID TIME
-    previousTimeRef.current = value;
-    setTimeVisit(value);
-
-    if (addingRecord) {
-      setNewRecord(prev => ({
-        ...prev,
-        time: value
-      }));
-    }
+    setNewRecord(prev => ({
+      ...prev,
+      time: value
+    }));
   };
+
 
   useEffect(() => {
     if (userInfo && Object.keys(userInfo).length > 0) {
@@ -812,7 +793,7 @@ export default function PetRecords() {
                       type="time"
                       name="time"
                       value={newRecord.time}
-                      onChange={handleTimeChange}
+                      onChange={handleVisitTimeChange}
                       required
                       className="addvisit-input"
                       min="08:00"
