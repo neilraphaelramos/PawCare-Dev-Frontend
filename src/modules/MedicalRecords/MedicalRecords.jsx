@@ -831,13 +831,13 @@ export default function PetRecords() {
                   <div className="addvisit-input-group">
                     <input
                       type="text"
-                      name="treatment"
-                      value={newRecord.treatment}
+                      name="diagnosis"
+                      value={newRecord.diagnosis}
                       onChange={handleNewRecordChange}
                       required
                       className="addvisit-input"
                     />
-                    <label htmlFor="treatment" className="addvisit-label">
+                    <label htmlFor="diagnosis" className="addvisit-label">
                       Diagnosis
                     </label>
                   </div>
